@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
 
 interface User {
   userId: string;
@@ -17,29 +18,39 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      this.currentUserSubject.next(JSON.parse(savedUser));
+  constructor(
+    private http: HttpClient, 
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    if (isPlatformBrowser(this.platformId)) {
+      const savedUser = localStorage.getItem('currentUser');
+      if (savedUser) {
+        this.currentUserSubject.next(JSON.parse(savedUser));
+      }
     }
   }
 
   login(email: string, password: string): Observable<any> {
-    return this.http.post('/api/auth/login', { email, password });
+    return this.http.post('http://localhost:3000/api/auth/login', { email, password });
   }
 
   register(userData: any): Observable<any> {
-    return this.http.post('/api/auth/register', userData);
+    return this.http.post('http://localhost:3000/api/auth/register', userData);
   }
 
   setCurrentUser(user: User) {
-    localStorage.setItem('currentUser', JSON.stringify(user));
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+    }
     this.currentUserSubject.next(user);
-    this.redirectToDashboard(user.role);
+    // Don't auto-redirect here anymore, let login component handle it
   }
 
   logout() {
-    localStorage.removeItem('currentUser');
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('currentUser');
+    }
     this.currentUserSubject.next(null);
     this.router.navigate(['/']);
   }

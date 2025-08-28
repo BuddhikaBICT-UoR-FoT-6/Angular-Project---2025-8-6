@@ -5,6 +5,8 @@ import { ProductDetails } from './customer/product-details/product-details';
 import { Cart } from './customer/cart/cart';
 import { Login } from './customer/login/login';
 import { Register } from './customer/register/register';
+import { RegistrationResult } from './registration-result';
+import { LoginResult } from './login-result';
 import { CustomerDashboard } from './customer/customer-dashboard/customer-dashboard';
 import { SuperadminDashboard } from './superadmin/dashboard/superadmin-dashboard';
 import { Products } from './admin/products/products';
@@ -16,6 +18,8 @@ export const routes: Routes = [
   { path: '', component: Showroom },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
+  { path: 'registration-result', component: RegistrationResult },
+  { path: 'login-result', component: LoginResult },
   { path: 'product/:id', component: ProductDetails },
   { path: 'cart', component: Cart },
   { path: 'customer/dashboard', component: CustomerDashboard },

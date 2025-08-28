@@ -24,11 +24,7 @@
             "styles": [
               "src/styles.css"
             ],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "ssr": {
-              "entry": "src/server.ts"
-            }
+
           },
           "configurations": {
             "production": {
@@ -61,7 +57,8 @@
               "buildTarget": "First_Project:build:production"
             },
             "development": {
-              "buildTarget": "First_Project:build:development"
+              "buildTarget": "First_Project:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

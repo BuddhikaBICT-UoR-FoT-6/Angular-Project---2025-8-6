@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -15,7 +16,7 @@ export class Login {
   isLoading = false;
   error = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
     if (!this.email || !this.password) {
@@ -34,10 +35,24 @@ export class Login {
           full_name: response.user.full_name,
           email: response.user.email
         });
+        
+        // Redirect to success page instead of direct dashboard
+        this.router.navigate(['/login-result'], {
+          queryParams: {
+            success: 'true',
+            message: `Welcome back, ${response.user.full_name}! Login successful.`,
+            role: response.role
+          }
+        });
       },
       error: (error) => {
-        this.error = error.error?.error || 'Login failed';
-        this.isLoading = false;
+        const errorMessage = error.error?.error || 'Login failed. Please check your credentials.';
+        this.router.navigate(['/login-result'], {
+          queryParams: {
+            success: 'false',
+            message: 'Login Unsuccessful! Please check your credentials and try again.'
+          }
+        });
       }
     });
   }

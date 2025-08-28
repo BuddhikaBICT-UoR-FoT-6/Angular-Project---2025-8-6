@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-register',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
@@ -21,7 +22,7 @@ export class Register {
   error = '';
   success = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
     if (!this.userData.full_name || !this.userData.email || !this.userData.password) {
@@ -35,12 +36,21 @@ export class Register {
 
     this.authService.register(this.userData).subscribe({
       next: (response) => {
-        this.success = 'Registration successful! Please login.';
-        this.isLoading = false;
+        this.router.navigate(['/registration-result'], {
+          queryParams: {
+            success: 'true',
+            message: 'Registration successful! You can now login with your credentials.'
+          }
+        });
       },
       error: (error) => {
-        this.error = error.error?.error || 'Registration failed';
-        this.isLoading = false;
+        const errorMessage = error.error?.error || 'Registration failed. Please try again.';
+        this.router.navigate(['/registration-result'], {
+          queryParams: {
+            success: 'false',
+            message: 'Registration Unsuccessful! Only one email can have one account!.'
+          }
+        });
       }
     });
   }
