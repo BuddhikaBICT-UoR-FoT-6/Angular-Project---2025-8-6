@@ -1,0 +1,90 @@
+.main-nav {
+  background: #2c3e50;
+  color: white;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+.nav-container h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #ecf0f1;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.auth-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-name {
+  color: #ecf0f1;
+  font-weight: 500;
+}
+
+.user-menu .logout-btn {
+  background: rgba(231, 76, 60, 0.8);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.user-menu .logout-btn:hover {
+  background: #e74c3c;
+}
+
+.nav-links a {
+  color: #bdc3c7;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: #ecf0f1;
+  background: rgba(255,255,255,0.1);
+}
+
+.nav-links a.active {
+  color: #3498db;
+  background: rgba(52, 152, 219, 0.1);
+}
+
+.main-content {
+  min-height: calc(100vh - 80px);
+  background: #f8f9fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}

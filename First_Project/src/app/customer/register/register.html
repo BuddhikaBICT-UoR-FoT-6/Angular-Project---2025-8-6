@@ -1,0 +1,63 @@
+<div class="register-container">
+  <div class="register-card">
+    <h2>Register</h2>
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <div class="form-group">
+        <label for="full_name">Full Name *</label>
+        <input 
+          type="text" 
+          id="full_name" 
+          [(ngModel)]="userData.full_name" 
+          name="full_name" 
+          required 
+          [disabled]="isLoading">
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input 
+          type="email" 
+          id="email" 
+          [(ngModel)]="userData.email" 
+          name="email" 
+          required 
+          [disabled]="isLoading">
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password *</label>
+        <input 
+          type="password" 
+          id="password" 
+          [(ngModel)]="userData.password" 
+          name="password" 
+          required 
+          [disabled]="isLoading">
+      </div>
+      
+      <div class="form-group">
+        <label for="phone">Phone</label>
+        <input 
+          type="tel" 
+          id="phone" 
+          [(ngModel)]="userData.phone" 
+          name="phone" 
+          [disabled]="isLoading">
+      </div>
+      
+      <div *ngIf="error" class="error">{{error}}</div>
+      <div *ngIf="success" class="success">{{success}}</div>
+      
+      <button 
+        type="submit" 
+        [disabled]="isLoading || !registerForm.valid"
+        class="register-btn">
+        {{isLoading ? 'Registering...' : 'Register'}}
+      </button>
+    </form>
+    
+    <p class="login-link">
+      Already have an account? <a routerLink="/login">Login here</a>
+    </p>
+  </div>
+</div>

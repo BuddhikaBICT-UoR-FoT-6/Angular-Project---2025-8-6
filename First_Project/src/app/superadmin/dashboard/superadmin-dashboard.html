@@ -1,0 +1,73 @@
+<div class="superadmin-dashboard">
+  <div class="dashboard-header">
+    <h1>🔐 SuperAdmin Dashboard</h1>
+    <div class="user-info">
+      <span>Welcome, {{user?.full_name}}</span>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">Loading dashboard data...</div>
+
+  <div *ngIf="!isLoading" class="dashboard-content">
+    <div class="stats-grid">
+      <div class="stat-card users">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <h3>{{stats.totalUsers}}</h3>
+          <p>Total Users</p>
+        </div>
+      </div>
+
+      <div class="stat-card admins">
+        <div class="stat-icon">👨‍💼</div>
+        <div class="stat-info">
+          <h3>{{stats.totalAdmins}}</h3>
+          <p>Admins</p>
+        </div>
+      </div>
+
+      <div class="stat-card customers">
+        <div class="stat-icon">🛍️</div>
+        <div class="stat-info">
+          <h3>{{stats.totalCustomers}}</h3>
+          <p>Customers</p>
+        </div>
+      </div>
+
+      <div class="stat-card products">
+        <div class="stat-icon">👕</div>
+        <div class="stat-info">
+          <h3>{{stats.totalProducts}}</h3>
+          <p>Products</p>
+        </div>
+      </div>
+
+      <div class="stat-card orders">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+          <h3>{{stats.totalOrders}}</h3>
+          <p>Orders</p>
+        </div>
+      </div>
+
+      <div class="stat-card revenue">
+        <div class="stat-icon">💰</div>
+        <div class="stat-info">
+          <h3>${{stats.totalRevenue | number:'1.2-2'}}</h3>
+          <p>Total Revenue</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-actions">
+      <h2>🛠️ Admin Actions</h2>
+      <div class="action-buttons">
+        <button class="action-btn users-btn" routerLink="/admin/users">Manage Users</button>
+        <button class="action-btn products-btn" routerLink="/admin/products">Manage Products</button>
+        <button class="action-btn orders-btn" routerLink="/admin/orders">View Orders</button>
+        <button class="action-btn financials-btn" routerLink="/admin/financials">View Financials</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,36 @@
+<div class="customer-dashboard">
+  <div class="dashboard-header">
+    <h1>Welcome, {{user?.full_name}}!</h1>
+    <button class="logout-btn" (click)="logout()">Logout</button>
+  </div>
+
+  <div class="dashboard-content">
+    <div class="profile-card">
+      <h2>👤 My Profile</h2>
+      <p><strong>Name:</strong> {{user?.full_name}}</p>
+      <p><strong>Email:</strong> {{user?.email}}</p>
+      <p><strong>Role:</strong> Customer</p>
+    </div>
+
+    <div class="orders-section">
+      <h2>📦 My Orders</h2>
+      <div *ngIf="isLoading" class="loading">Loading orders...</div>
+      
+      <div *ngIf="!isLoading && myOrders.length === 0" class="no-orders">
+        <p>You haven't placed any orders yet.</p>
+        <a routerLink="/" class="shop-btn">Start Shopping</a>
+      </div>
+
+      <div *ngIf="!isLoading && myOrders.length > 0" class="orders-list">
+        <div *ngFor="let order of myOrders" class="order-card">
+          <div class="order-header">
+            <span class="order-id">Order #{{order._id?.slice(-6)}}</span>
+            <span class="order-status" [class]="order.status">{{order.status}}</span>
+          </div>
+          <p><strong>Total:</strong> ${{order.total_amount | number:'1.2-2'}}</p>
+          <p><strong>Date:</strong> {{order.created_at | date:'short'}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
