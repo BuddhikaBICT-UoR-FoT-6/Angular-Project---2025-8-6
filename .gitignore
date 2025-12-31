@@ -1,0 +1,26 @@
+.amazonq/rules/only_suggest_code.md
+.amazonq/rules/Only_suggest_code_dont_edit_automatically.md
+
+# --- Dependencies (never commit) ---
+**/node_modules/
+
+# --- Builds / cache ---
+**/dist/
+**/out-tsc/
+**/.angular/cache/
+**/coverage/
+**/.nyc_output/
+
+# --- Runtime temp files ---
+**/tmp/
+**/*.log
+
+# --- Environment files (keep secrets out of git) ---
+**/.env
+**/.env.*
+!**/.env.example
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
