@@ -1,1 +1,137 @@
-<p>products works!</p>
+<div class = "products-page">
+    <h2>Products Management</h2>
+
+    <!-- Messages are shown globally using the purple Toast component -->
+
+        <!-- CSV Import/Export -->
+        <div class="csv-controls">
+            <button type="button" (click)="exportCsv()">Export CSV</button>
+
+            <input type="file" accept=".csv" (change)="onCsvSelected($event)" />
+            <button type="button" (click)="importCsv()">Import CSV</button>
+        </div>
+
+    <button (click) = "openAddForm()" *ngIf="!showAddForm && !editingProduct">+ Add Product</button>
+
+    <!-- ADD FORM -->
+     <div *ngIf="showAddForm" class="form-box">
+        <h3>Add Product</h3>
+
+        <label>Name: </label>
+        <input [(ngModel)]="newProduct.name"/>
+
+        <label>Category: </label>
+        <input [(ngModel)]="newProduct.category"/>
+
+        <label>Price</label>
+        <input type="number" [(ngModel)]="newProduct.price" />
+
+        <h4>Stock</h4>
+        <label>S</label>
+        <input type="number" [(ngModel)]="newProduct.stock.S" />
+        <label>M</label>
+        <input type="number" [(ngModel)]="newProduct.stock.M" />
+        <label>L</label>
+        <input type="number" [(ngModel)]="newProduct.stock.L" />
+        <label>XL</label>
+        <input type="number" [(ngModel)]="newProduct.stock.XL" />
+
+        <!-- Product Images (Cloudinary) -->
+        <label>Product Images</label>
+        <input type="file" multiple accept="image/*" (change)="onFilesSelected($event)" />
+        <button type="button" (click)="uploadSelectedImages()">Upload Images</button>
+
+        <!-- Gallery preview -->
+        <div class="gallery" *ngIf="(showAddForm ? newProduct.image : editingProduct?.image)?.length">
+        <div class="thumb-wrap" *ngFor="let url of (showAddForm ? newProduct.image : editingProduct.image)">
+            <img [src]="url" class="thumb" alt="Product image" />
+            <button type="button" (click)="removeImage(url)">Remove</button>
+        </div>
+        </div>
+
+        <div class="actions">
+            <button (click)="submitAdd()">Save</button>
+            <button (click)="cancelAdd()">Cancel</button>
+        </div>
+     </div>
+
+     <!-- EDIT FORM -->
+     <div *ngIf="editingProduct" class="form-box">
+        <h3>Edit Product</h3>
+
+        <label>Name: </label>
+        <input [(ngModel)]="editingProduct.name"/>
+
+        <label>Category: </label>
+        <input [(ngModel)]="editingProduct.category"/>
+
+        <label>Price</label>
+        <input type="number" [(ngModel)]="editingProduct.price" />
+
+        <h4>Stock</h4>
+        <label>S</label>
+        <input type="number" [(ngModel)]="editingProduct.stock.S" />
+        <label>M</label>
+        <input type="number" [(ngModel)]="editingProduct.stock.M" />
+        <label>L</label>
+        <input type="number" [(ngModel)]="editingProduct.stock.L" />
+        <label>XL</label>
+        <input type="number" [(ngModel)]="editingProduct.stock.XL" />
+
+        <!-- Product Images (Cloudinary) -->
+        <label>Product Images</label>
+        <input type="file" multiple accept="image/*" (change)="onFilesSelected($event)" />
+        <button type="button" (click)="uploadSelectedImages()">Upload Images</button>
+
+        <!-- Gallery preview -->
+        <div class="gallery" *ngIf="(showAddForm ? newProduct.image : editingProduct?.image)?.length">
+        <div class="thumb-wrap" *ngFor="let url of (showAddForm ? newProduct.image : editingProduct.image)">
+            <img [src]="url" class="thumb" alt="Product image" />
+            <button type="button" (click)="removeImage(url)">Remove</button>
+        </div>
+        </div>
+
+        <div class="actions">
+            <button (click)="submitEdit()">Update</button>
+            <button (click)="cancelEdit()">Cancel</button>
+        </div>
+     </div>
+
+    <!-- PRODUCTS LIST -->
+     <div *ngIf="isLoading">Loading products...</div>
+     
+     <table *ngIf="!isLoading && products.length">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock (Total)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr *ngFor="let p of products">
+                <td>{{ p.name }}</td>
+                <td>{{ p.category }}</td>
+                <td>{{ p.price }}</td>
+                <td>{{
+                    (p.stock?.S || 0) +
+                    (p.stock?.M || 0) +
+                    (p.stock?.L || 0) +
+                    (p.stock?.XL || 0)
+   
+                }}
+                </td>
+                <td>
+                    <button (click)="startEdit(p)">Edit</button>
+                    <button (click)="deleteProduct(p)">Delete</button>
+                </td>
+            </tr>
+        </tbody>
+     </table>
+
+     <div *ngIf="!isLoading && !products.length">
+        No products found.</div>
+</div>

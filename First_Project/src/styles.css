@@ -1,1 +1,14 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+	Global styles and theme variables.
+	This project uses a purple-first palette for message/toast UI.
+*/
+
+:root {
+	/* Purple palette (tweak here to update all toasts consistently) */
+	--purple-50: #f7f2ff;
+	--purple-300: #c4a7ff;
+	--purple-650: #6d3df5;
+	--purple-700: #5b2fe6;
+	--purple-750: #4a24cc;
+	--purple-800: #3b1aa8;
+}

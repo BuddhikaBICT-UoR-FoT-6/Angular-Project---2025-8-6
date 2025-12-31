@@ -1,0 +1,19 @@
+<!--
+  Global toast container.
+  - Fixed position
+  - Uses a purple-based palette (see global CSS variables)
+-->
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+  <div
+    class="toast"
+    *ngFor="let t of toasts; trackBy: trackById"
+    [class.toast-success]="t.type === 'success'"
+    [class.toast-error]="t.type === 'error'"
+    [class.toast-info]="t.type === 'info'"
+    [class.toast-warning]="t.type === 'warning'"
+    role="status"
+  >
+    <div class="toast-body">{{ t.message }}</div>
+    <button class="toast-close" type="button" (click)="dismiss(t.id)" aria-label="Close">×</button>
+  </div>
+</div>

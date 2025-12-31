@@ -1,1 +1,76 @@
-<p>showroom works!</p>
+<div class="showroom-container">
+
+    <!-- Hero Section -->
+     <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Fashion Forward</h1>
+            <p class="hero-subtitle">Discover the latest fashion trends</p>
+            <button class="cta-button" routerLink="/register">Shop Now</button>
+        </div>
+
+        <div class="hero-image">
+            <div class="hero-placeholder">👗</div>
+        </div>
+     </section>
+
+    <!-- Categories Section -->
+    <section class="categories-section">
+        <h2>Shop by Category</h2>
+        <div class="categories-grid">
+            <div *ngFor="let category of categories" class="category-card">
+                <div class="category-icon">
+                    <span *ngIf="category === 'Shirts'">👕</span>
+                    <span *ngIf="category === 'Pants'">👖</span>
+                    <span *ngIf="category === 'Dresses'">👗</span>
+                    <span *ngIf="category === 'Accessories'">👠</span>
+                </div>
+                <h3>{{category}}</h3>
+                <p>Explore {{category.toLowerCase()}}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section class="products-section">
+        <h2>Featured Products</h2>
+
+        <div *ngIf="isLoading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading products...</p>
+        </div>
+
+        <div *ngIf="!isLoading && featuredProducts.length === 0" class="no-products">
+            <p>No products available at the moment</p>
+            <button routerLink="/register">Join us</button>
+        </div>
+
+        <div *ngIf="!isLoading && featuredProducts.length > 0" class="products-grid">
+            <div *ngFor="let product of featuredProducts" class="product-card">
+                <div class="product-image">
+                    <img *ngIf="product.image && product.image[0]" [src]="product.image[0]" alt="product.name">
+                    <div *ngIf="!product.image || !product.image[0]" class="product-placeholder">📷</div>
+                </div>
+
+                <div class="product-info">
+                    <h3>{{product.name || 'Unnamed Product'}}</h3>
+                    <p class="product-category">{{product.category || 'Fashion'}}</p>
+                    <div class="product-price">${{product.price || '0.00' | number:'1.2-2'}}</div>
+                    <button class="add-to-cart-button" routerLink="/login">View Details</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>Ready to Start Shopping?</h2>
+            <p>Join thousands of satisfied customers</p>
+            <div class="cta-buttons">
+                <button routerLink="/register" class="cta-button primary">Create Account</button>
+                <button routerLink="/login" class="cta-button secondary">Sign In</button>
+            </div>
+        </div>
+    </section>
+    
+</div>
