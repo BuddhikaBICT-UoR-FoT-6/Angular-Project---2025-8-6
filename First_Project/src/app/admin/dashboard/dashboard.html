@@ -6,50 +6,86 @@
     </button>
   </div>
 
+  <!-- Admin Navigation -->
+  <div class="nav-grid" *ngIf="!isLoading">
+    <a class="nav-card" routerLink="/admin/products">
+      <div class="nav-title">👕 Products</div>
+      <div class="nav-sub">CRUD, images, CSV</div>
+    </a>
+    <a class="nav-card" routerLink="/admin/inventory">
+      <div class="nav-title">📦 Inventory</div>
+      <div class="nav-sub">Stock and low inventory</div>
+    </a>
+    <a class="nav-card" routerLink="/admin/users">
+      <div class="nav-title">👥 Users</div>
+      <div class="nav-sub">Customers and admins</div>
+    </a>
+    <a class="nav-card" routerLink="/admin/financials">
+      <div class="nav-title">💰 Financials</div>
+      <div class="nav-sub">Revenue and payments</div>
+    </a>
+    <a class="nav-card" routerLink="/admin/orders">
+      <div class="nav-title">🧾 Orders</div>
+      <div class="nav-sub">Order list and status</div>
+    </a>
+    <a class="nav-card" routerLink="/admin/reports">
+      <div class="nav-title">📤 Reports & Export</div>
+      <div class="nav-sub">Downloads and exports</div>
+    </a>
+    <a class="nav-card" routerLink="/admin/analytics">
+      <div class="nav-title">📈 Analytics</div>
+      <div class="nav-sub">KPIs overview</div>
+    </a>
+    <a class="nav-card" routerLink="/admin/admin-management">
+      <div class="nav-title">🛡️ Admin Management</div>
+      <div class="nav-sub">Admin roles and access</div>
+    </a>
+  </div>
+
   <div *ngIf="isLoading" class="loading">Loading dashboard data...</div>
 
   <div *ngIf="!isLoading" class="dashboard-content">
     <!-- Stats Cards -->
     <div class="stats-grid">
-      <div class="stat-card users">
+      <a class="stat-card users" routerLink="/admin/users">
         <div class="stat-icon">👥</div>
         <div class="stat-info">
           <h3>{{stats.totalUsers}}</h3>
           <p>Total Users</p>
         </div>
-      </div>
+      </a>
 
-      <div class="stat-card products">
+      <a class="stat-card products" routerLink="/admin/products">
         <div class="stat-icon">👕</div>
         <div class="stat-info">
           <h3>{{stats.totalProducts}}</h3>
           <p>Products</p>
         </div>
-      </div>
+      </a>
 
-      <div class="stat-card orders">
+      <a class="stat-card orders" routerLink="/admin/orders">
         <div class="stat-icon">📦</div>
         <div class="stat-info">
           <h3>{{stats.totalOrders}}</h3>
           <p>Total Orders</p>
         </div>
-      </div>
+      </a>
 
-      <div class="stat-card revenue">
+      <a class="stat-card revenue" routerLink="/admin/financials">
         <div class="stat-icon">💰</div>
         <div class="stat-info">
           <h3>${{stats.totalRevenue | number:'1.2-2'}}</h3>
           <p>Revenue</p>
         </div>
-      </div>
+      </a>
 
-      <div class="stat-card inventory">
+      <a class="stat-card inventory" routerLink="/admin/inventory">
         <div class="stat-icon">⚠️</div>
         <div class="stat-info">
           <h3>{{stats.lowStockItems}}</h3>
           <p>Low Stock Items</p>
         </div>
-      </div>
+      </a>
     </div>
 
     <!-- Data Tables -->

@@ -1,0 +1,38 @@
+<div class="page">
+  <div class="header">
+    <h2>Order Management</h2>
+    <div class="actions">
+      <a routerLink="/admin/dashboard" class="link">← Back to Dashboard</a>
+      <button type="button" (click)="loadOrders()" [disabled]="isLoading">Refresh</button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="muted">Loading orders…</div>
+
+  <div *ngIf="!isLoading && orders.length === 0" class="muted">
+    No orders found.
+  </div>
+
+  <div *ngIf="!isLoading && orders.length > 0" class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>User</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of orders">
+          <td>{{ o._id?.slice(-6) || 'N/A' }}</td>
+          <td>{{ o.user_id?.full_name || o.user_id || 'Unknown' }}</td>
+          <td>${{ o.total_amount || 0 | number:'1.2-2' }}</td>
+          <td><span class="status" [class]="o.status">{{ o.status || 'pending' }}</span></td>
+          <td>{{ o.created_at || o.createdAt | date:'short' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

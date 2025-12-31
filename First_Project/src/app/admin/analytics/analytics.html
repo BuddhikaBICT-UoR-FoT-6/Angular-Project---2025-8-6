@@ -1,0 +1,43 @@
+<div class="page">
+  <div class="header">
+    <h2>Analytics</h2>
+    <div class="actions">
+      <a routerLink="/admin/dashboard" class="link">← Back to Dashboard</a>
+      <button type="button" (click)="refresh()" [disabled]="isLoading">Refresh</button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="muted">Loading analytics…</div>
+
+  <div *ngIf="!isLoading" class="grid">
+    <div class="card">
+      <div class="label">Total Users</div>
+      <div class="value">{{ stats.totalUsers }}</div>
+      <a routerLink="/admin/users" class="small-link">Open Users</a>
+    </div>
+
+    <div class="card">
+      <div class="label">Total Products</div>
+      <div class="value">{{ stats.totalProducts }}</div>
+      <a routerLink="/admin/products" class="small-link">Open Products</a>
+    </div>
+
+    <div class="card">
+      <div class="label">Total Orders</div>
+      <div class="value">{{ stats.totalOrders }}</div>
+      <a routerLink="/admin/orders" class="small-link">Open Orders</a>
+    </div>
+
+    <div class="card">
+      <div class="label">Total Revenue</div>
+      <div class="value">${{ stats.totalRevenue | number:'1.2-2' }}</div>
+      <a routerLink="/admin/financials" class="small-link">Open Financials</a>
+    </div>
+
+    <div class="card">
+      <div class="label">Low Stock Items</div>
+      <div class="value">{{ stats.lowStockItems }}</div>
+      <a routerLink="/admin/inventory" class="small-link">Open Inventory</a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,45 @@
+<div class="page">
+  <div class="header">
+    <h2>Admin Management</h2>
+    <div class="actions">
+      <a routerLink="/admin/dashboard" class="link">← Back to Dashboard</a>
+      <button type="button" (click)="loadUsers()" [disabled]="isLoading">Refresh</button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="muted">Loading admins…</div>
+
+  <div *ngIf="!isLoading && admins.length === 0" class="muted">
+    No admin users found.
+  </div>
+
+  <div *ngIf="!isLoading && admins.length > 0" class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of admins">
+          <td>{{ u.full_name || '—' }}</td>
+          <td>{{ u.email || '—' }}</td>
+          <td>
+            <select [(ngModel)]="u.role">
+              <option value="superadmin">superadmin</option>
+              <option value="admin">admin</option>
+              <option value="customer">customer</option>
+              <option value="visitor">visitor</option>
+            </select>
+          </td>
+          <td>
+            <button type="button" (click)="saveRole(u)">Save</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

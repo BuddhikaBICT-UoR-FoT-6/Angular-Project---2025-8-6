@@ -13,6 +13,10 @@ import { Products } from './admin/products/products';
 import { Inventory } from './admin/inventory/inventory';
 import { Users } from './admin/users/users';
 import { Financials } from './admin/financials/financials';
+import { Orders } from './admin/orders/orders';
+import { Reports } from './admin/reports/reports';
+import { Analytics } from './admin/analytics/analytics';
+import { AdminManagement } from './admin/admin-management/admin-management';
 
 export const routes: Routes = [
   { path: '', component: Showroom },
@@ -29,6 +33,10 @@ export const routes: Routes = [
   { path: 'admin/inventory', component: Inventory },
   { path: 'admin/users', component: Users },
   { path: 'admin/financials', component: Financials },
+  { path: 'admin/orders', component: Orders },
+  { path: 'admin/reports', component: Reports },
+  { path: 'admin/analytics', component: Analytics },
+  { path: 'admin/admin-management', component: AdminManagement },
   { path: 'superadmin/dashboard', component: SuperadminDashboard },
   { path: '**', redirectTo: '' }
 ];

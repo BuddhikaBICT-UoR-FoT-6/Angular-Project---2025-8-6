@@ -1,0 +1,21 @@
+<div class="page">
+  <div class="header">
+    <h2>Reports & Export</h2>
+    <a routerLink="/admin/dashboard" class="link">← Back to Dashboard</a>
+  </div>
+
+  <div class="card">
+    <h3>Exports</h3>
+    <p class="muted">Download operational data as files.</p>
+
+    <div class="actions">
+      <button type="button" (click)="exportProductsCsv()">Export Products CSV</button>
+      <a routerLink="/admin/products" class="secondary">Go to Products Management</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Reports</h3>
+    <p class="muted">More reports can be added here (orders, revenue, inventory).</p>
+  </div>
+</div>
