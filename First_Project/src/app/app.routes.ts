@@ -5,6 +5,7 @@ import { ProductDetails } from './customer/product-details/product-details';
 import { Cart } from './customer/cart/cart';
 import { Login } from './customer/login/login';
 import { Register } from './customer/register/register';
+import { ForgotPassword } from './customer/forgot-password/forgot-password';
 import { RegistrationResult } from './registration-result';
 import { LoginResult } from './login-result';
 import { CustomerDashboard } from './customer/customer-dashboard/customer-dashboard';
@@ -22,6 +23,7 @@ export const routes: Routes = [
   { path: '', component: Showroom },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
+  { path: 'forgot-password', component: ForgotPassword },
   { path: 'registration-result', component: RegistrationResult },
   { path: 'login-result', component: LoginResult },
   { path: 'product/:id', component: ProductDetails },

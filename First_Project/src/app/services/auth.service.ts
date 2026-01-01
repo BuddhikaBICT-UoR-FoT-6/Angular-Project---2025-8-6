@@ -32,11 +32,11 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<any> {
-    return this.http.post('http://localhost:3000/api/auth/login', { email, password });
+    return this.http.post('/api/auth/login', { email, password });
   }
 
   register(userData: any): Observable<any> {
-    return this.http.post('http://localhost:3000/api/auth/register', userData);
+    return this.http.post('/api/auth/register', userData);
   }
 
   setCurrentUser(user: User) {
@@ -47,9 +47,23 @@ export class AuthService {
     // Don't auto-redirect here anymore, let login component handle it
   }
 
+  setToken(token: string) {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('token', token);
+    }
+  }
+
+  getToken(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem('token');
+    }
+    return null;
+  }
+
   logout() {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('currentUser');
+      localStorage.removeItem('token');
     }
     this.currentUserSubject.next(null);
     this.router.navigate(['/']);

@@ -2,8 +2,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 80vh;
+  height: calc(100vh - 70px);
   padding: 20px;
+  overflow: hidden;
 }
 
 .login-card {
@@ -13,6 +14,9 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
   width: 100%;
   max-width: 400px;
+  max-height: calc(100vh - 110px);
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .login-card h2 {
@@ -50,6 +54,22 @@
   font-size: 0.9rem;
   margin-bottom: 1rem;
   text-align: center;
+}
+
+.forgot-password-link {
+  text-align: right;
+  margin-bottom: 1rem;
+  margin-top: -0.5rem;
+}
+
+.forgot-password-link a {
+  color: #667eea;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.forgot-password-link a:hover {
+  text-decoration: underline;
 }
 
 .login-btn {

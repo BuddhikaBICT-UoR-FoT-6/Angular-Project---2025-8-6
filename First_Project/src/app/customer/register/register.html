@@ -1,63 +1,167 @@
 <div class="register-container">
   <div class="register-card">
-    <h2>Register</h2>
-    <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
-      <div class="form-group">
-        <label for="full_name">Full Name *</label>
-        <input 
-          type="text" 
-          id="full_name" 
-          [(ngModel)]="userData.full_name" 
-          name="full_name" 
-          required 
-          [disabled]="isLoading">
-      </div>
+    <!-- Step 1: Registration Form -->
+    <div *ngIf="currentStep() === 'form'">
+      <h2>Create Account</h2>
+      <p class="subtitle">Join Clothing Store today</p>
       
-      <div class="form-group">
-        <label for="email">Email *</label>
-        <input 
-          type="email" 
-          id="email" 
-          [(ngModel)]="userData.email" 
-          name="email" 
-          required 
-          [disabled]="isLoading">
-      </div>
+      <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+        <div class="form-group">
+          <label for="full_name">Full Name *</label>
+          <input 
+            type="text" 
+            id="full_name" 
+            [(ngModel)]="userData.full_name" 
+            name="full_name" 
+            required 
+            [disabled]="isLoading"
+            placeholder="Enter your full name">
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input 
+            type="email" 
+            id="email" 
+            [(ngModel)]="userData.email" 
+            name="email" 
+            required 
+            [disabled]="isLoading"
+            placeholder="your@email.com">
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <input 
+            type="password" 
+            id="password" 
+            [(ngModel)]="userData.password" 
+            name="password" 
+            required 
+            minlength="6"
+            [disabled]="isLoading"
+            placeholder="At least 6 characters">
+          <small>Must be at least 6 characters long</small>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password *</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            [(ngModel)]="userData.confirmPassword"
+            name="confirmPassword"
+            required
+            minlength="6"
+            [disabled]="isLoading"
+            placeholder="Re-enter your password">
+        </div>
+        
+        <div class="form-group">
+          <label for="phone">Phone (Optional)</label>
+          <input 
+            type="tel" 
+            id="phone" 
+            [(ngModel)]="userData.phone" 
+            name="phone" 
+            [disabled]="isLoading"
+            placeholder="+1-555-0100">
+        </div>
+
+        <div class="section-title">Address</div>
+
+        <div class="two-col">
+          <div class="form-group">
+            <label for="country">Country *</label>
+            <input
+              type="text"
+              id="country"
+              [(ngModel)]="userData.address.country"
+              name="country"
+              required
+              [disabled]="isLoading"
+              placeholder="Country">
+          </div>
+
+          <div class="form-group">
+            <label for="nearestCity">Nearest Largest City *</label>
+            <input
+              type="text"
+              id="nearestCity"
+              [(ngModel)]="userData.address.nearestLargestCity"
+              name="nearestLargestCity"
+              required
+              [disabled]="isLoading"
+              placeholder="City">
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="form-group">
+            <label for="streetName">Street Name *</label>
+            <input
+              type="text"
+              id="streetName"
+              [(ngModel)]="userData.address.streetName"
+              name="streetName"
+              required
+              [disabled]="isLoading"
+              placeholder="Street name">
+          </div>
+
+          <div class="form-group">
+            <label for="houseNo">House No (Optional)</label>
+            <input
+              type="text"
+              id="houseNo"
+              [(ngModel)]="userData.address.houseNo"
+              name="houseNo"
+              [disabled]="isLoading"
+              placeholder="House number">
+          </div>
+        </div>
+
+        <div class="section-title">Profile Picture (Optional)</div>
+        <div class="form-group">
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onProfileImageSelected($event)"
+            [disabled]="isLoading">
+          <small>You can skip this and add later</small>
+          <img *ngIf="profileImagePreviewUrl" class="profile-preview" [src]="profileImagePreviewUrl" alt="Profile preview" />
+        </div>
+        
+        <div *ngIf="error" class="error">❌ {{error}}</div>
+        <div *ngIf="success" class="success">✅ {{success}}</div>
+        
+        <button 
+          type="submit" 
+          [disabled]="isLoading || !registerForm.valid"
+          class="register-btn">
+          {{isLoading ? 'Sending Code...' : 'Continue'}}
+        </button>
+      </form>
       
-      <div class="form-group">
-        <label for="password">Password *</label>
-        <input 
-          type="password" 
-          id="password" 
-          [(ngModel)]="userData.password" 
-          name="password" 
-          required 
-          [disabled]="isLoading">
-      </div>
+      <p class="login-link">
+        Already have an account? <a routerLink="/login">Login here</a>
+      </p>
+    </div>
+
+    <!-- Step 2: OTP Verification -->
+    <div *ngIf="currentStep() === 'otp'">
+      <button class="back-btn" (click)="backToForm()">← Back</button>
       
-      <div class="form-group">
-        <label for="phone">Phone</label>
-        <input 
-          type="tel" 
-          id="phone" 
-          [(ngModel)]="userData.phone" 
-          name="phone" 
-          [disabled]="isLoading">
-      </div>
+      <app-otp-input
+        [title]="'Verify Your Email'"
+        [description]="'We sent a 6-digit code to ' + userData.email"
+        [expirySeconds]="600"
+        [resendDelay]="60"
+        (verify)="onVerifyOtp($event)"
+        (resend)="onResendOtp()"
+      ></app-otp-input>
       
-      <div *ngIf="error" class="error">{{error}}</div>
-      <div *ngIf="success" class="success">{{success}}</div>
-      
-      <button 
-        type="submit" 
-        [disabled]="isLoading || !registerForm.valid"
-        class="register-btn">
-        {{isLoading ? 'Registering...' : 'Register'}}
-      </button>
-    </form>
-    
-    <p class="login-link">
-      Already have an account? <a routerLink="/login">Login here</a>
-    </p>
+      <div *ngIf="success" class="success-banner">✅ {{success}}</div>
+    </div>
   </div>
 </div>

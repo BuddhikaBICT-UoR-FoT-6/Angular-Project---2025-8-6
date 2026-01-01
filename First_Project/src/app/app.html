@@ -24,13 +24,19 @@
 <!-- Global toast notifications (purple theme) -->
 <app-toast></app-toast>
 
-<!-- Admin Sidebar (shows only on admin routes) -->
+<!-- Admin/SuperAdmin Sidebar (shows on admin or superadmin routes) -->
 <aside *ngIf="isAdminRoute()" 
        class="admin-sidebar" 
        [class.collapsed]="sidebarCollapsed"
        (mouseenter)="onSidebarMouseEnter()"
        (mouseleave)="onSidebarMouseLeave()">
-  <nav class="sidebar-nav">
+  
+  <!-- SuperAdmin Links -->
+  <nav *ngIf="isSuperAdmin()" class="sidebar-nav">
+    <a routerLink="/superadmin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="sidebar-link">
+      <span class="link-icon">🏠</span>
+      <span class="link-text">Dashboard</span>
+    </a>
     <a routerLink="/admin/orders" routerLinkActive="active" class="sidebar-link">
       <span class="link-icon">🧾</span>
       <span class="link-text">Orders</span>
@@ -62,6 +68,42 @@
     <a routerLink="/admin/admin-management" routerLinkActive="active" class="sidebar-link">
       <span class="link-icon">🛡️</span>
       <span class="link-text">Admin Management</span>
+    </a>
+  </nav>
+  
+  <!-- Regular Admin Links -->
+  <nav *ngIf="isAdmin()" class="sidebar-nav">
+    <a routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="sidebar-link">
+      <span class="link-icon">🏠</span>
+      <span class="link-text">Dashboard</span>
+    </a>
+    <a routerLink="/admin/orders" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">🧾</span>
+      <span class="link-text">Orders</span>
+    </a>
+    <a routerLink="/admin/inventory" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">📦</span>
+      <span class="link-text">Inventory</span>
+    </a>
+    <a routerLink="/admin/products" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">👕</span>
+      <span class="link-text">Products</span>
+    </a>
+    <a routerLink="/admin/users" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">👥</span>
+      <span class="link-text">Users</span>
+    </a>
+    <a routerLink="/admin/financials" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">💰</span>
+      <span class="link-text">Financials</span>
+    </a>
+    <a routerLink="/admin/reports" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">📤</span>
+      <span class="link-text">Reports</span>
+    </a>
+    <a routerLink="/admin/analytics" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">📈</span>
+      <span class="link-text">Analytics</span>
     </a>
   </nav>
 </aside>

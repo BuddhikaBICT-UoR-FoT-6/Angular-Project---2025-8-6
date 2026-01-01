@@ -30,7 +30,7 @@ export class App {
 
   isAdminRoute(): boolean {
     const url = this.router.url || '';
-    return url.startsWith('/admin');
+    return url.startsWith('/admin') || url.startsWith('/superadmin');
   }
 
   isLoggedIn(): boolean {

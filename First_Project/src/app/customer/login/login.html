@@ -24,6 +24,10 @@
           [disabled]="isLoading">
       </div>
       
+      <div class="forgot-password-link">
+        <a routerLink="/forgot-password">Forgot Password?</a>
+      </div>
+      
       <div *ngIf="error" class="error">{{error}}</div>
       
       <button 

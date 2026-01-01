@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
@@ -29,9 +29,14 @@ export class Login {
 
     this.authService.login(this.email, this.password).subscribe({
       next: (response) => {
+        // Store JWT token using auth service
+        if (response.token) {
+          this.authService.setToken(response.token);
+        }
+        
         this.authService.setCurrentUser({
-          userId: response.userId,
-          role: response.role,
+          userId: response.user.userId,
+          role: response.user.role,
           full_name: response.user.full_name,
           email: response.user.email
         });
@@ -41,7 +46,7 @@ export class Login {
           queryParams: {
             success: 'true',
             message: `Welcome back, ${response.user.full_name}! Login successful.`,
-            role: response.role
+            role: response.user.role
           }
         });
       },

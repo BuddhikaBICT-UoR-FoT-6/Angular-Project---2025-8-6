@@ -12,13 +12,17 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
     "cors": "^2.8.5",
     "csv-parse": "^6.1.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "json2csv": "^6.0.0-alpha.2",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.18.0",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.12",
+    "sharp": "^0.34.5"
   }
 }
