@@ -1,15 +1,48 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError, filter, map, of, switchMap, take, timeout, timer } from 'rxjs';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  // All API calls go through Angular's dev proxy (see proxy.conf.json)
+  // Default to relative /api (for SSR/prod), but in local dev use explicit backend origin to avoid first-load proxy misses.
   private baseUrl = '/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    if (isPlatformBrowser(this.platformId)) {
+      const host = globalThis.location?.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        this.baseUrl = 'http://localhost:3000/api';
+      }
+    }
+  }
+
+  // --- Health / readiness ---
+  getHealth(): Observable<{ ok: boolean; dbReady: boolean }> {
+    return this.http.get<{ ok: boolean; dbReady: boolean }>(`${this.baseUrl}/health`);
+  }
+
+  // Wait until the backend reports MongoDB is ready.
+  // This prevents "infinite loading" on first page load while the DB is still connecting.
+  waitForDbReady(maxWaitMs = 120000): Observable<void> {
+    return timer(0, 1000).pipe(
+      switchMap(() =>
+        this.getHealth().pipe(
+          catchError(() => of({ ok: false, dbReady: false }))
+        )
+      ),
+      filter((h) => !!h.dbReady),
+      take(1),
+      timeout({ first: maxWaitMs }),
+      map(() => void 0)
+    );
+  }
 
   // User-related API calls
   getUsers(): Observable<any[]> {

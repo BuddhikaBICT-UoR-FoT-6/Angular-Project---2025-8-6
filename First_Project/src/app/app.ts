@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './services/auth.service';
 import { Toast } from './shared/toast/toast';
@@ -13,8 +13,25 @@ import { Toast } from './shared/toast/toast';
 })
 export class App {
   protected readonly title = signal('First_Project');
+  sidebarCollapsed = true; // Start collapsed, show only on hover
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  onSidebarMouseEnter() {
+    this.sidebarCollapsed = false;
+  }
+
+  onSidebarMouseLeave() {
+    this.sidebarCollapsed = true;
+  }
+
+  isAdminRoute(): boolean {
+    const url = this.router.url || '';
+    return url.startsWith('/admin');
+  }
 
   isLoggedIn(): boolean {
     return this.authService.isLoggedIn();
@@ -22,6 +39,28 @@ export class App {
 
   getCurrentUser() {
     return this.authService.getCurrentUser();
+  }
+
+  getCurrentRole(): string {
+    return this.getCurrentUser()?.role || '';
+  }
+
+  isAdmin(): boolean {
+    return this.getCurrentRole() === 'admin';
+  }
+
+  isSuperAdmin(): boolean {
+    return this.getCurrentRole() === 'superadmin';
+  }
+
+  isCustomer(): boolean {
+    return this.getCurrentRole() === 'customer';
+  }
+
+  // Home page is the Showroom; don't show the CTA there.
+  isShowroomRoute(): boolean {
+    const url = this.router.url || '';
+    return url === '/' || url.startsWith('/?');
   }
 
   logout() {

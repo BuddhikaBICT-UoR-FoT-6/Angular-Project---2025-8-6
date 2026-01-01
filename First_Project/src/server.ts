@@ -6,11 +6,59 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import http from 'node:http';
+import https from 'node:https';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+
+// Proxy API requests to the real backend (Express + MongoDB).
+// Without this, first-load requests to http://localhost:4000/api/*
+// hit the SSR server (which has no API routes) and appear to "work only after a second click".
+const apiTarget = new URL(process.env['API_PROXY_TARGET'] || 'http://localhost:3000');
+app.use('/api', (req, res) => {
+  const isHttps = apiTarget.protocol === 'https:';
+  const client = isHttps ? https : http;
+
+  const proxyReq = client.request(
+    {
+      protocol: apiTarget.protocol,
+      hostname: apiTarget.hostname,
+      port: apiTarget.port || (isHttps ? 443 : 80),
+      method: req.method,
+      path: req.originalUrl,
+      headers: {
+        ...req.headers,
+        host: apiTarget.host,
+      },
+    },
+    (proxyRes) => {
+      res.status(proxyRes.statusCode || 502);
+
+      // Forward headers (skip hop-by-hop headers).
+      for (const [key, value] of Object.entries(proxyRes.headers)) {
+        if (!value) continue;
+        const lower = key.toLowerCase();
+        if (lower === 'connection' || lower === 'transfer-encoding' || lower === 'keep-alive') continue;
+        res.setHeader(key, value as any);
+      }
+
+      proxyRes.pipe(res);
+    },
+  );
+
+  proxyReq.on('error', () => {
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'API proxy error' });
+    } else {
+      res.end();
+    }
+  });
+
+  req.pipe(proxyReq);
+});
 
 /**
  * Example Express Rest API endpoints can be defined here.

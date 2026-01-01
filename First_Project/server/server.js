@@ -1,7 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
@@ -54,9 +55,29 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.error("❌ MongoDB connection error:", err));
 
+// Health endpoint used by the UI to know when Mongo is ready.
+// Important: must be reachable even while Mongo is connecting.
+app.get('/api/health', (req, res) => {
+  const dbReady = mongoose.connection.readyState === 1;
+  res.status(dbReady ? 200 : 503).json({ ok: true, dbReady });
+});
+
+// If MongoDB isn't ready yet, don't let API requests hang.
+// Mongoose can buffer queries while connecting, which makes the UI look like it's loading forever.
+app.use('/api', (req, res, next) => {
+  if (req.path === '/health') return next();
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ error: 'Database is still connecting. Please retry.' });
+  }
+  next();
+});
+
 
 // test connection
 app.get("/test-db", async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).send('Database is still connecting.');
+  }
   const count = await mongoose.connection.db.collection("users").countDocuments();
   res.send(`Users count: ${count}`);
 });

@@ -1,10 +1,6 @@
 <div class="superadmin-dashboard">
   <div class="dashboard-header">
     <h1>🔐 SuperAdmin Dashboard</h1>
-    <div class="user-info">
-      <span>Welcome, {{user?.full_name}}</span>
-      <button class="logout-btn" (click)="logout()">Logout</button>
-    </div>
   </div>
 
   <div *ngIf="isLoading" class="loading">Loading dashboard data...</div>

@@ -1,14 +1,20 @@
 <nav class="main-nav">
   <div class="nav-container">
-    <h1>Clothing Store</h1>
+    <a routerLink="/" class="brand-link"><h1>Clothing Store</h1></a>
     <div class="nav-links">
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Showroom</a>
+
+      <!-- Role-based dashboards -->
+      <a *ngIf="isLoggedIn() && isAdmin()" class="nav-btn" routerLink="/admin/dashboard">Admin Dashboard</a>
+      <a *ngIf="isLoggedIn() && isSuperAdmin()" class="nav-btn" routerLink="/superadmin/dashboard">Super Admin</a>
+      <a *ngIf="isLoggedIn() && isCustomer()" class="nav-btn" routerLink="/customer/dashboard">My Dashboard</a>
+
       <div *ngIf="!isLoggedIn()" class="auth-links">
         <a routerLink="/login" routerLinkActive="active">Login</a>
         <a routerLink="/register" routerLinkActive="active">Register</a>
       </div>
       <div *ngIf="isLoggedIn()" class="user-menu">
-        <span class="user-name">{{getCurrentUser()?.full_name}}</span>
+        <span class="user-name">Welcome, {{getCurrentUser()?.full_name || getCurrentUser()?.email}}</span>
         <button (click)="logout()" class="logout-btn">Logout</button>
       </div>
     </div>
@@ -18,6 +24,61 @@
 <!-- Global toast notifications (purple theme) -->
 <app-toast></app-toast>
 
-<main class="main-content">
-  <router-outlet></router-outlet>
+<!-- Admin Sidebar (shows only on admin routes) -->
+<aside *ngIf="isAdminRoute()" 
+       class="admin-sidebar" 
+       [class.collapsed]="sidebarCollapsed"
+       (mouseenter)="onSidebarMouseEnter()"
+       (mouseleave)="onSidebarMouseLeave()">
+  <nav class="sidebar-nav">
+    <a routerLink="/admin/orders" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">🧾</span>
+      <span class="link-text">Orders</span>
+    </a>
+    <a routerLink="/admin/inventory" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">📦</span>
+      <span class="link-text">Inventory</span>
+    </a>
+    <a routerLink="/admin/products" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">👕</span>
+      <span class="link-text">Products</span>
+    </a>
+    <a routerLink="/admin/users" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">👥</span>
+      <span class="link-text">Users</span>
+    </a>
+    <a routerLink="/admin/financials" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">💰</span>
+      <span class="link-text">Financials</span>
+    </a>
+    <a routerLink="/admin/reports" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">📤</span>
+      <span class="link-text">Reports</span>
+    </a>
+    <a routerLink="/admin/analytics" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">📈</span>
+      <span class="link-text">Analytics</span>
+    </a>
+    <a routerLink="/admin/admin-management" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">🛡️</span>
+      <span class="link-text">Admin Management</span>
+    </a>
+  </nav>
+</aside>
+
+<main class="main-content" [class.with-sidebar]="isAdminRoute()" [class.sidebar-expanded]="isAdminRoute() && !sidebarCollapsed">
+  <div class="container">
+    <router-outlet></router-outlet>
+  </div>
 </main>
+
+<!-- Customer footer CTA (only when logged in as customer) -->
+<footer *ngIf="isLoggedIn() && isCustomer() && !isShowroomRoute()" class="shop-footer">
+  <div class="container footer-inner">
+    <div>
+      <div class="footer-title">Ready to start shopping?</div>
+      <div class="footer-sub">Browse new arrivals and manage your cart.</div>
+    </div>
+    <a routerLink="/" class="shop-cta">Go to Showroom</a>
+  </div>
+</footer>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
@@ -23,7 +23,8 @@ export class SuperadminDashboard implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -45,9 +46,11 @@ export class SuperadminDashboard implements OnInit {
       this.stats.totalOrders = orders?.length || 0;
       this.stats.totalRevenue = financials?.reduce((sum, f) => sum + (f.amount || 0), 0) || 0;
       this.isLoading = false;
+      this.cdr.detectChanges();
     }).catch(error => {
       console.error('Error loading data:', error);
       this.isLoading = false;
+      this.cdr.detectChanges();
     });
   }
 
