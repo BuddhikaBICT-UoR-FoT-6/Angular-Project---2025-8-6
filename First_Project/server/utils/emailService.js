@@ -265,9 +265,219 @@ const sendAccountActionOTP = async (email, otp, fullName, action) => {
   }
 };
 
+/**
+ * Send a restock notification email to the supplier.
+ *
+ * In development mode (when email isn't configured), this logs the email payload
+ * to the console instead of sending.
+ */
+const sendRestockNotificationEmail = async ({
+  to,
+  supplierName,
+  productName,
+  addedBySize,
+  newStockBySize,
+  timestamp
+}) => {
+  if (!to) {
+    return { success: false, messageId: null, skipped: true, reason: 'missing-recipient' };
+  }
+
+  const when = timestamp ? new Date(timestamp).toISOString() : new Date().toISOString();
+
+  // Development mode - just log to console
+  if (!isEmailConfigured || !transporter) {
+    console.log('\n📦 ═══════════════════════════════════════════════════');
+    console.log('📦 RESTOCK NOTIFICATION (Development Mode)');
+    console.log('📦 ═══════════════════════════════════════════════════');
+    console.log('📦 To:', to);
+    console.log('📦 Supplier:', supplierName || '-');
+    console.log('📦 Product:', productName || '-');
+    console.log('📦 Added:', addedBySize);
+    console.log('📦 New Stock:', newStockBySize);
+    console.log('📦 When:', when);
+    console.log('📦 Subject: Restock Notification - Clothing Store');
+    console.log('📦 ═══════════════════════════════════════════════════\n');
+    return { success: true, messageId: 'dev-mode-' + Date.now(), skipped: true };
+  }
+
+  const safeSupplier = supplierName || 'Supplier';
+  const safeProduct = productName || 'Product';
+  const add = addedBySize || { S: 0, M: 0, L: 0, XL: 0 };
+  const after = newStockBySize || { S: 0, M: 0, L: 0, XL: 0 };
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER || 'noreply@clothingstore.com',
+    to,
+    subject: `Restock Notification - ${safeProduct}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 640px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 22px; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 22px; border-radius: 0 0 10px 10px; }
+          table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+          th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e6e6e6; }
+          th { background: #ffffff; }
+          .muted { color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h2 style="margin:0">📦 Restock Notification</h2>
+          </div>
+          <div class="content">
+            <p>Hi ${safeSupplier},</p>
+            <p>We have restocked <strong>${safeProduct}</strong>.</p>
+
+            <h3 style="margin-bottom:6px">Added quantities</h3>
+            <table>
+              <tr><th>Size</th><th>Added</th></tr>
+              <tr><td>S</td><td>${add.S ?? 0}</td></tr>
+              <tr><td>M</td><td>${add.M ?? 0}</td></tr>
+              <tr><td>L</td><td>${add.L ?? 0}</td></tr>
+              <tr><td>XL</td><td>${add.XL ?? 0}</td></tr>
+            </table>
+
+            <h3 style="margin-bottom:6px">New stock levels</h3>
+            <table>
+              <tr><th>Size</th><th>In Stock</th></tr>
+              <tr><td>S</td><td>${after.S ?? 0}</td></tr>
+              <tr><td>M</td><td>${after.M ?? 0}</td></tr>
+              <tr><td>L</td><td>${after.L ?? 0}</td></tr>
+              <tr><td>XL</td><td>${after.XL ?? 0}</td></tr>
+            </table>
+
+            <p class="muted">Timestamp: ${when}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Restock notification email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending restock notification email:', error);
+    throw error;
+  }
+};
+
+/**
+ * Send a restock request email to the supplier.
+ *
+ * This is different from a "restock notification": this email asks the supplier to fulfill stock,
+ * and includes a one-time code that expires in 7 days.
+ */
+const sendRestockRequestEmail = async ({
+  to,
+  supplierName,
+  productName,
+  requestedBySize,
+  requestCode,
+  expiresAt,
+  note
+}) => {
+  if (!to) {
+    return { success: false, messageId: null, skipped: true, reason: 'missing-recipient' };
+  }
+
+  const safeSupplier = supplierName || 'Supplier';
+  const safeProduct = productName || 'Product';
+  const reqSizes = requestedBySize || { S: 0, M: 0, L: 0, XL: 0 };
+  const exp = expiresAt ? new Date(expiresAt) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const expIso = exp.toISOString();
+  const code = (requestCode || '').toString().trim().toUpperCase();
+
+  // Development mode - just log to console
+  if (!isEmailConfigured || !transporter) {
+    console.log('\n📦 ═══════════════════════════════════════════════════');
+    console.log('📦 RESTOCK REQUEST (Development Mode)');
+    console.log('📦 ═══════════════════════════════════════════════════');
+    console.log('📦 To:', to);
+    console.log('📦 Supplier:', safeSupplier);
+    console.log('📦 Product:', safeProduct);
+    console.log('📦 Requested:', reqSizes);
+    console.log('📦 Code:', code);
+    console.log('📦 Expires:', expIso);
+    if (note) console.log('📦 Note:', note);
+    console.log('📦 Subject: Stock Needed - Clothing Store');
+    console.log('📦 ═══════════════════════════════════════════════════\n');
+    return { success: true, messageId: 'dev-mode-' + Date.now(), skipped: true };
+  }
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER || 'noreply@clothingstore.com',
+    to,
+    subject: `Stock Needed - ${safeProduct}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 640px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 22px; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 22px; border-radius: 0 0 10px 10px; }
+          table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+          th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e6e6e6; }
+          th { background: #ffffff; }
+          .code { font-size: 22px; font-weight: bold; letter-spacing: 2px; background: #fff; border: 1px dashed #667eea; padding: 12px; border-radius: 8px; display: inline-block; }
+          .muted { color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h2 style="margin:0">📦 Stock Needed</h2>
+          </div>
+          <div class="content">
+            <p>Hi ${safeSupplier},</p>
+            <p>We need a restock for <strong>${safeProduct}</strong>. Please fulfill this request within 7 days.</p>
+
+            <h3 style="margin-bottom:6px">Requested quantities</h3>
+            <table>
+              <tr><th>Size</th><th>Quantity</th></tr>
+              <tr><td>S</td><td>${reqSizes.S ?? 0}</td></tr>
+              <tr><td>M</td><td>${reqSizes.M ?? 0}</td></tr>
+              <tr><td>L</td><td>${reqSizes.L ?? 0}</td></tr>
+              <tr><td>XL</td><td>${reqSizes.XL ?? 0}</td></tr>
+            </table>
+
+            ${note ? `<p><strong>Note:</strong> ${String(note)}</p>` : ''}
+
+            <p><strong>Fulfillment code:</strong></p>
+            <div class="code">${code}</div>
+            <p class="muted">Code expires: ${expIso}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Restock request email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending restock request email:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   generateOTP,
   sendRegistrationOTP,
   sendPasswordResetOTP,
-  sendAccountActionOTP
+  sendAccountActionOTP,
+  sendRestockNotificationEmail,
+  sendRestockRequestEmail
 };

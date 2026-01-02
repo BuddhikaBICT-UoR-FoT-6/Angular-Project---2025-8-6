@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of, timeout } from 'rxjs';
 import { ApiService } from '../../services/api.service';
 
 interface AnalyticsStats {
@@ -37,12 +37,52 @@ export class Analytics implements OnInit {
   refresh() {
     this.isLoading = true;
 
+    const users$ = this.apiService.getUsers().pipe(
+      timeout({ first: 20000 }),
+      catchError((err) => {
+        console.error('Analytics: failed to load users', err);
+        return of([]);
+      })
+    );
+
+    const products$ = this.apiService.getProducts().pipe(
+      timeout({ first: 20000 }),
+      catchError((err) => {
+        console.error('Analytics: failed to load products', err);
+        return of([]);
+      })
+    );
+
+    const orders$ = this.apiService.getOrders().pipe(
+      timeout({ first: 20000 }),
+      catchError((err) => {
+        console.error('Analytics: failed to load orders', err);
+        return of([]);
+      })
+    );
+
+    const financials$ = this.apiService.getFinancials().pipe(
+      timeout({ first: 20000 }),
+      catchError((err) => {
+        console.error('Analytics: failed to load financials', err);
+        return of([]);
+      })
+    );
+
+    const inventory$ = this.apiService.getInventory().pipe(
+      timeout({ first: 20000 }),
+      catchError((err) => {
+        console.error('Analytics: failed to load inventory', err);
+        return of([]);
+      })
+    );
+
     forkJoin({
-      users: this.apiService.getUsers(),
-      products: this.apiService.getProducts(),
-      orders: this.apiService.getOrders(),
-      financials: this.apiService.getFinancials(),
-      inventory: this.apiService.getInventory()
+      users: users$,
+      products: products$,
+      orders: orders$,
+      financials: financials$,
+      inventory: inventory$
     }).subscribe({
       next: ({ users, products, orders, financials, inventory }) => {
         this.stats.totalUsers = users?.length || 0;

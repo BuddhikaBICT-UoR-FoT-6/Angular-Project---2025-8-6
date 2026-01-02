@@ -12,6 +12,7 @@ const userRoutes = require('./routes/user.routes');
 const productRoutes = require('./routes/product.routes');
 const orderRoutes = require('./routes/order.routes');
 const inventoryRoutes = require('./routes/inventory.routes');
+const restockRequestRoutes = require('./routes/restockRequest.routes');
 const financialRoutes = require('./routes/financial.routes');
 
 const app = express();
@@ -70,6 +71,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/restock-requests', restockRequestRoutes);
 app.use('/api/financials', financialRoutes);
 
 // Test DB endpoint (optional, for debugging)

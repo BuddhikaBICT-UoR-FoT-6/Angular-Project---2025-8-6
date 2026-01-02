@@ -18,6 +18,7 @@ import { Orders } from './admin/orders/orders';
 import { Reports } from './admin/reports/reports';
 import { Analytics } from './admin/analytics/analytics';
 import { AdminManagement } from './admin/admin-management/admin-management';
+import { SupplierRestockRequests } from './supplier/restock-requests/restock-requests';
 
 export const routes: Routes = [
   { path: '', component: Showroom },
@@ -40,5 +41,6 @@ export const routes: Routes = [
   { path: 'admin/analytics', component: Analytics },
   { path: 'admin/admin-management', component: AdminManagement },
   { path: 'superadmin/dashboard', component: SuperadminDashboard },
+  { path: 'supplier/restock-requests', component: SupplierRestockRequests },
   { path: '**', redirectTo: '' }
 ];

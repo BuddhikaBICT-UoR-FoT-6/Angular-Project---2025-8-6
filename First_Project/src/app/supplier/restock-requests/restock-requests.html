@@ -1,0 +1,59 @@
+<div class="page">
+	<div class="page-head">
+		<h2>Supplier • Restock Requests</h2>
+		<div class="muted">Fulfill requests using the code from the email (valid 7 days).</div>
+	</div>
+
+	<div class="card" *ngIf="error">
+		<div class="error">{{ error }}</div>
+	</div>
+
+	<div class="grid">
+		<section class="card">
+			<h3>My Pending Requests</h3>
+			<div class="hint" *ngIf="!requests.length">No pending requests.</div>
+
+			<div class="table-wrap" *ngIf="requests.length">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Product</th>
+							<th>S</th>
+							<th>M</th>
+							<th>L</th>
+							<th>XL</th>
+							<th>Expires</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr *ngFor="let r of requests">
+							<td>
+								<div class="cell-title">{{ productName(r) }}</div>
+								<div class="muted" *ngIf="r.note">{{ r.note }}</div>
+							</td>
+							<td>{{ r.requested_by_size.S }}</td>
+							<td>{{ r.requested_by_size.M }}</td>
+							<td>{{ r.requested_by_size.L }}</td>
+							<td>{{ r.requested_by_size.XL }}</td>
+							<td class="muted">{{ r.expires_at | date: 'medium' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<section class="card">
+			<h3>Fulfill With Code</h3>
+			<div class="hint">Enter the code from the email to mark the request as fulfilled.</div>
+
+			<div class="form">
+				<label class="wide">
+					Code
+					<input [(ngModel)]="fulfillCode" placeholder="e.g. R8K2T6P9QJ" />
+				</label>
+				<button (click)="fulfill()" [disabled]="loading || !fulfillCode.trim()">Mark Fulfilled</button>
+				<div class="ok" *ngIf="fulfillMessage">{{ fulfillMessage }}</div>
+			</div>
+		</section>
+	</div>
+</div>

@@ -1,27 +1,18 @@
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError, filter, map, of, switchMap, take, timeout, timer } from 'rxjs';
-import { isPlatformBrowser } from '@angular/common';
+import { InventoryAuditEntry, InventoryItem, LowStockItem, StockBySize } from '../models/inventory.model';
+import { FulfillRestockResponse, RestockRequest } from '../models/restock-request.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  // Default to relative /api (for SSR/prod), but in local dev use explicit backend origin to avoid first-load proxy misses.
+  // Always use relative /api so dev proxy + SSR/prod behave consistently.
   private baseUrl = '/api';
 
-  constructor(
-    private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: Object
-  ) {
-    if (isPlatformBrowser(this.platformId)) {
-      const host = globalThis.location?.hostname;
-      if (host === 'localhost' || host === '127.0.0.1') {
-        this.baseUrl = 'http://localhost:3000/api';
-      }
-    }
-  }
+  constructor(private http: HttpClient) {}
 
   // --- Health / readiness ---
   getHealth(): Observable<{ ok: boolean; dbReady: boolean }> {
@@ -109,8 +100,84 @@ export class ApiService {
   }
 
   // Inventory-related API calls
-  getInventory(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/inventory`);
+
+  // GET /api/inventory
+  getInventory(): Observable<InventoryItem[]> {
+    return this.http.get<InventoryItem[]>(`${this.baseUrl}/inventory`);
+  }
+
+  // GET /api/inventory/low-stock
+  getLowStockInventory(): Observable<LowStockItem[]> {
+    return this.http.get<LowStockItem[]>(`${this.baseUrl}/inventory/low-stock`);
+  }
+
+  // POST /api/inventory/:id/restock
+  // Payload: { add: {S,M,L,XL}, supplier?: string, supplier_email?: string, note?: string }
+  restockInventory(
+    inventoryId: string,
+    payload: { add: Partial<StockBySize>; supplier?: string; supplier_email?: string; note?: string }
+  ): Observable<InventoryItem> {
+    return this.http.post<InventoryItem>(`${this.baseUrl}/inventory/${inventoryId}/restock`, payload);
+  }
+
+  // POST /api/inventory/:id/adjust
+  // Payload: { delta: {S,M,L,XL}, reason: string }
+  adjustInventory(
+    inventoryId: string,
+    payload: { delta: Partial<StockBySize>; reason: string }
+  ): Observable<InventoryItem> {
+    return this.http.post<InventoryItem>(`${this.baseUrl}/inventory/${inventoryId}/adjust`, payload);
+  }
+
+  // GET /api/inventory/:id/history?limit=50
+  getInventoryHistory(inventoryId: string, limit = 50): Observable<InventoryAuditEntry[]> {
+    return this.http.get<InventoryAuditEntry[]>(
+      `${this.baseUrl}/inventory/${inventoryId}/history?limit=${encodeURIComponent(String(limit))}`
+    );
+  }
+
+  // Restock request workflow (supplier fulfillment via 7-day code)
+  createRestockRequest(payload: {
+    inventoryId: string;
+    requested_by_size: Partial<StockBySize>;
+    supplier_name?: string;
+    supplier_email?: string;
+    note?: string;
+  }): Observable<RestockRequest> {
+    return this.http.post<RestockRequest>(`${this.baseUrl}/restock-requests`, payload);
+  }
+
+  listRestockRequests(status: 'pending' | 'fulfilled' | 'all' = 'all', limit = 50): Observable<RestockRequest[]> {
+    return this.http.get<RestockRequest[]>(
+      `${this.baseUrl}/restock-requests?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(String(limit))}`
+    );
+  }
+
+  getMyRestockRequests(): Observable<RestockRequest[]> {
+    return this.http.get<RestockRequest[]>(`${this.baseUrl}/restock-requests/my`);
+  }
+
+  fulfillRestockRequest(code: string): Observable<FulfillRestockResponse> {
+    return this.http.post<FulfillRestockResponse>(`${this.baseUrl}/restock-requests/fulfill`, { code });
+  }
+
+  listRestockRequestsForInventory(
+    inventoryId: string,
+    status: 'pending' | 'fulfilled' | 'cancelled' | 'expired' | 'all' = 'all',
+    limit = 50
+  ): Observable<RestockRequest[]> {
+    return this.http.get<RestockRequest[]>(
+      `${this.baseUrl}/restock-requests?inventoryId=${encodeURIComponent(inventoryId)}&status=${encodeURIComponent(
+        status
+      )}&limit=${encodeURIComponent(String(limit))}`
+    );
+  }
+
+  cancelRestockRequest(requestId: string, reason = ''): Observable<{ success: boolean; request: RestockRequest }> {
+    return this.http.post<{ success: boolean; request: RestockRequest }>(
+      `${this.baseUrl}/restock-requests/${requestId}/cancel`,
+      { reason }
+    );
   }
 
   // Financial-related API calls

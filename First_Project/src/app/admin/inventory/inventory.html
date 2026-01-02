@@ -1,1 +1,230 @@
-<p>inventory works!</p>
+<div class="container inv">
+	<div class="inv-header">
+		<div>
+			<h2 class="inv-title">Inventory Management</h2>
+			<div class="muted inv-subtitle">Real-time stock tracking by size • Restock • Adjustments • Audit log</div>
+		</div>
+		<div class="inv-metrics">
+			<div class="metric">
+				<div class="metric-label muted">Items</div>
+				<div class="metric-value">{{ inventory.length }}</div>
+			</div>
+			<div class="metric">
+				<div class="metric-label muted">Low Stock</div>
+				<div class="metric-value">{{ lowStock.length }}</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="error" *ngIf="error">{{ error }}</div>
+
+	<!-- Low stock alerts (computed by backend thresholds) -->
+	<section class="card panel" *ngIf="lowStock.length">
+		<div class="panel-head">
+			<h3>Low Stock Alerts</h3>
+			<div class="muted">Items at or below their threshold</div>
+		</div>
+		<div class="low-grid">
+			<div class="low" *ngFor="let item of lowStock">
+				<div class="low-title">{{ item.product.name || item.product._id }}</div>
+				<div class="low-sizes">
+					<span class="pill" *ngFor="let s of item.low">
+						{{ s.size }}: {{ s.stock }} (≤ {{ s.threshold }})
+					</span>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<div class="inv-layout">
+		<!-- Inventory list (click a row to manage it) -->
+		<section class="card panel inv-list">
+			<div class="panel-head">
+				<h3>Inventory</h3>
+				<div class="muted">Click a row to manage stock</div>
+			</div>
+
+			<div class="table-wrap" *ngIf="inventory.length; else emptyInventory">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Product</th>
+							<th class="num">S</th>
+							<th class="num">M</th>
+							<th class="num">L</th>
+							<th class="num">XL</th>
+							<th>Supplier</th>
+							<th>Updated</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							*ngFor="let invItem of inventory"
+							(click)="pick(invItem)"
+							[class.selected]="selected?._id === invItem._id"
+						>
+							<td class="product">{{ productName(invItem) }}</td>
+							<td class="num">{{ invItem.stock_by_size.S }}</td>
+							<td class="num">{{ invItem.stock_by_size.M }}</td>
+							<td class="num">{{ invItem.stock_by_size.L }}</td>
+							<td class="num">{{ invItem.stock_by_size.XL }}</td>
+							<td>{{ invItem.supplier || '-' }}</td>
+							<td>{{ invItem.updated_at ? (invItem.updated_at | date : 'short') : '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<ng-template #emptyInventory>
+				<div class="hint">No inventory items found.</div>
+			</ng-template>
+		</section>
+
+		<!-- Selected item management: restock, adjust, orders, history -->
+		<section class="card panel inv-manage" *ngIf="selected; else pickHelp">
+			<div class="panel-head">
+				<h3>Manage</h3>
+				<div class="muted">
+					{{ productName(selected!) }}
+					<span *ngIf="selected.supplier_email"> • {{ selected.supplier_email }}</span>
+				</div>
+			</div>
+
+			<div class="manage-grid">
+				<div class="box">
+					<h4>Current Stock</h4>
+					<div class="kv">
+						<div class="muted">S</div><div class="kv-value">{{ selected!.stock_by_size.S }}</div>
+						<div class="muted">M</div><div class="kv-value">{{ selected!.stock_by_size.M }}</div>
+						<div class="muted">L</div><div class="kv-value">{{ selected!.stock_by_size.L }}</div>
+						<div class="muted">XL</div><div class="kv-value">{{ selected!.stock_by_size.XL }}</div>
+					</div>
+				</div>
+
+				<div class="box">
+					<h4>Restock</h4>
+					<div class="form-row">
+						<label>S <input type="number" [(ngModel)]="restock.S" /></label>
+						<label>M <input type="number" [(ngModel)]="restock.M" /></label>
+						<label>L <input type="number" [(ngModel)]="restock.L" /></label>
+						<label>XL <input type="number" [(ngModel)]="restock.XL" /></label>
+					</div>
+					<div class="form-row">
+						<label class="wide">Supplier <input type="text" [(ngModel)]="restockSupplier" placeholder="Optional" /></label>
+					</div>
+					<div class="form-row">
+						<label class="wide">Supplier Email <input type="email" [(ngModel)]="restockSupplierEmail" placeholder="Used for requests + notifications" /></label>
+					</div>
+					<div class="form-row">
+						<label class="wide">Note <input type="text" [(ngModel)]="restockNote" placeholder="Optional" /></label>
+					</div>
+					<div class="form-row">
+						<button (click)="submitRestock()" [disabled]="loading">Create Supplier Order (email batch code)</button>
+					</div>
+					<div class="hint" *ngIf="requestMessage">{{ requestMessage }}</div>
+				</div>
+
+				<div class="box">
+					<h4>Adjustment (with reason)</h4>
+					<div class="form-row">
+						<label>S <input type="number" [(ngModel)]="adjustDelta.S" /></label>
+						<label>M <input type="number" [(ngModel)]="adjustDelta.M" /></label>
+						<label>L <input type="number" [(ngModel)]="adjustDelta.L" /></label>
+						<label>XL <input type="number" [(ngModel)]="adjustDelta.XL" /></label>
+					</div>
+					<div class="form-row">
+						<label class="wide">Reason <input type="text" [(ngModel)]="adjustReason" placeholder="Required (e.g., damaged items)" /></label>
+					</div>
+					<button (click)="submitAdjust()" [disabled]="loading">Apply Adjustment</button>
+				</div>
+
+				<div class="box history">
+					<div class="history-head">
+						<h4>Supplier Orders (Restock Requests)</h4>
+						<div class="muted">Status becomes “FULFILLED” only after code scan</div>
+					</div>
+					<div class="table-wrap" *ngIf="restockOrders.length; else emptyOrders">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Created</th>
+									<th>Status</th>
+									<th>Expires</th>
+									<th>Qty (S/M/L/XL)</th>
+									<th>Supplier</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr *ngFor="let r of restockOrders">
+									<td>{{ r.created_at ? (r.created_at | date : 'short') : '-' }}</td>
+									<td>{{ orderStatus(r) }}</td>
+									<td>{{ r.expires_at ? (r.expires_at | date : 'short') : '-' }}</td>
+									<td>
+										{{ r.requested_by_size.S }} /
+										{{ r.requested_by_size.M }} /
+										{{ r.requested_by_size.L }} /
+										{{ r.requested_by_size.XL }}
+									</td>
+									<td>{{ r.supplier_email }}</td>
+									<td>
+										<button *ngIf="orderStatus(r) === 'PENDING'" (click)="cancelOrder(r)" [disabled]="loading">Cancel</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<ng-template #emptyOrders>
+						<div class="hint">No supplier orders yet for this product.</div>
+					</ng-template>
+				</div>
+			</div>
+
+			<div class="box history">
+				<div class="history-head">
+					<h4>Inventory History / Audit Log</h4>
+					<div class="muted">Newest first</div>
+				</div>
+				<div class="table-wrap" *ngIf="history.length; else emptyHistory">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>When</th>
+								<th>Action</th>
+								<th>Delta (S/M/L/XL)</th>
+								<th>Reason / Note</th>
+								<th>By</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr *ngFor="let h of history">
+								<td>{{ h.created_at ? (h.created_at | date : 'short') : '-' }}</td>
+								<td>{{ h.action }}</td>
+								<td>
+									{{ h.delta_by_size.S }} /
+									{{ h.delta_by_size.M }} /
+									{{ h.delta_by_size.L }} /
+									{{ h.delta_by_size.XL }}
+								</td>
+								<td>{{ h.reason || '-' }}</td>
+								<td>{{ h.performed_by?.role || '-' }}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<ng-template #emptyHistory>
+					<div class="hint">No history yet.</div>
+				</ng-template>
+			</div>
+		</section>
+
+		<ng-template #pickHelp>
+			<section class="card panel inv-empty">
+				<div class="panel-head">
+					<h3>Manage</h3>
+					<div class="muted">Select an inventory row to start</div>
+				</div>
+				<div class="hint">Tip: inventory updates every 5 seconds.</div>
+			</section>
+		</ng-template>
+	</div>
+</div>

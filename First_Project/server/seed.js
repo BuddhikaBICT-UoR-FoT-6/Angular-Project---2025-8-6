@@ -142,7 +142,8 @@ async function main() {
         L: p.stock?.L ?? 0,
         XL: p.stock?.XL ?? 0
       },
-      supplier: 'Demo Supplier'
+      supplier: 'Demo Supplier',
+      supplier_email: ''
     }))
   );
 
