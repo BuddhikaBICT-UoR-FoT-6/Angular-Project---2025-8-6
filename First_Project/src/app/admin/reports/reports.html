@@ -1,21 +1,88 @@
-<div class="page">
+<div class="reports-container">
   <div class="header">
-    <h2>Reports & Export</h2>
-    <a routerLink="/admin/dashboard" class="link">← Back to Dashboard</a>
-  </div>
-
-  <div class="card">
-    <h3>Exports</h3>
-    <p class="muted">Download operational data as files.</p>
-
-    <div class="actions">
-      <button type="button" (click)="exportProductsCsv()">Export Products CSV</button>
-      <a routerLink="/admin/products" class="secondary">Go to Products Management</a>
+    <div class="header-content">
+      <h1 class="page-title">📊 Reports & Export</h1>
+      <p class="page-subtitle">Download and analyze your business data</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/admin/dashboard" class="btn-secondary">
+        <span>← Back to Dashboard</span>
+      </a>
     </div>
   </div>
 
-  <div class="card">
-    <h3>Reports</h3>
-    <p class="muted">More reports can be added here (orders, revenue, inventory).</p>
+  <!-- Export Section -->
+  <div class="section">
+    <div class="section-card">
+      <div class="card-header">
+        <div class="card-icon">📥</div>
+        <div class="card-title-group">
+          <h2 class="card-title">Data Exports</h2>
+          <p class="card-subtitle">Download operational data in CSV format</p>
+        </div>
+      </div>
+
+      <div class="export-options">
+        <div class="export-item">
+          <div class="export-info">
+            <div class="export-icon">📦</div>
+            <div class="export-details">
+              <h3 class="export-title">Products Export</h3>
+              <p class="export-description">Download complete product catalog with pricing, inventory, and images</p>
+            </div>
+          </div>
+          <div class="export-actions">
+            <button type="button" (click)="exportProductsCsv()" [disabled]="isExporting" class="btn-export">
+              <span *ngIf="!isExporting">📥 Download CSV</span>
+              <span *ngIf="isExporting" class="spinner"></span>
+            </button>
+            <a routerLink="/admin/products" class="link-manage">Manage Products →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Future Reports Section -->
+  <div class="section">
+    <div class="section-card">
+      <div class="card-header">
+        <div class="card-icon">📈</div>
+        <div class="card-title-group">
+          <h2 class="card-title">Business Reports</h2>
+          <p class="card-subtitle">Comprehensive analytics and insights (coming soon)</p>
+        </div>
+      </div>
+
+      <div class="report-grid">
+        <div class="report-card report-disabled">
+          <div class="report-icon">💰</div>
+          <h3 class="report-title">Revenue Report</h3>
+          <p class="report-description">Detailed financial analysis with trends</p>
+          <span class="badge-coming-soon">Coming Soon</span>
+        </div>
+
+        <div class="report-card report-disabled">
+          <div class="report-icon">🛒</div>
+          <h3 class="report-title">Orders Report</h3>
+          <p class="report-description">Complete order history and statistics</p>
+          <span class="badge-coming-soon">Coming Soon</span>
+        </div>
+
+        <div class="report-card report-disabled">
+          <div class="report-icon">📊</div>
+          <h3 class="report-title">Inventory Report</h3>
+          <p class="report-description">Stock levels and restocking analysis</p>
+          <span class="badge-coming-soon">Coming Soon</span>
+        </div>
+
+        <div class="report-card report-disabled">
+          <div class="report-icon">👥</div>
+          <h3 class="report-title">Customer Report</h3>
+          <p class="report-description">User engagement and behavior metrics</p>
+          <span class="badge-coming-soon">Coming Soon</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

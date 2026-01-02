@@ -1,45 +1,75 @@
-<div class="page">
+<div class="admin-management-container">
   <div class="header">
-    <h2>Admin Management</h2>
-    <div class="actions">
-      <a routerLink="/admin/dashboard" class="link">← Back to Dashboard</a>
-      <button type="button" (click)="loadUsers()" [disabled]="isLoading">Refresh</button>
+    <div class="header-content">
+      <h1 class="page-title">👨‍💼 Admin Management</h1>
+      <p class="page-subtitle">Manage administrator and superadmin roles</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/admin/dashboard" class="btn-secondary">← Back to Dashboard</a>
+      <button type="button" (click)="loadUsers()" [disabled]="isLoading" class="btn-primary">
+        <span *ngIf="!isLoading">🔄 Refresh</span>
+        <span *ngIf="isLoading" class="spinner"></span>
+      </button>
     </div>
   </div>
 
-  <div *ngIf="isLoading" class="muted">Loading admins…</div>
-
-  <div *ngIf="!isLoading && admins.length === 0" class="muted">
-    No admin users found.
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner-large"></div>
+    <p>Loading admin users...</p>
   </div>
 
-  <div *ngIf="!isLoading && admins.length > 0" class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Role</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let u of admins">
-          <td>{{ u.full_name || '—' }}</td>
-          <td>{{ u.email || '—' }}</td>
-          <td>
-            <select [(ngModel)]="u.role">
-              <option value="superadmin">superadmin</option>
-              <option value="admin">admin</option>
-              <option value="customer">customer</option>
-              <option value="visitor">visitor</option>
-            </select>
-          </td>
-          <td>
-            <button type="button" (click)="saveRole(u)">Save</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && admins.length === 0" class="empty-state">
+    <div class="empty-icon">👨‍💼</div>
+    <p class="empty-text">No admin users found</p>
+  </div>
+
+  <!-- Admin Cards -->
+  <div *ngIf="!isLoading && admins.length > 0" class="admin-grid">
+    <div class="admin-card" *ngFor="let u of admins">
+      <div class="admin-avatar">
+        <span class="avatar-text">{{ (u.full_name || u.email || '?')[0].toUpperCase() }}</span>
+      </div>
+      <div class="admin-info">
+        <div class="admin-name">{{ u.full_name || '—' }}</div>
+        <div class="admin-email">{{ u.email || '—' }}</div>
+        <span class="role-badge" [class]="'role-' + u.role">{{ u.role }}</span>
+      </div>
+      <div class="admin-actions">
+        <button type="button" class="btn-edit" (click)="openEditModal(u)">✏️ Edit Role</button>
+        <button type="button" class="btn-delete" (click)="deleteUser(u)">🗑️ Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div class="modal-overlay" *ngIf="editModalOpen && editingUser" (click)="closeEditModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header-content">
+        <h3 class="modal-title">✏️ Edit Admin Role</h3>
+        <p class="modal-subtitle">{{ editingUser.full_name || editingUser.email }}</p>
+      </div>
+      <button type="button" class="modal-close" (click)="closeEditModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="field-label">User Role</label>
+        <select class="field-select" [(ngModel)]="editingUser.role">
+          <option value="superadmin">Superadmin - Full system access</option>
+          <option value="admin">Admin - Limited admin access</option>
+          <option value="customer">Customer - Regular user</option>
+          <option value="supplier">Supplier - Supplier access</option>
+        </select>
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary-modal" (click)="closeEditModal()">Cancel</button>
+        <button type="button" class="btn-primary-modal" (click)="saveRole()">💾 Save Changes</button>
+      </div>
+    </div>
   </div>
 </div>

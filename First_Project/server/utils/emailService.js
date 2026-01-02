@@ -473,11 +473,143 @@ const sendRestockRequestEmail = async ({
   }
 };
 
+/**
+ * Send a cancellation email to the supplier when an admin cancels a pending restock request.
+ *
+ * Note: We cannot include the original code because we never store it in plaintext.
+ * Instead, we include the request id + product + quantities + timestamps.
+ */
+const sendRestockCancellationEmail = async ({
+  to,
+  supplierName,
+  productName,
+  requestedBySize,
+  requestCode,
+  requestCodeHint,
+  requestId,
+  createdAt,
+  expiresAt,
+  cancelledAt,
+  cancellationReason,
+  note
+}) => {
+  if (!to) {
+    return { success: false, messageId: null, skipped: true, reason: 'missing-recipient' };
+  }
+
+  const safeSupplier = supplierName || 'Supplier';
+  const safeProduct = productName || 'Product';
+  const reqSizes = requestedBySize || { S: 0, M: 0, L: 0, XL: 0 };
+
+  const createdIso = createdAt ? new Date(createdAt).toISOString() : '';
+  const expiresIso = expiresAt ? new Date(expiresAt).toISOString() : '';
+  const cancelledIso = cancelledAt ? new Date(cancelledAt).toISOString() : new Date().toISOString();
+  const safeReason = (cancellationReason || '').toString().trim();
+  const safeNote = (note || '').toString().trim();
+  const safeRequestId = (requestId || '').toString().trim();
+  const safeRequestCode = (requestCode || '').toString().trim().toUpperCase();
+  const safeRequestCodeHint = (requestCodeHint || '').toString().trim().toUpperCase();
+
+  // Development mode - just log to console
+  if (!isEmailConfigured || !transporter) {
+    console.log('\n📦 ═══════════════════════════════════════════════════');
+    console.log('📦 RESTOCK REQUEST CANCELLED (Development Mode)');
+    console.log('📦 ═══════════════════════════════════════════════════');
+    console.log('📦 To:', to);
+    console.log('📦 Supplier:', safeSupplier);
+    console.log('📦 Product:', safeProduct);
+    if (safeRequestCode) console.log('📦 Batch Code:', safeRequestCode);
+    else if (safeRequestCodeHint) console.log('📦 Batch Code Hint:', safeRequestCodeHint);
+    console.log('📦 Request ID:', safeRequestId);
+    console.log('📦 Requested:', reqSizes);
+    if (createdIso) console.log('📦 Created:', createdIso);
+    if (expiresIso) console.log('📦 Expires:', expiresIso);
+    console.log('📦 Cancelled:', cancelledIso);
+    if (safeReason) console.log('📦 Reason:', safeReason);
+    if (safeNote) console.log('📦 Note:', safeNote);
+    console.log('📦 Subject: Restock Request Cancelled - Clothing Store');
+    console.log('📦 ═══════════════════════════════════════════════════\n');
+    return { success: true, messageId: 'dev-mode-' + Date.now(), skipped: true };
+  }
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER || 'noreply@clothingstore.com',
+    to,
+    subject: `Restock Request Cancelled - ${safeProduct}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 640px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 22px; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 22px; border-radius: 0 0 10px 10px; }
+          table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+          th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e6e6e6; }
+          th { background: #ffffff; }
+          .muted { color: #666; font-size: 12px; }
+          .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #fff; border: 1px solid #e6e6e6; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h2 style="margin:0">📦 Restock Request Cancelled</h2>
+          </div>
+          <div class="content">
+            <p>Hi ${safeSupplier},</p>
+            <p>We’re sorry — the following restock request has been cancelled. Please do not prepare or ship this batch.</p>
+
+            <p><span class="badge">Product: <strong>${safeProduct}</strong></span></p>
+
+            <h3 style="margin-bottom:6px">Cancelled batch details</h3>
+            <table>
+              <tr><th>Field</th><th>Value</th></tr>
+              ${safeRequestCode ? `<tr><td>Batch code</td><td><strong>${safeRequestCode}</strong></td></tr>` : ''}
+              ${!safeRequestCode && safeRequestCodeHint ? `<tr><td>Batch code hint</td><td><strong>${safeRequestCodeHint}</strong></td></tr>` : ''}
+              <tr><td>Request ID</td><td>${safeRequestId || '-'}</td></tr>
+              <tr><td>Cancelled at</td><td>${cancelledIso}</td></tr>
+              ${createdIso ? `<tr><td>Created at</td><td>${createdIso}</td></tr>` : ''}
+              ${expiresIso ? `<tr><td>Original expiry</td><td>${expiresIso}</td></tr>` : ''}
+            </table>
+
+            <h3 style="margin-bottom:6px">Requested quantities</h3>
+            <table>
+              <tr><th>Size</th><th>Quantity</th></tr>
+              <tr><td>S</td><td>${reqSizes.S ?? 0}</td></tr>
+              <tr><td>M</td><td>${reqSizes.M ?? 0}</td></tr>
+              <tr><td>L</td><td>${reqSizes.L ?? 0}</td></tr>
+              <tr><td>XL</td><td>${reqSizes.XL ?? 0}</td></tr>
+            </table>
+
+            ${safeReason ? `<p><strong>Cancellation reason:</strong> ${safeReason}</p>` : ''}
+            ${safeNote ? `<p><strong>Original note:</strong> ${safeNote}</p>` : ''}
+
+            <p class="muted">If you have already started processing, please contact us so we can coordinate next steps. The batch code above (if shown) should be considered invalid.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Restock cancellation email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending restock cancellation email:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   generateOTP,
   sendRegistrationOTP,
   sendPasswordResetOTP,
   sendAccountActionOTP,
   sendRestockNotificationEmail,
-  sendRestockRequestEmail
+  sendRestockRequestEmail,
+  sendRestockCancellationEmail
 };

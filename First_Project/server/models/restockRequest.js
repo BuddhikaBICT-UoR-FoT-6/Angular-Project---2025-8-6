@@ -26,6 +26,13 @@ const restockRequestSchema = new mongoose.Schema(
     // Store the code hashed so DB leaks don't reveal valid codes.
     request_code_hash: { type: String, required: true, index: true },
 
+    // Optional: encrypted copy of the original code for email-only use (e.g., cancellation emails).
+    // This remains optional so older documents continue to work.
+    request_code_enc: { type: String, default: '' },
+
+    // Optional: a short human-friendly hint to identify the batch (e.g., ABC…XYZ).
+    request_code_hint: { type: String, default: '' },
+
     // Expiration (7 days from creation). Enforced in API.
     expires_at: { type: Date, required: true },
 

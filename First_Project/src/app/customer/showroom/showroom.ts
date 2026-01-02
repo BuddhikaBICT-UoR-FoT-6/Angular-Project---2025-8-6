@@ -164,7 +164,7 @@ export class Showroom {
         map((products) => ({ loading: false, featuredProducts: (products || []).slice(0, 8) })),
         catchError((error) => {
           console.error('Error fetching products:', error);
-          this.toast.error('Backend is still starting. Please wait and try again.');
+          this.toast.error('😕 Oops! Having trouble loading products. Give us a moment and we\'ll try again!');
 
           // One automatic retry after a short delay.
           if (!this.autoRetryDone && (globalThis as any)?.setTimeout) {
@@ -175,7 +175,7 @@ export class Showroom {
           return of({
             loading: false,
             featuredProducts: [],
-            errorMessage: 'Backend is still starting. Please wait and try again.'
+            errorMessage: '😕 Oops! Having trouble loading products. Please refresh the page or try again in a moment.'
           });
         }),
         startWith({ loading: true, featuredProducts: [] })

@@ -4,9 +4,9 @@
     <!-- Hero Section -->
      <section class="hero-section">
         <div class="hero-content">
-            <h1 class="hero-title">Fashion Forward</h1>
-            <p class="hero-subtitle">Discover the latest fashion trends</p>
-            <button *ngIf="!isLoggedIn()" class="cta-button" routerLink="/register">Shop Now</button>
+            <h1 class="hero-title">✨ Fashion Forward</h1>
+            <p class="hero-subtitle">Discover your style, embrace the trends</p>
+            <button *ngIf="!isLoggedIn()" class="cta-button" routerLink="/register">🛍️ Shop Now</button>
         </div>
 
         <div class="hero-image">
@@ -45,12 +45,14 @@
 
         <div *ngIf="vm.loading" class="loading">
             <div class="spinner"></div>
-            <p>Loading products...</p>
+            <p>✨ Loading amazing products for you...</p>
         </div>
 
         <div *ngIf="!vm.loading && vm.featuredProducts.length === 0" class="no-products">
-            <p>{{ vm.errorMessage || 'No products available at the moment' }}</p>
-            <button *ngIf="!isLoggedIn()" routerLink="/register">Join us</button>
+            <div class="empty-icon">🛍️</div>
+            <h3>{{ vm.errorMessage || '😊 Our collection is being refreshed!' }}</h3>
+            <p>Check back soon for amazing new arrivals</p>
+            <button *ngIf="!isLoggedIn()" routerLink="/register" class="join-button">Join Our Community</button>
         </div>
 
         <div *ngIf="!vm.loading && vm.featuredProducts.length > 0" 

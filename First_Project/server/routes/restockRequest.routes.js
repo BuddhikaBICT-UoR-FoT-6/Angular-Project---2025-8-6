@@ -8,7 +8,7 @@ const InventoryAudit = require('../models/inventoryAudit');
 const RestockRequest = require('../models/restockRequest');
 const User = require('../models/user');
 const { verifyToken, requireRole } = require('../middleware/auth');
-const { sendRestockRequestEmail } = require('../utils/emailService');
+const { sendRestockRequestEmail, sendRestockCancellationEmail } = require('../utils/emailService');
 
 const SIZES = ['S', 'M', 'L', 'XL'];
 
@@ -39,6 +39,50 @@ function generateCode() {
 
 function sha256(input) {
   return crypto.createHash('sha256').update(String(input)).digest('hex');
+}
+
+function getRestockCodeSecret() {
+  // Prefer a dedicated secret; fallback to JWT secret to avoid extra setup.
+  return String(process.env.RESTOCK_CODE_SECRET || process.env.JWT_SECRET || '').trim();
+}
+
+function codeHint(code) {
+  const c = String(code || '').trim().toUpperCase();
+  if (c.length <= 6) return c;
+  return `${c.slice(0, 3)}…${c.slice(-3)}`;
+}
+
+function encryptRestockCode(code) {
+  const secret = getRestockCodeSecret();
+  if (!secret) return '';
+
+  const key = crypto.createHash('sha256').update(secret).digest(); // 32 bytes
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const ciphertext = Buffer.concat([cipher.update(String(code), 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+
+  return `${iv.toString('base64')}.${ciphertext.toString('base64')}.${tag.toString('base64')}`;
+}
+
+function decryptRestockCode(payload) {
+  const secret = getRestockCodeSecret();
+  if (!secret) return '';
+  if (!payload) return '';
+
+  const parts = String(payload).split('.');
+  if (parts.length !== 3) throw new Error('Invalid encrypted code format');
+  const [ivB64, dataB64, tagB64] = parts;
+
+  const key = crypto.createHash('sha256').update(secret).digest();
+  const iv = Buffer.from(ivB64, 'base64');
+  const data = Buffer.from(dataB64, 'base64');
+  const tag = Buffer.from(tagB64, 'base64');
+
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(tag);
+  const plaintext = Buffer.concat([decipher.update(data), decipher.final()]);
+  return plaintext.toString('utf8');
 }
 
 function validEmail(email) {
@@ -95,6 +139,10 @@ router.post('/', requireRole('admin', 'superadmin'), async (req, res) => {
     const code = generateCode();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
+    // Persist an encrypted copy of the code for future cancellation emails.
+    const codeEnc = encryptRestockCode(code);
+    const codeHintValue = codeHint(code);
+
     const productName = typeof inv.product_id === 'object' && inv.product_id ? inv.product_id.name || '' : '';
 
     const doc = await RestockRequest.create({
@@ -105,6 +153,8 @@ router.post('/', requireRole('admin', 'superadmin'), async (req, res) => {
       supplier_email: supplierEmail,
       note: typeof req.body?.note === 'string' ? req.body.note : '',
       request_code_hash: sha256(code),
+      request_code_enc: codeEnc,
+      request_code_hint: codeHintValue,
       expires_at: expiresAt,
       fulfilled_by: { userId: '', role: '' },
       cancelled_by: { userId: '', role: '' }
@@ -171,7 +221,7 @@ router.get('/', requireRole('admin', 'superadmin'), async (req, res) => {
 // Body: { reason? }
 router.post('/:id/cancel', requireRole('admin', 'superadmin'), async (req, res) => {
   try {
-    const doc = await RestockRequest.findById(req.params.id);
+    const doc = await RestockRequest.findById(req.params.id).populate('product_id');
     if (!doc) return res.status(404).json({ error: 'Request not found' });
 
     const now = new Date();
@@ -185,7 +235,44 @@ router.post('/:id/cancel', requireRole('admin', 'superadmin'), async (req, res) 
     doc.cancelled_by = { userId: String(req.user?.userId || ''), role: String(req.user?.role || '') };
 
     await doc.save();
-    res.json({ success: true, request: doc });
+
+    // Best-effort email to supplier with apology + request details.
+    let emailStatus = { attempted: false, success: false };
+    try {
+      const p = doc.product_id;
+      const productName = typeof p === 'object' && p ? p.name || '' : '';
+
+      let requestCode = '';
+      try {
+        requestCode = decryptRestockCode(doc.request_code_enc);
+      } catch (_decryptErr) {
+        requestCode = '';
+      }
+
+      emailStatus = { attempted: true, ...(await sendRestockCancellationEmail({
+        to: doc.supplier_email,
+        supplierName: doc.supplier_name,
+        productName,
+        requestedBySize: doc.requested_by_size,
+        requestCode,
+        requestCodeHint: doc.request_code_hint,
+        requestId: String(doc._id),
+        createdAt: doc.created_at,
+        expiresAt: doc.expires_at,
+        cancelledAt: doc.cancelled_at,
+        cancellationReason: doc.cancelled_reason,
+        note: doc.note
+      })) };
+    } catch (emailErr) {
+      emailStatus = {
+        attempted: true,
+        success: false,
+        error: emailErr?.message || String(emailErr)
+      };
+      console.error('Restock request cancelled but email failed:', emailErr?.message || emailErr);
+    }
+
+    res.json({ success: true, request: doc, emailStatus });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

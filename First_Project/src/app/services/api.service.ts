@@ -173,8 +173,11 @@ export class ApiService {
     );
   }
 
-  cancelRestockRequest(requestId: string, reason = ''): Observable<{ success: boolean; request: RestockRequest }> {
-    return this.http.post<{ success: boolean; request: RestockRequest }>(
+  cancelRestockRequest(
+    requestId: string,
+    reason = ''
+  ): Observable<{ success: boolean; request: RestockRequest; emailStatus?: { attempted?: boolean; success?: boolean; skipped?: boolean; error?: string } }> {
+    return this.http.post<{ success: boolean; request: RestockRequest; emailStatus?: { attempted?: boolean; success?: boolean; skipped?: boolean; error?: string } }>(
       `${this.baseUrl}/restock-requests/${requestId}/cancel`,
       { reason }
     );

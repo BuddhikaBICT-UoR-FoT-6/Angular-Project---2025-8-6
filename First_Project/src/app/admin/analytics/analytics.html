@@ -1,43 +1,76 @@
-<div class="page">
+<div class="analytics-container">
   <div class="header">
-    <h2>Analytics</h2>
-    <div class="actions">
-      <a routerLink="/admin/dashboard" class="link">← Back to Dashboard</a>
-      <button type="button" (click)="refresh()" [disabled]="isLoading">Refresh</button>
+    <div class="header-content">
+      <h1 class="page-title">📊 Analytics Dashboard</h1>
+      <p class="page-subtitle">View comprehensive business metrics and insights</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/admin/dashboard" class="btn-secondary">
+        <span>← Back</span>
+      </a>
+      <button type="button" (click)="refresh()" [disabled]="isLoading" class="btn-primary">
+        <span *ngIf="!isLoading">🔄 Refresh</span>
+        <span *ngIf="isLoading" class="spinner"></span>
+      </button>
     </div>
   </div>
 
-  <div *ngIf="isLoading" class="muted">Loading analytics…</div>
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner-large"></div>
+    <p>Loading analytics data...</p>
+  </div>
 
-  <div *ngIf="!isLoading" class="grid">
-    <div class="card">
-      <div class="label">Total Users</div>
-      <div class="value">{{ stats.totalUsers }}</div>
-      <a routerLink="/admin/users" class="small-link">Open Users</a>
+  <!-- Stats Grid -->
+  <div *ngIf="!isLoading" class="stats-grid">
+    <!-- Total Users Card -->
+    <div class="stat-card stat-card-users">
+      <div class="stat-icon">👥</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">{{ stats.totalUsers }}</div>
+        <a routerLink="/admin/users" class="stat-link">View Users →</a>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="label">Total Products</div>
-      <div class="value">{{ stats.totalProducts }}</div>
-      <a routerLink="/admin/products" class="small-link">Open Products</a>
+    <!-- Total Products Card -->
+    <div class="stat-card stat-card-products">
+      <div class="stat-icon">📦</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Products</div>
+        <div class="stat-value">{{ stats.totalProducts }}</div>
+        <a routerLink="/admin/products" class="stat-link">View Products →</a>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="label">Total Orders</div>
-      <div class="value">{{ stats.totalOrders }}</div>
-      <a routerLink="/admin/orders" class="small-link">Open Orders</a>
+    <!-- Total Orders Card -->
+    <div class="stat-card stat-card-orders">
+      <div class="stat-icon">🛒</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value">{{ stats.totalOrders }}</div>
+        <a routerLink="/admin/orders" class="stat-link">View Orders →</a>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="label">Total Revenue</div>
-      <div class="value">${{ stats.totalRevenue | number:'1.2-2' }}</div>
-      <a routerLink="/admin/financials" class="small-link">Open Financials</a>
+    <!-- Total Revenue Card -->
+    <div class="stat-card stat-card-revenue">
+      <div class="stat-icon">💰</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value">${{ stats.totalRevenue | number:'1.2-2' }}</div>
+        <a routerLink="/admin/financials" class="stat-link">View Financials →</a>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="label">Low Stock Items</div>
-      <div class="value">{{ stats.lowStockItems }}</div>
-      <a routerLink="/admin/inventory" class="small-link">Open Inventory</a>
+    <!-- Low Stock Items Card -->
+    <div class="stat-card stat-card-inventory">
+      <div class="stat-icon">⚠️</div>
+      <div class="stat-content">
+        <div class="stat-label">Low Stock Items</div>
+        <div class="stat-value">{{ stats.lowStockItems }}</div>
+        <a routerLink="/admin/inventory" class="stat-link">View Inventory →</a>
+      </div>
     </div>
   </div>
 </div>

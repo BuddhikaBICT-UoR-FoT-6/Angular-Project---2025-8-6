@@ -5,6 +5,7 @@ import { Subject, timer } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 import { RestockRequest } from '../../models/restock-request.model';
+import { ToastService } from '../../shared/toast/toast.service';
 
 @Component({
   selector: 'app-supplier-restock-requests',
@@ -15,6 +16,8 @@ import { RestockRequest } from '../../models/restock-request.model';
 export class SupplierRestockRequests implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
+  private didShowLoadErrorToast = false;
+
   requests: RestockRequest[] = [];
   loading = false;
   error = '';
@@ -22,7 +25,10 @@ export class SupplierRestockRequests implements OnInit, OnDestroy {
   fulfillCode = '';
   fulfillMessage = '';
 
-  constructor(private api: ApiService) {}
+  constructor(
+    private api: ApiService,
+    private toast: ToastService
+  ) {}
 
   ngOnInit(): void {
     // Poll so the supplier sees new requests without refresh.
@@ -40,10 +46,17 @@ export class SupplierRestockRequests implements OnInit, OnDestroy {
     this.api.getMyRestockRequests().pipe(takeUntil(this.destroy$)).subscribe({
       next: (items) => {
         this.requests = items || [];
+        this.didShowLoadErrorToast = false;
       },
       error: (err) => {
         this.error = err?.error?.error || 'Failed to load restock requests';
         this.requests = [];
+
+        // Avoid spamming toasts because refresh polls.
+        if (!this.didShowLoadErrorToast) {
+          this.toast.error(this.error);
+          this.didShowLoadErrorToast = true;
+        }
       }
     });
   }
@@ -69,11 +82,13 @@ export class SupplierRestockRequests implements OnInit, OnDestroy {
           this.loading = false;
           this.fulfillCode = '';
           this.fulfillMessage = resp?.message || 'Request fulfilled';
+          this.toast.success(this.fulfillMessage);
           this.refresh();
         },
         error: (err) => {
           this.loading = false;
           this.error = err?.error?.error || 'Failed to fulfill request';
+          this.toast.error(this.error);
         }
       });
   }

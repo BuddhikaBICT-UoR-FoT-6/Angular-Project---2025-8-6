@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+import { ToastService } from '../../shared/toast/toast.service';
 
 @Component({
   selector: 'app-reports',
@@ -10,9 +11,17 @@ import { ApiService } from '../../services/api.service';
   styleUrl: './reports.css'
 })
 export class Reports {
-  constructor(private apiService: ApiService) {}
+  isExporting = false;
+
+  constructor(
+    private apiService: ApiService,
+    private toast: ToastService
+  ) {}
 
   exportProductsCsv() {
+    this.isExporting = true;
+    this.toast.info('Generating CSV export...');
+    
     this.apiService.exportProductsCsv().subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -21,9 +30,13 @@ export class Reports {
         a.download = 'products.csv';
         a.click();
         window.URL.revokeObjectURL(url);
+        this.isExporting = false;
+        this.toast.success('Products CSV exported successfully!');
       },
       error: (err) => {
         console.error('CSV export failed', err);
+        this.isExporting = false;
+        this.toast.error('Failed to export CSV. Please try again.');
       }
     });
   }

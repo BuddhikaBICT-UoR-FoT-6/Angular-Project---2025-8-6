@@ -1,1 +1,167 @@
-<p>users works!</p>
+<div class="users-page">
+  <div class="page-header">
+    <h2>User Management</h2>
+    <div class="header-actions">
+      <a routerLink="/admin/dashboard" class="btn-back">← Dashboard</a>
+      <button class="btn-primary" (click)="openAddForm()" *ngIf="!showAddForm && !editingUser">
+        <span>➕</span> Add User
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters & Search -->
+  <div class="controls-bar">
+    <div class="filter-tabs">
+      <button class="filter-tab" [class.active]="selectedRole === 'all'" (click)="filterByRole('all')">
+        All ({{ users.length }})
+      </button>
+      <button class="filter-tab" [class.active]="selectedRole === 'customer'" (click)="filterByRole('customer')">
+        Customers
+      </button>
+      <button class="filter-tab" [class.active]="selectedRole === 'admin'" (click)="filterByRole('admin')">
+        Admins
+      </button>
+      <button class="filter-tab" [class.active]="selectedRole === 'superadmin'" (click)="filterByRole('superadmin')">
+        Super Admins
+      </button>
+      <button class="filter-tab" [class.active]="selectedRole === 'supplier'" (click)="filterByRole('supplier')">
+        Suppliers
+      </button>
+    </div>
+    <div class="search-box">
+      <input type="text" [(ngModel)]="searchQuery" (input)="onSearchChange()" placeholder="🔍 Search users..." />
+    </div>
+  </div>
+
+  <!-- Add Form Modal -->
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelAdd()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-header-content">
+          <h3 class="modal-title">➕ Add New User</h3>
+          <p class="modal-subtitle">Create a new user account</p>
+        </div>
+        <button type="button" class="modal-close" (click)="cancelAdd()">&times;</button>
+      </div>
+      <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input [(ngModel)]="newUser.full_name" placeholder="John Doe" />
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" [(ngModel)]="newUser.email" placeholder="john@example.com" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" [(ngModel)]="newUser.password" placeholder="••••••••" />
+        </div>
+        <div class="form-group">
+          <label>Role *</label>
+          <select [(ngModel)]="newUser.role">
+            <option value="customer">Customer</option>
+            <option value="admin">Admin</option>
+            <option value="superadmin">Super Admin</option>
+            <option value="supplier">Supplier</option>
+          </select>
+        </div>
+      </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary-modal" (click)="cancelAdd()">Cancel</button>
+        <button class="btn-primary-modal" (click)="submitAdd()">💾 Create User</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Form Modal -->
+  <div *ngIf="editingUser" class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-header-content">
+          <h3 class="modal-title">✏️ Edit User</h3>
+          <p class="modal-subtitle">Update user information</p>
+        </div>
+        <button type="button" class="modal-close" (click)="cancelEdit()">&times;</button>
+      </div>
+      <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input [(ngModel)]="editingUser.full_name" placeholder="John Doe" />
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" [(ngModel)]="editingUser.email" placeholder="john@example.com" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role *</label>
+          <select [(ngModel)]="editingUser.role">
+            <option value="customer">Customer</option>
+            <option value="admin">Admin</option>
+            <option value="superadmin">Super Admin</option>
+            <option value="supplier">Supplier</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select [(ngModel)]="editingUser.status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary-modal" (click)="cancelEdit()">Cancel</button>
+        <button class="btn-primary-modal" (click)="submitEdit()">💾 Update User</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading users...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading && filteredUsers.length === 0">
+    <div class="empty-icon">👥</div>
+    <h3>No users found</h3>
+    <p *ngIf="searchQuery">Try a different search term</p>
+    <p *ngIf="!searchQuery && selectedRole !== 'all'">No users with this role</p>
+  </div>
+
+  <!-- Users Grid -->
+  <div class="users-grid" *ngIf="!isLoading && filteredUsers.length > 0">
+    <div class="user-card" *ngFor="let user of filteredUsers">
+      <div class="user-avatar">
+        <div class="avatar-circle">{{ (user.full_name || 'U')[0].toUpperCase() }}</div>
+      </div>
+      <div class="user-info">
+        <h4 class="user-name">{{ user.full_name || 'Unknown' }}</h4>
+        <p class="user-email">{{ user.email }}</p>
+        <div class="user-meta">
+          <span class="role-badge" [ngClass]="getRoleBadgeClass(user.role)">
+            {{ user.role || 'customer' }}
+          </span>
+          <span class="user-id">ID: {{ user._id?.slice(-6) }}</span>
+        </div>
+      </div>
+      <div class="user-actions">
+        <button class="btn-edit" (click)="startEdit(user)">
+          <span>✏️</span> Edit
+        </button>
+        <button class="btn-delete" (click)="deleteUser(user)">
+          <span>🗑️</span> Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

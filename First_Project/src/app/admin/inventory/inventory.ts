@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, timer } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 import { InventoryAuditEntry, InventoryItem, LowStockItem, StockBySize } from '../../models/inventory.model';
 import { RestockRequest } from '../../models/restock-request.model';
+import { ToastService } from '../../shared/toast/toast.service';
 
 @Component({
   selector: 'app-inventory',
@@ -16,12 +17,19 @@ import { RestockRequest } from '../../models/restock-request.model';
 export class Inventory implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
+  manageOpen = false;
+  private previousBodyOverflow: string | null = null;
+
   inventory: InventoryItem[] = [];
   lowStock: LowStockItem[] = [];
   selected: InventoryItem | null = null;
   history: InventoryAuditEntry[] = [];
 
   restockOrders: RestockRequest[] = [];
+
+  // Toast-based confirmation for cancelling supplier orders.
+  private pendingCancelOrderId: string | null = null;
+  private pendingCancelOrderUntil = 0;
 
   loading = false;
   error = '';
@@ -36,7 +44,10 @@ export class Inventory implements OnInit, OnDestroy {
   adjustDelta: Partial<StockBySize> = { S: 0, M: 0, L: 0, XL: 0 };
   adjustReason = '';
 
-  constructor(private api: ApiService) {}
+  constructor(
+    private api: ApiService,
+    private toast: ToastService
+  ) {}
 
   ngOnInit(): void {
     timer(0, 5000)
@@ -52,6 +63,7 @@ export class Inventory implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.closeManage();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -65,6 +77,42 @@ export class Inventory implements OnInit, OnDestroy {
     this.requestMessage = '';
     this.refreshHistory(inv._id);
     this.refreshRestockOrders(inv._id);
+    this.openManage();
+  }
+
+  openManage() {
+    this.manageOpen = true;
+    this.setBodyScrollLocked(true);
+  }
+
+  closeManage() {
+    this.manageOpen = false;
+    this.setBodyScrollLocked(false);
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscape(event: Event) {
+    if (!this.manageOpen) return;
+    (event as KeyboardEvent).preventDefault();
+    this.closeManage();
+  }
+
+  private setBodyScrollLocked(locked: boolean) {
+    // Browser-only guard (app supports SSR).
+    const body = (globalThis as any)?.document?.body as HTMLBodyElement | undefined;
+    if (!body) return;
+
+    if (locked) {
+      if (this.previousBodyOverflow === null) {
+        this.previousBodyOverflow = body.style.overflow || '';
+      }
+      body.style.overflow = 'hidden';
+    } else {
+      if (this.previousBodyOverflow !== null) {
+        body.style.overflow = this.previousBodyOverflow;
+        this.previousBodyOverflow = null;
+      }
+    }
   }
 
   private resetForms() {
@@ -132,11 +180,13 @@ export class Inventory implements OnInit, OnDestroy {
         next: () => {
           this.loading = false;
           this.requestMessage = 'Supplier order created and email sent (code valid 7 days).';
+          this.toast.success(this.requestMessage);
           this.refreshRestockOrders(this.selected!._id);
         },
         error: (err) => {
           this.loading = false;
           this.error = err?.error?.error || 'Failed to create supplier order';
+          this.toast.error(this.error);
         }
       });
   }
@@ -144,6 +194,19 @@ export class Inventory implements OnInit, OnDestroy {
   cancelOrder(req: RestockRequest) {
     if (!this.selected?._id) return;
     if (!req?._id) return;
+
+    // Toast-based confirmation (no browser confirm). Tap cancel twice within 5 seconds.
+    const now = Date.now();
+    if (this.pendingCancelOrderId !== req._id || now > this.pendingCancelOrderUntil) {
+      this.pendingCancelOrderId = req._id;
+      this.pendingCancelOrderUntil = now + 5000;
+      this.toast.warning('Tap Cancel again within 5 seconds to confirm cancelling this supplier order');
+      return;
+    }
+
+    // Confirmed.
+    this.pendingCancelOrderId = null;
+    this.pendingCancelOrderUntil = 0;
 
     this.loading = true;
     this.error = '';
@@ -153,13 +216,28 @@ export class Inventory implements OnInit, OnDestroy {
       .cancelRestockRequest(req._id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
+        next: (resp) => {
           this.loading = false;
+          this.toast.info('Supplier order cancelled');
+
+          const emailStatus = resp?.emailStatus;
+          if (emailStatus?.attempted) {
+            if (emailStatus.success) {
+              this.toast.success('Cancellation email sent to supplier');
+            } else if (emailStatus.skipped) {
+              this.toast.warning('Cancellation email skipped (email not configured)');
+            } else {
+              const msg = emailStatus.error ? String(emailStatus.error) : 'Unknown error';
+              this.toast.error(`Cancellation email failed: ${msg}`);
+            }
+          }
+
           this.refreshRestockOrders(this.selected!._id);
         },
         error: (err) => {
           this.loading = false;
           this.error = err?.error?.error || 'Failed to cancel order';
+          this.toast.error(this.error);
         }
       });
   }
@@ -168,6 +246,7 @@ export class Inventory implements OnInit, OnDestroy {
     if (!this.selected?._id) return;
     if (!this.adjustReason.trim()) {
       this.error = 'Adjustment reason is required';
+      this.toast.warning(this.error);
       return;
     }
 
@@ -182,6 +261,7 @@ export class Inventory implements OnInit, OnDestroy {
           this.selected = updated;
           this.resetForms();
           this.loading = false;
+          this.toast.success('Adjustment applied');
           this.refreshInventory();
           this.refreshLowStock();
           this.refreshHistory(updated._id);
@@ -189,6 +269,7 @@ export class Inventory implements OnInit, OnDestroy {
         error: (err) => {
           this.loading = false;
           this.error = err?.error?.error || 'Adjustment failed';
+          this.toast.error(this.error);
         }
       });
   }
