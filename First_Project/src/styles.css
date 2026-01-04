@@ -30,6 +30,37 @@
 	--radius: 14px;
 	--radius-sm: 10px;
 	--shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+
+	/* Form field surfaces */
+	--field-bg: rgba(0, 0, 0, 0.25);
+	--field-border: var(--border);
+
+	/* Shell surfaces */
+	--nav-bg: linear-gradient(180deg, rgba(15, 8, 40, 0.92), rgba(10, 6, 24, 0.78));
+	--nav-border: rgba(196, 167, 255, 0.18);
+	--footer-bg: linear-gradient(180deg, rgba(10, 6, 24, 0.35), rgba(10, 6, 24, 0.75));
+}
+
+/* Light mode overrides (applied when html has data-theme="light") */
+html[data-theme="light"] {
+	--bg: #f7f2ff;
+	--bg-2: #ffffff;
+	--surface: rgba(20, 10, 40, 0.045);
+	--surface-2: rgba(20, 10, 40, 0.06);
+	--border: rgba(70, 40, 140, 0.18);
+	--border-strong: rgba(70, 40, 140, 0.28);
+	--text: rgba(18, 10, 28, 0.92);
+	--muted: rgba(18, 10, 28, 0.68);
+
+	--shadow: 0 12px 28px rgba(20, 10, 40, 0.12);
+	--focus: rgba(109, 61, 245, 0.22);
+
+	--field-bg: rgba(255, 255, 255, 0.85);
+	--field-border: rgba(70, 40, 140, 0.22);
+
+	--nav-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 242, 255, 0.88));
+	--nav-border: rgba(70, 40, 140, 0.14);
+	--footer-bg: linear-gradient(180deg, rgba(247, 242, 255, 0.55), rgba(247, 242, 255, 0.9));
 }
 
 html,
@@ -87,9 +118,9 @@ input,
 select,
 textarea {
 	width: 100%;
-	background: rgba(0, 0, 0, 0.25);
+	background: var(--field-bg);
 	color: var(--text);
-	border: 1px solid var(--border);
+	border: 1px solid var(--field-border);
 	border-radius: var(--radius-sm);
 	padding: 0.65rem 0.75rem;
 	outline: none;

@@ -5,7 +5,7 @@ const Order = require('../models/order');
 
 router.get('/', async (req, res) => {
   try {
-    res.json(await Order.find());
+    res.json(await Order.find().populate('user_id', 'full_name email'));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

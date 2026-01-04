@@ -15,10 +15,39 @@ export class App {
   protected readonly title = signal('First_Project');
   sidebarCollapsed = true; // Start collapsed, show only on hover
 
+  theme: 'dark' | 'light' = 'dark';
+  private readonly THEME_KEY = 'theme';
+
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) {
+    this.initTheme();
+  }
+
+  private initTheme(): void {
+    const saved = (localStorage.getItem(this.THEME_KEY) || '').toLowerCase();
+    if (saved === 'light' || saved === 'dark') {
+      this.setTheme(saved as 'light' | 'dark');
+      return;
+    }
+
+    const prefersLight = typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-color-scheme: light)').matches;
+
+    this.setTheme(prefersLight ? 'light' : 'dark');
+  }
+
+  private setTheme(theme: 'dark' | 'light'): void {
+    this.theme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem(this.THEME_KEY, theme);
+  }
+
+  toggleTheme(): void {
+    this.setTheme(this.theme === 'dark' ? 'light' : 'dark');
+  }
 
   onSidebarMouseEnter() {
     this.sidebarCollapsed = false;

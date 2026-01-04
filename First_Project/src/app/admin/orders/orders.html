@@ -83,7 +83,7 @@
         </div>
         <div class="info-row">
           <span class="info-label">📅 Date</span>
-          <span class="info-value">{{ order.created_at || order.createdAt | date:'short' }}</span>
+          <span class="info-value">{{ (order.created_at || order.createdAt) | date:'short' }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">💰 Total</span>
@@ -91,7 +91,7 @@
         </div>
         <div class="info-row" *ngIf="order.shipping_address">
           <span class="info-label">📍 Address</span>
-          <span class="info-value">{{ order.shipping_address }}</span>
+          <span class="info-value">{{ formatAddress(order.shipping_address) }}</span>
         </div>
       </div>
 
@@ -127,7 +127,7 @@
             </div>
             <div class="detail-item">
               <span class="detail-label">Order Date</span>
-              <span class="detail-value">{{ selectedOrder.created_at || selectedOrder.createdAt | date:'medium' }}</span>
+              <span class="detail-value">{{ (selectedOrder.created_at || selectedOrder.createdAt) | date:'medium' }}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Customer</span>
@@ -138,7 +138,7 @@
 
         <div class="detail-section" *ngIf="selectedOrder.shipping_address">
           <h4>Shipping Address</h4>
-          <p class="address-text">{{ selectedOrder.shipping_address }}</p>
+          <p class="address-text">{{ formatAddress(selectedOrder.shipping_address) }}</p>
         </div>
 
         <div class="detail-section" *ngIf="getOrderItems(selectedOrder).length > 0">

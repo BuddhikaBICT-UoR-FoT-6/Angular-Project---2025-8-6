@@ -4,6 +4,10 @@
     <div class="nav-links">
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Showroom</a>
 
+      <button type="button" class="theme-toggle" (click)="toggleTheme()">
+        {{ theme === 'dark' ? 'Light mode' : 'Dark mode' }}
+      </button>
+
       <!-- Role-based dashboards -->
       <a *ngIf="isLoggedIn() && isAdmin()" class="nav-btn" routerLink="/admin/dashboard">Admin Dashboard</a>
       <a *ngIf="isLoggedIn() && isSuperAdmin()" class="nav-btn" routerLink="/superadmin/dashboard">Super Admin</a>

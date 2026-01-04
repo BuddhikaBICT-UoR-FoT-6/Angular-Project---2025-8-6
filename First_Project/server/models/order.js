@@ -5,7 +5,7 @@ const OrderSchema = new mongoose.Schema({
         product_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true},
         name: {type: String, required: true},
         size: {type: String, required: true},
-        color: {type: String, required: true},
+        color: {type: String, default: ''},
         quantity: {type: Number, required: true},
         price: {type: Number, required: true}
 
@@ -17,15 +17,23 @@ const OrderSchema = new mongoose.Schema({
             default: 'pending'
     },
     shipping_address: {
-        street: String,
-        city: String,
-        country: String
+        fullName: { type: String, default: '' },
+        phone: { type: String, default: '' },
+        street: { type: String, default: '' },
+        line1: { type: String, default: '' },
+        line2: { type: String, default: '' },
+        city: { type: String, default: '' },
+        state: { type: String, default: '' },
+        postalCode: { type: String, default: '' },
+        country: { type: String, default: '' }
     },
     payment_method: {
         type: String,
         enum: ['credit_card', 'paypal', 'cash_on_delivery'],
         required: true
     },
+    coupon_code: { type: String, default: '' },
+    discount_amount: { type: Number, default: 0 },
     created_at: {type: Date, default: Date.now},
     updated_at: {type: Date, default: Date.now}
 });

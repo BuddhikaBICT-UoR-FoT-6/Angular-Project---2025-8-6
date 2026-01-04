@@ -5,12 +5,8 @@
   right: 0;
   z-index: 50;
   backdrop-filter: blur(12px);
-  background: linear-gradient(
-      180deg,
-      rgba(15, 8, 40, 0.92),
-      rgba(10, 6, 24, 0.78)
-    );
-  border-bottom: 1px solid rgba(196, 167, 255, 0.18);
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
 }
 
 .nav-container {
@@ -42,6 +38,19 @@
   display: flex;
   align-items: center;
   gap: 2rem;
+}
+
+.theme-toggle {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  box-shadow: none;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+}
+
+.theme-toggle:hover {
+  background: rgba(196, 167, 255, 0.12);
 }
 
 .nav-btn {
@@ -206,8 +215,8 @@
 }
 
 .shop-footer {
-  border-top: 1px solid rgba(196, 167, 255, 0.18);
-  background: linear-gradient(180deg, rgba(10, 6, 24, 0.35), rgba(10, 6, 24, 0.75));
+  border-top: 1px solid var(--nav-border);
+  background: var(--footer-bg);
 }
 
 .footer-inner {

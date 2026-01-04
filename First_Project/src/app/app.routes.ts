@@ -3,6 +3,7 @@ import { Dashboard } from './admin/dashboard/dashboard';
 import { Showroom } from './customer/showroom/showroom';
 import { ProductDetails } from './customer/product-details/product-details';
 import { Cart } from './customer/cart/cart';
+import { Checkout } from './customer/checkout/checkout';
 import { Login } from './customer/login/login';
 import { Register } from './customer/register/register';
 import { ForgotPassword } from './customer/forgot-password/forgot-password';
@@ -29,6 +30,7 @@ export const routes: Routes = [
   { path: 'login-result', component: LoginResult },
   { path: 'product/:id', component: ProductDetails },
   { path: 'cart', component: Cart },
+  { path: 'checkout', component: Checkout },
   { path: 'customer/dashboard', component: CustomerDashboard },
   { path: 'admin', redirectTo: 'admin/dashboard', pathMatch: 'full' },
   { path: 'admin/dashboard', component: Dashboard },

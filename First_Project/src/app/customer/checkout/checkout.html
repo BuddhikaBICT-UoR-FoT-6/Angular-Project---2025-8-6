@@ -1,0 +1,160 @@
+<div class="checkout-page">
+  <div class="checkout-header">
+    <h1>Checkout</h1>
+    <a class="back" routerLink="/cart">Back to cart</a>
+  </div>
+
+  <div *ngIf="!isLoggedIn()" class="empty">
+    <div class="empty-card">
+      <h3>Please login to checkout</h3>
+      <p>Your cart and orders are linked to your account.</p>
+      <a class="primary" routerLink="/login">Go to login</a>
+    </div>
+  </div>
+
+  <ng-container *ngIf="isLoggedIn()">
+    <div *ngIf="confirmation" class="confirm">
+      <div class="confirm-card">
+        <h3>Order Confirmed</h3>
+        <p>Your order has been created successfully.</p>
+        <div class="confirm-row"><span>Order ID</span><strong>{{ confirmation.orderId }}</strong></div>
+        <div class="confirm-row"><span>Total</span><strong>${{ confirmation.total | number : '1.2-2' }}</strong></div>
+        <a class="primary" routerLink="/">Continue shopping</a>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading checkout...</p>
+    </div>
+
+    <div *ngIf="!loading && errorMessage" class="error">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="!loading && summary" class="checkout-grid">
+      <!-- Shipping + Payment -->
+      <div class="panel">
+        <h3>Shipping Address</h3>
+        <div class="form-grid">
+          <label>
+            Full name
+            <input [(ngModel)]="shipping.fullName" name="fullName" placeholder="Your name" autocomplete="name" />
+          </label>
+
+          <label>
+            Phone
+            <input [(ngModel)]="shipping.phone" name="phone" placeholder="Optional" autocomplete="tel" />
+          </label>
+
+          <label class="span-2">
+            Address line 1
+            <input [(ngModel)]="shipping.line1" name="line1" placeholder="Street address" autocomplete="address-line1" />
+          </label>
+
+          <label class="span-2">
+            Address line 2
+            <input [(ngModel)]="shipping.line2" name="line2" placeholder="Apartment, suite, etc (optional)" autocomplete="address-line2" />
+          </label>
+
+          <label>
+            City
+            <input [(ngModel)]="shipping.city" name="city" autocomplete="address-level2" />
+          </label>
+
+          <label>
+            State
+            <input [(ngModel)]="shipping.state" name="state" autocomplete="address-level1" />
+          </label>
+
+          <label>
+            Postal code
+            <input [(ngModel)]="shipping.postalCode" name="postalCode" autocomplete="postal-code" />
+          </label>
+
+          <label>
+            Country
+            <input [(ngModel)]="shipping.country" name="country" placeholder="e.g. USA" />
+          </label>
+        </div>
+
+        <h3 class="section">Payment Method</h3>
+        <div class="payment-methods">
+          <label class="radio">
+            <input type="radio" name="pm" [(ngModel)]="paymentMethod" [value]="'credit_card'" />
+            <span>Card (Stripe)</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="pm" [(ngModel)]="paymentMethod" [value]="'paypal'" />
+            <span>PayPal</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="pm" [(ngModel)]="paymentMethod" [value]="'cash_on_delivery'" />
+            <span>Cash on Delivery</span>
+          </label>
+        </div>
+
+        <h3 class="section">OTP Verification</h3>
+        <div class="otp">
+          <button type="button" class="secondary" (click)="sendOtp()" [disabled]="otpSending || placingOrder">
+            {{ otpSending ? 'Sending…' : 'Send OTP' }}
+          </button>
+
+          <div class="otp-row">
+            <input
+              [(ngModel)]="otpCode"
+              name="otpCode"
+              placeholder="Enter OTP"
+              autocomplete="one-time-code"
+              inputmode="numeric"
+              maxlength="6"
+            />
+            <button type="button" class="secondary" (click)="verifyOtp()" [disabled]="otpVerifying || placingOrder || !checkoutToken">
+              {{ otpVerifying ? 'Verifying…' : 'Verify' }}
+            </button>
+          </div>
+
+          <p class="hint ok" *ngIf="otpVerified">OTP verified.</p>
+          <p class="hint" *ngIf="!otpVerified">Verify OTP to place your order.</p>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="panel summary">
+        <h3>Order Summary</h3>
+
+        <div class="items" *ngIf="summary.items.length > 0">
+          <div class="item" *ngFor="let item of summary.items">
+            <div class="thumb">
+              <img *ngIf="item.imageUrl" [src]="item.imageUrl" [alt]="item.name" />
+              <div *ngIf="!item.imageUrl" class="thumb-ph">No Image</div>
+            </div>
+            <div class="meta">
+              <div class="name">{{ item.name }}</div>
+              <div class="sub">Size {{ item.size }} · Qty {{ item.quantity }}</div>
+            </div>
+            <div class="price">${{ (item.unitPrice * item.quantity) | number : '1.2-2' }}</div>
+          </div>
+        </div>
+
+        <div class="promo">
+          <input [(ngModel)]="couponCode" name="couponCode" placeholder="Promo code" />
+          <button type="button" class="secondary" (click)="applyCoupon()">Apply</button>
+        </div>
+
+        <div class="rows">
+          <div class="row"><span>Subtotal</span><strong>${{ summary.subtotal | number : '1.2-2' }}</strong></div>
+          <div class="row" *ngIf="summary.discount > 0"><span>Discount</span><strong>- ${{ summary.discount | number : '1.2-2' }}</strong></div>
+          <div class="row total"><span>Total</span><strong>${{ summary.total | number : '1.2-2' }}</strong></div>
+        </div>
+
+        <button type="button" class="primary" (click)="placeOrder()" [disabled]="placingOrder || summary.items.length === 0 || !otpVerified">
+          {{ placingOrder ? 'Processing…' : 'Place Order' }}
+        </button>
+
+        <p class="hint" *ngIf="paymentMethod === 'credit_card'">You will be redirected to Stripe to pay.</p>
+        <p class="hint" *ngIf="paymentMethod === 'paypal'">You will be redirected to PayPal to approve payment.</p>
+      </div>
+    </div>
+  </ng-container>
+</div>

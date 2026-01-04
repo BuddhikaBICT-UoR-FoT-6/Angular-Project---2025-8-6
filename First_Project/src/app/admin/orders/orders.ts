@@ -85,4 +85,20 @@ export class Orders implements OnInit {
   getOrderItems(order: any): any[] {
     return order?.items || [];
   }
+
+  formatAddress(addr: any): string {
+    if (!addr) return '';
+    if (typeof addr === 'string') return addr;
+    if (typeof addr !== 'object') return '';
+
+    const line1 = String(addr.line1 || addr.street || '').trim();
+    const line2 = String(addr.line2 || '').trim();
+    const city = String(addr.city || '').trim();
+    const state = String(addr.state || '').trim();
+    const postalCode = String(addr.postalCode || addr.postal_code || '').trim();
+    const country = String(addr.country || '').trim();
+
+    const parts = [line1, line2, city, state, postalCode, country].filter(Boolean);
+    return parts.join(', ');
+  }
 }

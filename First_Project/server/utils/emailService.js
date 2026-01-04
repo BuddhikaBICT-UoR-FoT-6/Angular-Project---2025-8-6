@@ -604,10 +604,54 @@ const sendRestockCancellationEmail = async ({
   }
 };
 
+/**
+ * Send OTP email for checkout verification
+ */
+const sendCheckoutOTP = async (email, otp, fullName) => {
+  // Development mode - just log to console
+  if (!isEmailConfigured) {
+    console.log('\n📧 ═══════════════════════════════════════════════════');
+    console.log('📧 CHECKOUT OTP EMAIL (Development Mode)');
+    console.log('📧 ═══════════════════════════════════════════════════');
+    console.log('📧 To:', email);
+    console.log('📧 Name:', fullName);
+    console.log('📧 OTP Code:', otp);
+    console.log('📧 Subject: Verify Your Checkout - Clothing Store');
+    console.log('📧 ═══════════════════════════════════════════════════\n');
+    return Promise.resolve({ success: true, messageId: 'dev-mode-' + Date.now() });
+  }
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER || 'noreply@clothingstore.com',
+    to: email,
+    subject: 'Verify Your Checkout - Clothing Store',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2>Checkout Verification</h2>
+          <p>Hi ${fullName || 'there'},</p>
+          <p>Use the OTP below to verify your checkout:</p>
+          <div style="font-size: 28px; font-weight: bold; letter-spacing: 6px; margin: 18px 0;">${otp}</div>
+          <p><strong>This code expires in 10 minutes.</strong></p>
+          <p style="color:#b00;"><strong>Never share this code with anyone.</strong></p>
+        </div>
+      </body>
+      </html>
+    `
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log('✅ Checkout OTP email sent:', info.messageId);
+  return { success: true, messageId: info.messageId };
+};
+
 module.exports = {
   generateOTP,
   sendRegistrationOTP,
   sendPasswordResetOTP,
+  sendCheckoutOTP,
   sendAccountActionOTP,
   sendRestockNotificationEmail,
   sendRestockRequestEmail,

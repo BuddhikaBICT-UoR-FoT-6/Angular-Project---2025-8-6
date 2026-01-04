@@ -158,13 +158,8 @@ export class ProductDetails {
       return;
     }
 
-    // Yes/No confirmation (minimal UI, per requirement).
-    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-      const ok = window.confirm(
-        `Add ${safeQty} item${safeQty === 1 ? '' : 's'} (size ${this.selectedSize}) to your cart?`
-      );
-      if (!ok) return;
-    }
+    // No confirmation prompt: just inform the user what will be added.
+    this.toast.info(`Adding ${safeQty} item${safeQty === 1 ? '' : 's'} (size ${this.selectedSize}) to your cart...`);
 
     this.cartService.addProduct(this.product, this.selectedSize, safeQty).subscribe({
       next: () => this.toast.success(`Added ${safeQty} item${safeQty === 1 ? '' : 's'} to cart!`),
