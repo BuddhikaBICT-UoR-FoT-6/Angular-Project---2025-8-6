@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { ReviewService } from '../../services/review.service';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../shared/toast/toast.service';
+import type { ReviewSummary } from '../../models/review.model';
 import {
   Observable,
   Subject,
@@ -37,6 +39,8 @@ export class Showroom {
   private startX = 0;
   private scrollLeft = 0;
 
+  private reviewSummariesByProductId: Record<string, ReviewSummary> = {};
+
   readonly vm$: Observable<{ loading: boolean; featuredProducts: any[]; errorMessage?: string }> =
     this.refreshTrigger$.pipe(
       startWith(void 0),
@@ -47,10 +51,11 @@ export class Showroom {
   categories = ['Shirts', 'Pants', 'Dresses', 'Accessories'];
 
   constructor(
-    private apiService: ApiService,
-    private authService: AuthService,
-    private toast: ToastService
-  ) { }
+  private apiService: ApiService,
+  private authService: AuthService,
+  private toast: ToastService,
+  private reviewService: ReviewService
+) {}
 
   ngOnInit(): void {
     // No-op: vm$ starts loading via startWith.
@@ -150,6 +155,15 @@ export class Showroom {
     }
   }
 
+  onProductCardClick(event: MouseEvent): void {
+    // Prevent accidental navigation when the user is dragging the horizontal scroller.
+    if (this.isDragging) {
+      event.preventDefault();
+      event.stopPropagation();
+      (event as any)?.stopImmediatePropagation?.();
+    }
+  }
+
   isLoggedIn(): boolean {
     return this.authService.isLoggedIn();
   }
@@ -161,7 +175,27 @@ export class Showroom {
         switchMap(() => this.apiService.getProducts()),
         timeout({ first: 20000 }),
         retry({ count: 1, delay: 1500 }),
-        map((products) => ({ loading: false, featuredProducts: (products || []).slice(0, 8) })),
+        switchMap((products) => {
+          const featured = (products || []).slice(0, 8);
+          const ids = featured.map((p: any) => String(p?._id || '')).filter(Boolean);
+
+          if (!ids.length) {
+            this.reviewSummariesByProductId = {};
+            return of({ loading: false, featuredProducts: featured });
+          }
+
+          return this.reviewService.getSummaries(ids).pipe(
+            map((summaries) => {
+              this.reviewSummariesByProductId = summaries || {};
+              return { loading: false, featuredProducts: featured };
+            }),
+            catchError((err) => {
+              console.error('Showroom: failed to load review summaries', err);
+              this.reviewSummariesByProductId = {};
+              return of({ loading: false, featuredProducts: featured });
+            })
+          );
+        }),
         catchError((error) => {
           console.error('Error fetching products:', error);
           this.toast.error('😕 Oops! Having trouble loading products. Give us a moment and we\'ll try again!');
@@ -181,6 +215,20 @@ export class Showroom {
         startWith({ loading: true, featuredProducts: [] })
       )
     );
+  }
+
+  getAverageRating(productId: string): number {
+    return Number(this.reviewSummariesByProductId?.[productId]?.average || 0);
+  }
+
+  getReviewCount(productId: string): number {
+    return Number(this.reviewSummariesByProductId?.[productId]?.count || 0);
+  }
+
+  starsFor(productId: string): boolean[] {
+    const avg = this.getAverageRating(productId);
+    const filled = Math.round(avg);
+    return [1, 2, 3, 4, 5].map((n) => n <= filled);
   }
 
   refresh() {

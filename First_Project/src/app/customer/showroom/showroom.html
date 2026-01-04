@@ -62,7 +62,14 @@
                (mousemove)="onDrag($event)"
                (mouseup)="onDragEnd()"
                (mouseleave)="onDragEnd()">
-            <div *ngFor="let product of vm.featuredProducts" class="product-card">
+            <div
+                *ngFor="let product of vm.featuredProducts"
+                class="product-card"
+                [routerLink]="['/product', product._id]"
+                role="link"
+                tabindex="0"
+                (click)="onProductCardClick($event)"
+            >
                 <div class="product-image">
                     <img *ngIf="product.image && product.image[0]" [src]="product.image[0]" [alt]="product.name || 'Product image'">
                     <div *ngIf="!product.image || !product.image[0]" class="product-placeholder">📷</div>
@@ -71,9 +78,17 @@
                 <div class="product-info">
                     <h3>{{product.name || 'Unnamed Product'}}</h3>
                     <p class="product-category">{{product.category || 'Fashion'}}</p>
-                    <div class="product-price">${{product.price || '0.00' | number:'1.2-2'}}</div>
-                    <button *ngIf="!isLoggedIn()" class="add-to-cart-button" routerLink="/login">View Details</button>
-                    <button *ngIf="isLoggedIn()" class="add-to-cart-button" [routerLink]="['/product', product._id]">View Details</button>
+                    <div class="rating-row" *ngIf="product?._id">
+                    <div class="stars">
+                        <ng-container *ngFor="let filled of starsFor(product._id)">
+                        <span class="star" [class.filled]="filled">★</span>
+                        </ng-container>
+                    </div>
+                    <span class="rating-meta">{{ getAverageRating(product._id) | number : '1.1-1' }}/5</span>
+                    <span class="rating-meta">({{ getReviewCount(product._id) }})</span>
+                    </div>
+                    <div class="product-price">${{ (product.price || 0) | number:'1.2-2' }}</div>
+                                        <div class="see-product-details-tile" aria-hidden="true">See Product Details</div>
                 </div>
             </div>
           </div>

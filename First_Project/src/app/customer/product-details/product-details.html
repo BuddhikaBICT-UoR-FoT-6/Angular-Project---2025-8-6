@@ -1,1 +1,247 @@
-<p>product-details works!</p>
+<div class="product-details-page">
+	<div class="breadcrumb">
+		<a routerLink="/">Home</a>
+		<span class="sep">/</span>
+		<span *ngIf="product?.category">{{ product?.category }}</span>
+		<span *ngIf="product?.category" class="sep">/</span>
+		<span>{{ product?.name || 'Product' }}</span>
+	</div>
+
+	<div *ngIf="loading" class="loading">
+		<div class="spinner"></div>
+		<p>Loading product details...</p>
+	</div>
+
+	<div *ngIf="!loading && errorMessage" class="error">
+		<h3>Something went wrong</h3>
+		<p>{{ errorMessage }}</p>
+		<a class="back-link" routerLink="/">Back to showroom</a>
+	</div>
+
+	<ng-container *ngIf="!loading && product as p">
+		<div class="details-grid">
+			<!-- Gallery -->
+			<div class="gallery">
+				<div
+					class="main-image"
+					(mouseenter)="onZoomEnter()"
+					(mouseleave)="onZoomLeave()"
+					(mousemove)="onZoomMove($event)"
+				>
+					<ng-container *ngIf="selectedImageUrl; else noImage">
+						<img
+							[src]="selectedImageUrl"
+							[alt]="p.name"
+							[class.zoomed]="zoomActive"
+							[style.transform-origin]="zoomX + '% ' + zoomY + '%'"
+						/>
+					</ng-container>
+
+					<ng-template #noImage>
+						<div class="placeholder">No Image</div>
+					</ng-template>
+
+					<div class="zoom-hint">Hover to zoom</div>
+				</div>
+
+				<div class="thumbnails" *ngIf="p.image?.length">
+					<button
+						type="button"
+						class="thumb"
+						*ngFor="let img of p.image"
+						(click)="selectImage(img)"
+						[class.active]="img === selectedImageUrl"
+					>
+						<img [src]="img" [alt]="p.name" />
+					</button>
+				</div>
+			</div>
+
+			<!-- Info -->
+			<div class="info">
+				<h1 class="title">{{ p.name }}</h1>
+				<p class="category">{{ p.category }} <span *ngIf="p.sub_category">• {{ p.sub_category }}</span></p>
+
+				<div class="price-row">
+					<span class="price">${{ p.price | number : '1.2-2' }}</span>
+					<span *ngIf="(p.discount || 0) > 0" class="discount">Discount: {{ p.discount }}</span>
+				</div>
+
+				<p class="description" *ngIf="p.description">{{ p.description }}</p>
+
+				<!-- Stock availability by size -->
+				<div class="sizes">
+					<div class="sizes-header">
+						<h3>Size</h3>
+						<button type="button" class="link" (click)="toggleSizeGuide()">Size guide</button>
+					</div>
+
+					<div class="size-grid">
+						<button
+							type="button"
+							class="size-btn"
+							*ngFor="let s of availableSizes"
+							[disabled]="stockFor(s) <= 0"
+							[class.selected]="selectedSize === s"
+							(click)="selectSize(s)"
+						>
+							<span class="size-label">{{ s }}</span>
+							<span class="size-stock">{{ stockFor(s) }} in stock</span>
+						</button>
+					</div>
+
+					<div class="stock-status" *ngIf="selectedSize">
+						<span>Selected: <strong>{{ selectedSize }}</strong></span>
+						<span class="dot">•</span>
+						<span>Available: <strong>{{ stockFor(selectedSize) }}</strong></span>
+					</div>
+
+					<div class="size-guide" *ngIf="showSizeGuide">
+						<h4>Size Guide</h4>
+						<table>
+							<thead>
+								<tr>
+									<th>Size</th>
+									<th>Chest (cm)</th>
+									<th>Waist (cm)</th>
+									<th>Hip (cm)</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>S</td>
+									<td>86–91</td>
+									<td>71–76</td>
+									<td>86–91</td>
+								</tr>
+								<tr>
+									<td>M</td>
+									<td>92–97</td>
+									<td>77–82</td>
+									<td>92–97</td>
+								</tr>
+								<tr>
+									<td>L</td>
+									<td>98–103</td>
+									<td>83–88</td>
+									<td>98–103</td>
+								</tr>
+								<tr>
+									<td>XL</td>
+									<td>104–109</td>
+									<td>89–94</td>
+									<td>104–109</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+				<!-- Add to cart -->
+				<div class="qty-row">
+					<h3>Quantity</h3>
+					<div class="qty-controls">
+						<button type="button" (click)="decrementQty()" [disabled]="quantity <= 1">-</button>
+						<span class="qty">{{ quantity }}</span>
+						<button
+							type="button"
+							(click)="incrementQty()"
+							[disabled]="!selectedSize || quantity >= stockFor(selectedSize)"
+						>
+							+
+						</button>
+					</div>
+				</div>
+
+				<div class="actions">
+					<a *ngIf="!isLoggedIn()" class="primary" routerLink="/login">Login to add to cart</a>
+					<ng-container *ngIf="isLoggedIn()">
+						<button type="button" class="primary" (click)="addOneToCart()" [disabled]="!selectedSize">
+							Add 1 to Cart
+						</button>
+						<button type="button" class="primary" (click)="addSelectedQtyToCart()" [disabled]="!selectedSize">
+							Add {{ quantity }} to Cart
+						</button>
+					</ng-container>
+					<a class="secondary" routerLink="/cart">View Cart</a>
+				</div>
+			</div>
+		</div>
+
+		<!-- Related products -->
+		<section class="related" *ngIf="relatedProducts.length">
+			<h2>Related Products</h2>
+			<div class="related-grid">
+				<a class="related-card" *ngFor="let rp of relatedProducts" [routerLink]="['/product', rp._id]">
+					<div class="related-image">
+						<img *ngIf="rp.image?.[0]" [src]="rp.image[0]" [alt]="rp.name" />
+						<div *ngIf="!rp.image?.[0]" class="placeholder">No Image</div>
+					</div>
+					<div class="related-info">
+						<div class="related-name">{{ rp.name }}</div>
+						<div class="related-price">${{ rp.price | number : '1.2-2' }}</div>
+					</div>
+				</a>
+			</div>
+		</section>
+
+		<!-- Reviews -->
+		<section class="reviews">
+			<div class="reviews-header">
+				<h2>Customer Reviews</h2>
+				<div class="reviews-summary">
+					<span class="avg">{{ averageRating | number : '1.1-1' }}/5</span>
+					<span class="count">({{ reviews.length }} reviews)</span>
+				</div>
+			</div>
+
+			<div class="review-form">
+				<h3>Write a review</h3>
+				<p *ngIf="!isLoggedIn()" class="muted">Login to submit a review.</p>
+
+				<div class="form-row">
+					<label>Rating</label>
+					<select [(ngModel)]="newReviewRating" [disabled]="!isLoggedIn()">
+						<option [ngValue]="5">5</option>
+						<option [ngValue]="4">4</option>
+						<option [ngValue]="3">3</option>
+						<option [ngValue]="2">2</option>
+						<option [ngValue]="1">1</option>
+					</select>
+				</div>
+
+				<div class="form-row">
+					<label>Comment</label>
+					<textarea
+						rows="3"
+						[(ngModel)]="newReviewComment"
+						[disabled]="!isLoggedIn()"
+						placeholder="Share your thoughts about this product..."
+					></textarea>
+				</div>
+
+				<button type="button" class="primary" (click)="submitReview()" [disabled]="!isLoggedIn()">
+					Submit Review
+				</button>
+			</div>
+
+			<div class="review-list" *ngIf="reviews.length; else noReviews">
+				<div class="review" *ngFor="let r of reviews">
+					<div class="review-top">
+						<div class="review-name">{{ r.userName }}</div>
+						<div class="review-meta">
+							<span class="rating">Rating: {{ r.rating }}/5</span>
+							<span class="dot">•</span>
+							<span class="date">{{ r.createdAt | date : 'mediumDate' }}</span>
+						</div>
+					</div>
+					<div class="review-comment">{{ r.comment }}</div>
+				</div>
+			</div>
+
+			<ng-template #noReviews>
+				<p class="muted">No reviews yet. Be the first to review this product.</p>
+			</ng-template>
+		</section>
+	</ng-container>
+</div>

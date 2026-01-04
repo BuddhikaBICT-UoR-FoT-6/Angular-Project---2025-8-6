@@ -1,1 +1,74 @@
-<p>cart works!</p>
+<div class="cart-page">
+	<div class="cart-header">
+		<h1>Your Cart</h1>
+		<a class="back" routerLink="/">Continue shopping</a>
+	</div>
+
+	<div *ngIf="!isLoggedIn()" class="empty">
+		<div class="empty-card">
+			<h3>Please login to view your cart</h3>
+			<p>Your cart is stored in MongoDB and is linked to your account.</p>
+			<a class="primary" routerLink="/login">Go to login</a>
+		</div>
+	</div>
+
+	<ng-container *ngIf="isLoggedIn()">
+		<ng-container *ngIf="items$ | async as items">
+		<div *ngIf="items.length === 0" class="empty">
+			<div class="empty-card">
+				<h3>Your cart is empty</h3>
+				<p>Add a product from the product details page.</p>
+				<a class="primary" routerLink="/">Go to showroom</a>
+			</div>
+		</div>
+
+		<div *ngIf="items.length > 0" class="cart-grid">
+			<div class="items">
+				<div class="item" *ngFor="let item of items">
+					<div class="image">
+						<img *ngIf="item.imageUrl" [src]="item.imageUrl" [alt]="item.name" />
+						<div *ngIf="!item.imageUrl" class="placeholder">No Image</div>
+					</div>
+
+					<div class="info">
+						<div class="name">{{ item.name }}</div>
+						<div class="meta">
+							Size:
+							<select
+								[value]="item.size"
+								(change)="onSizeChange(item, ($any($event.target).value))"
+							>
+								<option *ngFor="let s of availableSizes" [value]="s" [disabled]="(item.stock?.[s] ?? 0) <= 0">
+									{{ s }}
+								</option>
+							</select>
+						</div>
+						<div class="meta">Unit: ${{ item.unitPrice | number : '1.2-2' }}</div>
+					</div>
+
+					<div class="qty">
+						<button type="button" (click)="dec(item)" [disabled]="item.quantity <= 1">-</button>
+						<span class="value">{{ item.quantity }}</span>
+						<button type="button" (click)="inc(item)" [disabled]="!canInc(item)">+</button>
+					</div>
+
+					<div class="line-total">
+						${{ (item.unitPrice * item.quantity) | number : '1.2-2' }}
+					</div>
+
+					<button type="button" class="remove" (click)="remove(item)">Remove</button>
+				</div>
+			</div>
+
+			<div class="summary">
+				<h3>Summary</h3>
+				<div class="row">
+					<span>Total</span>
+					<strong>${{ (total$ | async) || 0 | number : '1.2-2' }}</strong>
+				</div>
+				<button type="button" class="secondary" (click)="clear()">Clear cart</button>
+			</div>
+		</div>
+		</ng-container>
+	</ng-container>
+</div>

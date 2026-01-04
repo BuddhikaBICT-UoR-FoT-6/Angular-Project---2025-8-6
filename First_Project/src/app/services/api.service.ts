@@ -16,7 +16,13 @@ export class ApiService {
 
   // --- Health / readiness ---
   getHealth(): Observable<{ ok: boolean; dbReady: boolean }> {
-    return this.http.get<{ ok: boolean; dbReady: boolean }>(`${this.baseUrl}/health`);
+    return this.http.get<any>(`${this.baseUrl}/health`).pipe(
+      map((h) => ({
+        ok: typeof h?.ok === 'boolean' ? h.ok : h?.status === 'ok',
+        dbReady: typeof h?.dbReady === 'boolean' ? h.dbReady : h?.mongodb === 'connected'
+      })),
+      catchError(() => of({ ok: false, dbReady: false }))
+    );
   }
 
   // Wait until the backend reports MongoDB is ready.
