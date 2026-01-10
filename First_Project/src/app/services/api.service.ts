@@ -44,19 +44,19 @@ export class ApiService {
 
   // User-related API calls
   getUsers(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/users`);
+    return this.http.get<any[]>(`${this.baseUrl}/user`);
   }
 
   createUser(user: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/users`, user);
+    return this.http.post<any>(`${this.baseUrl}/user`, user);
   }
 
   updateUser(id: string, user: any): Observable<any> {
-    return this.http.put<any>(`${this.baseUrl}/users/${id}`, user);
+    return this.http.put<any>(`${this.baseUrl}/user/${id}`, user);
   }
 
   deleteUser(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.baseUrl}/users/${id}`);
+    return this.http.delete<any>(`${this.baseUrl}/user/${id}`);
   }
 
   // Product-related API calls

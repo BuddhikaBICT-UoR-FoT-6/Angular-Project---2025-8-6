@@ -7,14 +7,30 @@ const userSchema = new mongoose.Schema({
     password: {type: String, required: true},
     phone: String,
     address: {
-        // Kept for backwards compatibility with existing code.
-        // UI labels can map these fields as:
-        // - street => street name
-        // - city => nearest largest city
         street: String,
         city: String,
         country: String,
         houseNo: String
+    },
+    addresses: [{
+        label: String,
+        street: String,
+        city: String,
+        country: String,
+        houseNo: String,
+        isDefault: {type: Boolean, default: false}
+    }],
+    paymentMethods: [{
+        type: String,
+        last4: String,
+        expiryMonth: Number,
+        expiryYear: Number,
+        isDefault: {type: Boolean, default: false}
+    }],
+    emailPreferences: {
+        marketing: {type: Boolean, default: true},
+        orderUpdates: {type: Boolean, default: true},
+        newsletter: {type: Boolean, default: false}
     },
     profile_image: String,
     created_at: {type: Date, default: Date.now},

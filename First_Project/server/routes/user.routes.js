@@ -135,4 +135,149 @@ router.delete('/:id', verifyToken, requireRole('admin', 'superadmin'), async (re
   }
 });
 
+// Update profile
+router.put('/me/profile', verifyToken, async (req, res) => {
+  try {
+    const { full_name, phone, address } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      { $set: { full_name, phone, address } },
+      { new: true }
+    ).select('-password');
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Change password
+router.put('/me/password', verifyToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ error: 'Current password is incorrect' });
+    
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Manage addresses
+router.get('/me/addresses', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('addresses');
+    res.json(user.addresses || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/me/addresses', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user.addresses) user.addresses = [];
+    if (req.body.isDefault) {
+      user.addresses.forEach(a => a.isDefault = false);
+    }
+    user.addresses.push(req.body);
+    await user.save();
+    res.json(user.addresses);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/me/addresses/:addressId', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    const address = user.addresses.id(req.params.addressId);
+    if (!address) return res.status(404).json({ error: 'Address not found' });
+    
+    if (req.body.isDefault) {
+      user.addresses.forEach(a => a.isDefault = false);
+    }
+    Object.assign(address, req.body);
+    await user.save();
+    res.json(user.addresses);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/me/addresses/:addressId', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    user.addresses.pull(req.params.addressId);
+    await user.save();
+    res.json(user.addresses);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Manage payment methods
+router.get('/me/payment-methods', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('paymentMethods');
+    res.json(user.paymentMethods || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/me/payment-methods', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user.paymentMethods) user.paymentMethods = [];
+    if (req.body.isDefault) {
+      user.paymentMethods.forEach(p => p.isDefault = false);
+    }
+    user.paymentMethods.push(req.body);
+    await user.save();
+    res.json(user.paymentMethods);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/me/payment-methods/:methodId', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    user.paymentMethods.pull(req.params.methodId);
+    await user.save();
+    res.json(user.paymentMethods);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Email preferences
+router.get('/me/email-preferences', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('emailPreferences');
+    res.json(user.emailPreferences || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/me/email-preferences', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      { $set: { emailPreferences: req.body } },
+      { new: true }
+    ).select('emailPreferences');
+    res.json(user.emailPreferences);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

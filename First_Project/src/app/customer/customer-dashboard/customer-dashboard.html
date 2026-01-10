@@ -1,23 +1,239 @@
 <div class="customer-dashboard">
   <div class="dashboard-header">
-    <h1>Welcome, {{user?.full_name}}!</h1>
+    <div class="header-content">
+      <div class="user-info">
+        <div class="avatar">{{user?.full_name?.charAt(0) || 'U'}}</div>
+        <div>
+          <h1>Welcome back, {{user?.full_name}}!</h1>
+          <p class="subtitle">{{user?.email}}</p>
+        </div>
+      </div>
+      <button (click)="logout()" class="logout-btn">
+        <span>🚪</span> Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="dashboard-tabs">
+    <button [class.active]="activeTab === 'profile'" (click)="setTab('profile')">
+      <span class="icon">👤</span>
+      <span class="label">Profile</span>
+    </button>
+    <button [class.active]="activeTab === 'password'" (click)="setTab('password')">
+      <span class="icon">🔒</span>
+      <span class="label">Password</span>
+    </button>
+    <button [class.active]="activeTab === 'addresses'" (click)="setTab('addresses')">
+      <span class="icon">📍</span>
+      <span class="label">Addresses</span>
+    </button>
+    <button [class.active]="activeTab === 'payment'" (click)="setTab('payment')">
+      <span class="icon">💳</span>
+      <span class="label">Payment</span>
+    </button>
+    <button [class.active]="activeTab === 'email'" (click)="setTab('email')">
+      <span class="icon">📧</span>
+      <span class="label">Email</span>
+    </button>
+    <button [class.active]="activeTab === 'orders'" (click)="setTab('orders')">
+      <span class="icon">📦</span>
+      <span class="label">Orders</span>
+    </button>
   </div>
 
   <div class="dashboard-content">
-    <div class="profile-card">
-      <h2>👤 My Profile</h2>
-      <p><strong>Name:</strong> {{user?.full_name}}</p>
-      <p><strong>Email:</strong> {{user?.email}}</p>
-      <p><strong>Role:</strong> Customer</p>
+    <div *ngIf="message" class="alert alert-success">✓ {{message}}</div>
+    <div *ngIf="error" class="alert alert-error">✕ {{error}}</div>
+
+    <!-- Profile Tab -->
+    <div *ngIf="activeTab === 'profile'" class="tab-content">
+      <h2>Edit Profile Information</h2>
+      <form (ngSubmit)="updateProfile()">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" [(ngModel)]="profileForm.full_name" name="full_name" required>
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" [(ngModel)]="profileForm.phone" name="phone">
+        </div>
+        <div class="form-group">
+          <label>House No</label>
+          <input type="text" [(ngModel)]="profileForm.address.houseNo" name="houseNo" *ngIf="profileForm.address">
+        </div>
+        <div class="form-group">
+          <label>Street</label>
+          <input type="text" [(ngModel)]="profileForm.address.street" name="street" *ngIf="profileForm.address">
+        </div>
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" [(ngModel)]="profileForm.address.city" name="city" *ngIf="profileForm.address">
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input type="text" [(ngModel)]="profileForm.address.country" name="country" *ngIf="profileForm.address">
+        </div>
+        <button type="submit" class="btn-primary">Update Profile</button>
+      </form>
     </div>
 
-    <div class="orders-section">
-      <h2>📦 My Orders</h2>
+    <!-- Password Tab -->
+    <div *ngIf="activeTab === 'password'" class="tab-content">
+      <h2>Change Password</h2>
+      <form (ngSubmit)="changePassword()">
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" [(ngModel)]="passwordForm.currentPassword" name="currentPassword" required>
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" [(ngModel)]="passwordForm.newPassword" name="newPassword" required>
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" [(ngModel)]="passwordForm.confirmPassword" name="confirmPassword" required>
+        </div>
+        <button type="submit" class="btn-primary">Change Password</button>
+      </form>
+    </div>
+
+    <!-- Addresses Tab -->
+    <div *ngIf="activeTab === 'addresses'" class="tab-content">
+      <h2>Manage Addresses</h2>
+      
+      <div class="address-form">
+        <h3>{{editingAddressId ? 'Edit' : 'Add'}} Address</h3>
+        <form (ngSubmit)="editingAddressId ? updateAddress() : addAddress()">
+          <div class="form-group">
+            <label>Label</label>
+            <input type="text" [(ngModel)]="addressForm.label" name="label" placeholder="Home, Work, etc.">
+          </div>
+          <div class="form-group">
+            <label>House No</label>
+            <input type="text" [(ngModel)]="addressForm.houseNo" name="houseNo">
+          </div>
+          <div class="form-group">
+            <label>Street</label>
+            <input type="text" [(ngModel)]="addressForm.street" name="street" required>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" [(ngModel)]="addressForm.city" name="city" required>
+          </div>
+          <div class="form-group">
+            <label>Country</label>
+            <input type="text" [(ngModel)]="addressForm.country" name="country" required>
+          </div>
+          <div class="form-group checkbox">
+            <label>
+              <input type="checkbox" [(ngModel)]="addressForm.isDefault" name="isDefault">
+              Set as default
+            </label>
+          </div>
+          <button type="submit" class="btn-primary">{{editingAddressId ? 'Update' : 'Add'}} Address</button>
+          <button *ngIf="editingAddressId" type="button" (click)="editingAddressId = null; addressForm = {}" class="btn-secondary">Cancel</button>
+        </form>
+      </div>
+
+      <div class="address-list">
+        <div *ngFor="let address of addresses" class="address-card">
+          <h4>{{address.label}} <span *ngIf="address.isDefault" class="badge">Default</span></h4>
+          <p>{{address.houseNo}} {{address.street}}</p>
+          <p>{{address.city}}, {{address.country}}</p>
+          <div class="actions">
+            <button (click)="editAddress(address)" class="btn-small">Edit</button>
+            <button (click)="deleteAddress(address._id)" class="btn-small btn-danger">Delete</button>
+          </div>
+        </div>
+        <div *ngIf="addresses.length === 0" class="empty-state">No addresses saved yet.</div>
+      </div>
+    </div>
+
+    <!-- Payment Methods Tab -->
+    <div *ngIf="activeTab === 'payment'" class="tab-content">
+      <h2>Saved Payment Methods</h2>
+      
+      <div class="payment-form">
+        <h3>Add Payment Method</h3>
+        <form (ngSubmit)="addPaymentMethod()">
+          <div class="form-group">
+            <label>Card Type</label>
+            <select [(ngModel)]="paymentForm.type" name="type" required>
+              <option value="">Select type</option>
+              <option value="Visa">Visa</option>
+              <option value="Mastercard">Mastercard</option>
+              <option value="Amex">American Express</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Last 4 Digits</label>
+            <input type="text" [(ngModel)]="paymentForm.last4" name="last4" maxlength="4" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Expiry Month</label>
+              <input type="number" [(ngModel)]="paymentForm.expiryMonth" name="expiryMonth" min="1" max="12" required>
+            </div>
+            <div class="form-group">
+              <label>Expiry Year</label>
+              <input type="number" [(ngModel)]="paymentForm.expiryYear" name="expiryYear" min="2025" required>
+            </div>
+          </div>
+          <div class="form-group checkbox">
+            <label>
+              <input type="checkbox" [(ngModel)]="paymentForm.isDefault" name="isDefault">
+              Set as default
+            </label>
+          </div>
+          <button type="submit" class="btn-primary">Add Payment Method</button>
+        </form>
+      </div>
+
+      <div class="payment-list">
+        <div *ngFor="let method of paymentMethods" class="payment-card">
+          <h4>{{method.type}} <span *ngIf="method.isDefault" class="badge">Default</span></h4>
+          <p>•••• •••• •••• {{method.last4}}</p>
+          <p>Expires: {{method.expiryMonth}}/{{method.expiryYear}}</p>
+          <button (click)="deletePaymentMethod(method._id)" class="btn-small btn-danger">Delete</button>
+        </div>
+        <div *ngIf="paymentMethods.length === 0" class="empty-state">No payment methods saved yet.</div>
+      </div>
+    </div>
+
+    <!-- Email Preferences Tab -->
+    <div *ngIf="activeTab === 'email'" class="tab-content">
+      <h2>Email Preferences</h2>
+      <form (ngSubmit)="updateEmailPreferences()">
+        <div class="form-group checkbox">
+          <label>
+            <input type="checkbox" [(ngModel)]="emailPreferences.orderUpdates" name="orderUpdates">
+            Order updates and shipping notifications
+          </label>
+        </div>
+        <div class="form-group checkbox">
+          <label>
+            <input type="checkbox" [(ngModel)]="emailPreferences.marketing" name="marketing">
+            Marketing emails and promotions
+          </label>
+        </div>
+        <div class="form-group checkbox">
+          <label>
+            <input type="checkbox" [(ngModel)]="emailPreferences.newsletter" name="newsletter">
+            Newsletter and product updates
+          </label>
+        </div>
+        <button type="submit" class="btn-primary">Save Preferences</button>
+      </form>
+    </div>
+
+    <!-- Orders Tab -->
+    <div *ngIf="activeTab === 'orders'" class="tab-content">
+      <h2>My Orders</h2>
       <div *ngIf="isLoading" class="loading">Loading orders...</div>
       
-      <div *ngIf="!isLoading && myOrders.length === 0" class="no-orders">
+      <div *ngIf="!isLoading && myOrders.length === 0" class="empty-state">
         <p>You haven't placed any orders yet.</p>
-        <a routerLink="/" class="shop-btn">Start Shopping</a>
+        <a routerLink="/" class="btn-primary">Start Shopping</a>
       </div>
 
       <div *ngIf="!isLoading && myOrders.length > 0" class="orders-list">

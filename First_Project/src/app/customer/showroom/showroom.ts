@@ -33,16 +33,14 @@ import {
 export class Showroom {
   private readonly refreshTrigger$ = new Subject<void>();
   private autoRetryDone = false;
-  private scrollInterval: any | null = null;
-  private scrollDirection = 1; // 1 for right, -1 for left
+  private scrollInterval: any = null;
+  private scrollDirection = 1;
   isAutoScrollActive = true;
   private isDragging = false;
   private startX = 0;
   private scrollLeft = 0;
-  private autoScrollStartTimer: any | null = null;
-  private autoScrollStartAttempts = 0;
 
-  @ViewChild('featuredScrollContainer')
+  @ViewChild('featuredScrollContainer', { static: false })
   private featuredScrollContainer?: ElementRef<HTMLElement>;
 
   private reviewSummariesByProductId: Record<string, ReviewSummary> = {};
@@ -52,10 +50,12 @@ export class Showroom {
       startWith(void 0),
       switchMap(() => this.loadVm$()),
       tap((vm) => {
-        if (!vm.loading && (vm.featuredProducts?.length || 0) > 0) {
-          // The container is created by *ngIf; ensure we start auto-scroll
-          // after this emission when the DOM exists.
-          this.scheduleAutoScrollStart();
+        if (!vm.loading && vm.featuredProducts?.length > 0) {
+          setTimeout(() => {
+            console.log('[Showroom] VM loaded with products; restarting auto-scroll.');
+            this.stopAutoScroll();
+            this.startAutoScroll();
+          }, 1000); // Increased delay to ensure DOM is ready
         }
       }),
       shareReplay({ bufferSize: 1, refCount: true })
@@ -75,92 +75,94 @@ export class Showroom {
   }
 
   ngOnDestroy(): void {
-    if (this.scrollInterval) {
-      clearInterval(this.scrollInterval);
-      this.scrollInterval = null;
-    }
-    if (this.autoScrollStartTimer) {
-      clearTimeout(this.autoScrollStartTimer);
-      this.autoScrollStartTimer = null;
-    }
+    this.stopAutoScroll();
   }
 
   ngAfterViewInit(): void {
-    // The scroller is rendered conditionally after async data loads.
-    // Try starting a few times until the container exists and overflows.
-    this.scheduleAutoScrollStart();
+    setTimeout(() => {
+      this.tryStartAutoScroll();
+      setInterval(() => {
+        if (this.isAutoScrollActive && !this.scrollInterval) {
+          this.tryStartAutoScroll();
+        }
+      }, 2000);
+    }, 1500);
+
+    // Use a MutationObserver to detect when product children are added/changed
+    // and ensure auto-scroll starts when there is overflow.
+    const obsStart = () => {
+      const el = this.getScrollContainer();
+      if (!el) return;
+      try {
+        const observer = new MutationObserver(() => {
+          // If there are children and auto-scroll active, restart scroll
+          if (this.isAutoScrollActive && el.children.length > 0) {
+            console.log('[Showroom] MutationObserver detected children change, restarting auto-scroll.');
+            this.stopAutoScroll();
+            this.startAutoScroll();
+          }
+        });
+        observer.observe(el, { childList: true, subtree: false });
+      } catch (err) {
+        // ignore in environments that don't support MutationObserver
+      }
+    };
+    // Delay attaching the observer to give time for initial rendering
+    setTimeout(obsStart, 1600);
+  }
+
+  private tryStartAutoScroll(): void {
+    if (this.isAutoScrollActive && this.getScrollContainer()) {
+      this.startAutoScroll();
+    }
   }
 
   private getScrollContainer(): HTMLElement | null {
-    return this.featuredScrollContainer?.nativeElement ?? null;
-  }
-
-  private scheduleAutoScrollStart(): void {
-    if (!this.isAutoScrollActive) return;
-
-    this.autoScrollStartAttempts = 0;
-    if (this.autoScrollStartTimer) {
-      clearTimeout(this.autoScrollStartTimer);
-      this.autoScrollStartTimer = null;
-    }
-
-    const tryStart = () => {
-      this.autoScrollStartAttempts++;
-      if (!this.isAutoScrollActive || this.isDragging || this.scrollInterval) return;
-
-      const container = this.getScrollContainer();
-      const canScroll = !!container && container.scrollWidth > container.clientWidth + 5;
-
-      if (canScroll) {
-        this.startAutoScroll();
-        return;
-      }
-
-      if (this.autoScrollStartAttempts < 20) {
-        this.autoScrollStartTimer = setTimeout(tryStart, 150);
-      }
-    };
-
-    this.autoScrollStartTimer = setTimeout(tryStart, 0);
+    return this.featuredScrollContainer?.nativeElement || null;
   }
 
   startAutoScroll(): void {
     this.stopAutoScroll();
-
+    const container = this.getScrollContainer();
+    if (!container) {
+      console.log('[Showroom] startAutoScroll: no container');
+      return;
+    }
+    container.scrollLeft = 0; // Start from the left
+    let direction = 1;
+    let lastDirection = direction;
+    // ensure only one interval exists
+    if (this.scrollInterval) {
+      clearInterval(this.scrollInterval);
+      this.scrollInterval = null;
+    }
+    console.log('[Showroom] Starting auto-scroll. scrollWidth=', container.scrollWidth, 'clientWidth=', container.clientWidth);
     this.scrollInterval = setInterval(() => {
-      const container = this.getScrollContainer();
-      if (!container) return;
-
-      const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth);
-      const currentScroll = container.scrollLeft;
-
-      // Change direction at edges
-      if (currentScroll >= maxScroll - 1) {
-        this.scrollDirection = -1;
-      } else if (currentScroll <= 1) {
-        this.scrollDirection = 1;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      const current = container.scrollLeft;
+      if (maxScroll <= 0) return;
+      if (current >= maxScroll - 10) direction = -1;
+      if (current <= 10) direction = 1;
+      if (lastDirection !== direction) {
+        console.log('[Showroom] Direction changed to', direction, 'at scrollLeft=', current);
+        lastDirection = direction;
       }
-
-      // Use direct scrollLeft updates for consistent movement.
-      container.scrollLeft = currentScroll + this.scrollDirection * 2;
-    }, 20);
+      container.scrollLeft += direction * 2;
+    }, 100);
   }
 
   stopAutoScroll(): void {
     if (this.scrollInterval) {
       clearInterval(this.scrollInterval);
       this.scrollInterval = null;
+      console.log('[Showroom] Auto-scroll stopped.');
     }
-  }
-
-  resumeAutoScroll(): void {
-    this.scheduleAutoScrollStart();
   }
 
   toggleAutoScroll(): void {
     this.isAutoScrollActive = !this.isAutoScrollActive;
     if (this.isAutoScrollActive) {
-      this.scheduleAutoScrollStart();
+      this.startAutoScroll();
     } else {
       this.stopAutoScroll();
     }
@@ -172,11 +174,7 @@ export class Showroom {
     this.startX = e.pageX - container.offsetLeft;
     this.scrollLeft = container.scrollLeft;
     container.style.cursor = 'grabbing';
-    container.style.userSelect = 'none';
-    // Stop auto-scroll while dragging
-    if (this.isAutoScrollActive) {
-      this.stopAutoScroll();
-    }
+    this.stopAutoScroll();
   }
 
   onDrag(e: MouseEvent): void {
@@ -184,7 +182,7 @@ export class Showroom {
     e.preventDefault();
     const container = e.currentTarget as HTMLElement;
     const x = e.pageX - container.offsetLeft;
-    const walk = (x - this.startX) * 2; // Scroll speed multiplier
+    const walk = (x - this.startX) * 2;
     container.scrollLeft = this.scrollLeft - walk;
   }
 
@@ -194,11 +192,9 @@ export class Showroom {
     const container = this.getScrollContainer();
     if (container) {
       container.style.cursor = 'grab';
-      container.style.userSelect = 'auto';
     }
-    // Resume auto-scroll if it was active
     if (this.isAutoScrollActive) {
-      this.scheduleAutoScrollStart();
+      setTimeout(() => this.startAutoScroll(), 500);
     }
   }
 
@@ -219,7 +215,7 @@ export class Showroom {
     return defer(() =>
       this.apiService.waitForDbReady(120000).pipe(
         delay(1000),
-        switchMap(() => this.apiService.getProducts({ sort: 'popular', limit: 8 })),
+        switchMap(() => this.apiService.getProducts({ sort: 'popular', limit: 7 })),
         timeout({ first: 20000 }),
         retry({ count: 1, delay: 1500 }),
         switchMap((products) => {
