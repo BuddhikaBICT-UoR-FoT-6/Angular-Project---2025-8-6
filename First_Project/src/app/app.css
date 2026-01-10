@@ -30,7 +30,7 @@
 .nav-container h1 {
   margin: 0;
   font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text);
   letter-spacing: 0.2px;
 }
 
@@ -47,14 +47,24 @@
   box-shadow: none;
   padding: 0.55rem 0.9rem;
   border-radius: 10px;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 45px;
+  height: 45px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .theme-toggle:hover {
   background: rgba(196, 167, 255, 0.12);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(109, 61, 245, 0.2);
 }
 
 .nav-btn {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text);
   background: rgba(109, 61, 245, 0.25);
   border: 1px solid rgba(196, 167, 255, 0.22);
   text-decoration: none;
@@ -69,6 +79,60 @@
   text-decoration: none;
 }
 
+.nav-search {
+  position: relative;
+}
+
+.nav-search-input {
+  width: 260px;
+  height: 45px;
+  border-radius: 10px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  outline: none;
+}
+
+.nav-search-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 360px;
+  max-height: 360px;
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid var(--nav-border);
+  background: var(--nav-bg);
+  backdrop-filter: blur(12px);
+  z-index: 60;
+  padding: 8px;
+}
+
+.nav-search-item {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  color: rgba(233, 213, 255, 0.92);
+  cursor: pointer;
+}
+
+.nav-search-item:hover {
+  background: rgba(196, 167, 255, 0.12);
+}
+
+.nav-search-hint,
+.nav-search-empty {
+  padding: 10px;
+  color: rgba(233, 213, 255, 0.78);
+}
+
 .auth-links {
   display: flex;
   gap: 1rem;
@@ -81,13 +145,13 @@
 }
 
 .user-name {
-  color: rgba(233, 213, 255, 0.92);
+  color: var(--muted);
   font-weight: 500;
 }
 
 .user-menu .logout-btn {
   background: rgba(255, 255, 255, 0.08);
-  color: rgba(233, 213, 255, 0.95);
+  color: var(--text);
   border: 1px solid rgba(196, 167, 255, 0.25);
   padding: 0.55rem 0.9rem;
   border-radius: 10px;
@@ -102,7 +166,7 @@
 }
 
 .nav-links a {
-  color: rgba(233, 213, 255, 0.82);
+  color: var(--muted);
   text-decoration: none;
   padding: 0.5rem 1rem;
   border-radius: 10px;
@@ -110,12 +174,12 @@
 }
 
 .nav-links a:hover {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text);
   background: rgba(196, 167, 255, 0.12);
 }
 
 .nav-links a.active {
-  color: rgba(255, 255, 255, 0.98);
+  color: var(--text);
   background: rgba(109, 61, 245, 0.25);
   border: 1px solid rgba(196, 167, 255, 0.2);
 }

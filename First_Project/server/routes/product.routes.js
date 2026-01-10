@@ -9,6 +9,8 @@ const Product = require('../models/product');
 const { verifyToken } = require('../middleware/auth');
 const { validateImage } = require('../utils/imageProcessor');
 
+const Order = require('../models/order');
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024, files: 10 },
@@ -35,50 +37,10 @@ async function uploadBufferToCloudinary(buffer, folder, options = {}) {
   });
 }
 
-// Get all products
-router.get('/', async (req, res) => {
-  try {
-    res.json(await Product.find());
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get single product
-router.get('/:id', async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    res.json(product);
-  } catch (err) {
-    res.status(400).json({ error: 'Invalid product id' });
-  }
-});
-
 // Create product
 router.post('/', async (req, res) => {
   try {
     res.json(await new Product(req.body).save());
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Update product
-router.put('/:id', async (req, res) => {
-  try {
-    res.json(await Product.findByIdAndUpdate(req.params.id, req.body, { new: true }));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Delete product
-router.delete('/:id', async (req, res) => {
-  try {
-    res.json(await Product.findByIdAndDelete(req.params.id));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -219,6 +181,159 @@ router.post('/import/csv', upload.single('file'), async (req, res) => {
     }
 
     res.json({ message: 'CSV import completed', inserted, updated, failed: errors.length, errors });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all products (supports search/filter/sort/pagination)
+router.get('/', async (req, res) => {
+  try {
+    const qRaw = String(req.query.q || '').trim();
+    const q = qRaw.length ? qRaw : '';
+
+    const category = String(req.query.category || '').trim();
+    const subCategory = String(req.query.sub_category || '').trim();
+    const size = String(req.query.size || '').trim();
+
+    const minPrice = req.query.minPrice !== undefined ? Number(req.query.minPrice) : undefined;
+    const maxPrice = req.query.maxPrice !== undefined ? Number(req.query.maxPrice) : undefined;
+
+    const sort = String(req.query.sort || '').trim(); // price_asc | price_desc | newest | popular
+    const page = Math.max(1, Number(req.query.page || 1));
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit || 50)));
+    const skip = (page - 1) * limit;
+
+    // Base filter for non-popular queries
+    const filter = {};
+    if (category) filter.category = category;
+    if (subCategory) filter.sub_category = subCategory;
+    if (size) filter.sizes = size;
+
+    if (!Number.isNaN(minPrice) && minPrice !== undefined) filter.price = { ...(filter.price || {}), $gte: minPrice };
+    if (!Number.isNaN(maxPrice) && maxPrice !== undefined) filter.price = { ...(filter.price || {}), $lte: maxPrice };
+
+    if (q) {
+      filter.$or = [
+        { name: { $regex: q, $options: 'i' } },
+        { description: { $regex: q, $options: 'i' } },
+        { category: { $regex: q, $options: 'i' } },
+        { sub_category: { $regex: q, $options: 'i' } }
+      ];
+    }
+
+    if (sort === 'popular') {
+      // Popularity based on orders (exclude cancelled)
+      const productMatch = {};
+      if (category) productMatch['product.category'] = category;
+      if (subCategory) productMatch['product.sub_category'] = subCategory;
+      if (size) productMatch['product.sizes'] = size;
+
+      if (!Number.isNaN(minPrice) && minPrice !== undefined) {
+        productMatch['product.price'] = { ...(productMatch['product.price'] || {}), $gte: minPrice };
+      }
+      if (!Number.isNaN(maxPrice) && maxPrice !== undefined) {
+        productMatch['product.price'] = { ...(productMatch['product.price'] || {}), $lte: maxPrice };
+      }
+
+      if (q) {
+        productMatch.$or = [
+          { 'product.name': { $regex: q, $options: 'i' } },
+          { 'product.description': { $regex: q, $options: 'i' } },
+          { 'product.category': { $regex: q, $options: 'i' } },
+          { 'product.sub_category': { $regex: q, $options: 'i' } }
+        ];
+      }
+
+      const pipeline = [
+        { $match: { status: { $ne: 'cancelled' } } },
+        { $unwind: '$items' },
+        { $group: { _id: '$items.product_id', soldCount: { $sum: '$items.quantity' } } },
+        { $sort: { soldCount: -1 } },
+        {
+          $lookup: {
+            from: 'products',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'product'
+          }
+        },
+        { $unwind: '$product' },
+        ...(Object.keys(productMatch).length ? [{ $match: productMatch }] : []),
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $replaceRoot: {
+            newRoot: { $mergeObjects: ['$product', { soldCount: '$soldCount' }] }
+          }
+        }
+      ];
+
+      const popularProducts = await Order.aggregate(pipeline);
+      return res.json(popularProducts);
+    }
+
+    // Non-popular sort
+    let sortSpec = {};
+    if (sort === 'price_asc') sortSpec = { price: 1 };
+    else if (sort === 'price_desc') sortSpec = { price: -1 };
+    else if (sort === 'newest') sortSpec = { createdAt: -1 };
+    else sortSpec = { createdAt: -1 }; // default
+
+    const products = await Product.find(filter).sort(sortSpec).skip(skip).limit(limit);
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Autocomplete search (small payload)
+router.get('/search', async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim();
+    const limit = Math.min(20, Math.max(1, Number(req.query.limit || 8)));
+
+    if (q.length < 2) return res.json([]);
+
+    const results = await Product.find({
+      name: { $regex: q, $options: 'i' }
+    })
+      .select('_id name price image category')
+      .limit(limit)
+      .lean();
+
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get single product
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    res.json(product);
+  } catch (err) {
+    res.status(400).json({ error: 'Invalid product id' });
+  }
+});
+
+// Update product
+router.put('/:id', async (req, res) => {
+  try {
+    res.json(await Product.findByIdAndUpdate(req.params.id, req.body, { new: true }));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete product
+router.delete('/:id', async (req, res) => {
+  try {
+    res.json(await Product.findByIdAndDelete(req.params.id));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -2,10 +2,44 @@
   <div class="nav-container">
     <a routerLink="/" class="brand-link"><h1>Clothing Store</h1></a>
     <div class="nav-links">
+      <div class="nav-search" (focusin)="openSearch()" (keydown.escape)="closeSearch()">
+  <input
+    type="search"
+    class="nav-search-input"
+    placeholder="Search products..."
+    aria-label="Search products"
+    autocomplete="off"
+    [formControl]="searchControl"
+  />
+
+  <div class="nav-search-dropdown" *ngIf="searchOpen">
+    <ng-container *ngIf="searchResults$ | async as results">
+      <div class="nav-search-hint" *ngIf="searchControl.value.trim().length < 2">
+        Type at least 2 characters
+      </div>
+
+      <button
+        type="button"
+        class="nav-search-item"
+        *ngFor="let p of results"
+        (mousedown)="goToProduct(p._id)"
+      >
+        <span class="name">{{ p.name }}</span>
+        <span class="price">{{ p.price | currency }}</span>
+      </button>
+
+      <div class="nav-search-empty" *ngIf="searchControl.value.trim().length >= 2 && results.length === 0">
+        No matches
+      </div>
+    </ng-container>
+  </div>
+</div>
+
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Showroom</a>
 
-      <button type="button" class="theme-toggle" (click)="toggleTheme()">
-        {{ theme === 'dark' ? 'Light mode' : 'Dark mode' }}
+      <button type="button" class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+        <span *ngIf="theme === 'dark'">☀️</span>
+        <span *ngIf="theme === 'light'">🌙</span>
       </button>
 
       <!-- Role-based dashboards -->
@@ -37,7 +71,7 @@
   
   <!-- SuperAdmin Links -->
   <nav *ngIf="isSuperAdmin()" class="sidebar-nav">
-    <a routerLink="/superadmin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="sidebar-link">
+    <a [routerLink]="getSidebarDashboardRoute()" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="sidebar-link">
       <span class="link-icon">🏠</span>
       <span class="link-text">Dashboard</span>
     </a>
@@ -77,7 +111,7 @@
   
   <!-- Regular Admin Links -->
   <nav *ngIf="isAdmin()" class="sidebar-nav">
-    <a routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="sidebar-link">
+    <a [routerLink]="getSidebarDashboardRoute()" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="sidebar-link">
       <span class="link-icon">🏠</span>
       <span class="link-text">Dashboard</span>
     </a>

@@ -37,9 +37,12 @@
             <h2>Featured Products</h2>
             <button class="auto-scroll-toggle" 
                     [class.active]="isAutoScrollActive"
+                    type="button"
+                    [attr.aria-pressed]="isAutoScrollActive"
                     *ngIf="!vm.loading && vm.featuredProducts.length > 0"
                     (click)="toggleAutoScroll()">
-                {{ isAutoScrollActive ? '⏸️ Stop Auto Scroll' : '▶️ Start Auto Scroll' }}
+                <span class="auto-scroll-icon" aria-hidden="true">{{ isAutoScrollActive ? '⏸️' : '▶️' }}</span>
+                <span class="auto-scroll-text">{{ isAutoScrollActive ? 'Pause' : 'Play' }}</span>
             </button>
         </div>
 
@@ -57,7 +60,7 @@
 
         <div *ngIf="!vm.loading && vm.featuredProducts.length > 0" 
              class="horizontal-scroll-wrapper">
-          <div class="products-scroll-container"
+                    <div class="products-scroll-container" #featuredScrollContainer
                (mousedown)="onDragStart($event)"
                (mousemove)="onDrag($event)"
                (mouseup)="onDragEnd()"

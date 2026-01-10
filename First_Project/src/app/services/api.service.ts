@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { catchError, filter, map, of, switchMap, take, timeout, timer } from 'rxjs';
 import { InventoryAuditEntry, InventoryItem, LowStockItem, StockBySize } from '../models/inventory.model';
 import { FulfillRestockResponse, RestockRequest } from '../models/restock-request.model';
+import { HttpParams } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -59,9 +60,30 @@ export class ApiService {
   }
 
   // Product-related API calls
-  getProducts(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/products`);
+  getProducts(params?: {
+  q?: string;
+  category?: string;
+  sub_category?: string;
+  size?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: 'price_asc' | 'price_desc' | 'newest' | 'popular';
+  page?: number;
+  limit?: number;
+}): Observable<any[]> {
+  let httpParams = new HttpParams();
+  for (const [key, value] of Object.entries(params || {})) {
+    if (value === undefined || value === null || value === '') continue;
+    httpParams = httpParams.set(key, String(value));
   }
+  return this.http.get<any[]>(`${this.baseUrl}/products`, { params: httpParams });
+}
+  searchProducts(q: string, limit = 8): Observable<any[]> {
+  const params = new HttpParams()
+    .set('q', q || '')
+    .set('limit', String(limit));
+  return this.http.get<any[]>(`${this.baseUrl}/products/search`, { params });
+}
 
   getProductById(id: string): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/products/${id}`);

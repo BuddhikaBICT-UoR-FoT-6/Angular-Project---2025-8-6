@@ -3,11 +3,15 @@ import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/rou
 import { CommonModule } from '@angular/common';
 import { AuthService } from './services/auth.service';
 import { Toast } from './shared/toast/toast';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, startWith, switchMap } from 'rxjs';
+import { ApiService } from './services/api.service';
+import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   // Global imports for the root shell (nav + router outlet + toasts)
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, Toast],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, Toast, ReactiveFormsModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -20,7 +24,8 @@ export class App {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private apiService: ApiService
   ) {
     this.initTheme();
   }
@@ -95,4 +100,54 @@ export class App {
   logout() {
     this.authService.logout();
   }
+
+  getDashboardRoute(): string {
+    const role = this.getCurrentRole();
+    switch (role) {
+      case 'superadmin':
+        return '/superadmin/dashboard';
+      case 'admin':
+        return '/admin/dashboard';
+      case 'customer':
+        return '/customer/dashboard';
+      default:
+        return '/';
+    }
+  }
+
+  getSidebarDashboardRoute(): string {
+    const url = this.router.url || '';
+    if (url.startsWith('/admin')) return '/admin/dashboard';
+    if (url.startsWith('/superadmin')) return '/superadmin/dashboard';
+    return this.getDashboardRoute();
+  }
+
+  searchControl = new FormControl('', { nonNullable: true });
+  searchOpen = false;
+
+  searchResults$ = this.searchControl.valueChanges.pipe(
+    startWith(this.searchControl.value),
+    debounceTime(200),
+    distinctUntilChanged(),
+    switchMap((raw) => {
+      const q = (raw || '').trim();
+      if (q.length < 2) return of([]);
+      return this.apiService.searchProducts(q, 8).pipe(catchError(() => of([])));
+    })
+  );
+
+  openSearch(): void {
+    this.searchOpen = true;
+  }
+
+  closeSearch(): void {
+    this.searchOpen = false;
+  }
+
+  goToProduct(id: string): void {
+    this.closeSearch();
+    this.searchControl.setValue('', { emitEvent: false });
+    this.router.navigate(['/product', id]);
+  }
+  
 }
