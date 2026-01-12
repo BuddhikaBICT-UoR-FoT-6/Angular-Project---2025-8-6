@@ -19,6 +19,10 @@
         <p>Your order has been created successfully.</p>
         <div class="confirm-row"><span>Order ID</span><strong>{{ confirmation.orderId }}</strong></div>
         <div class="confirm-row"><span>Total</span><strong>${{ confirmation.total | number : '1.2-2' }}</strong></div>
+
+        <!-- Download invoice (opens backend endpoint with attachment) -->
+        <a class="secondary" [href]="'/api/orders/' + confirmation.orderId + '/invoice'" target="_blank">Download Invoice</a>
+
         <a class="primary" routerLink="/">Continue shopping</a>
       </div>
     </div>

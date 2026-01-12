@@ -11,6 +11,8 @@ const OTP = require('../models/otp');
 const { verifyToken } = require('../middleware/auth');
 const { generateOTP, sendCheckoutOTP } = require('../utils/emailService');
 
+const nodemailer = require('nodemailer');
+
 function toUpperCode(code) {
   return String(code || '').trim().toUpperCase();
 }
@@ -505,26 +507,69 @@ async function createOrderFromCart({ userId, shippingAddress, paymentMethod, cou
     };
   });
 
-  const created = await Order.create({
-    user_id: userId,
-    items: orderItems,
-    total_amount: summary.total,
-    status: 'pending',
-    shipping_address: {
-      fullName: shippingAddress.fullName,
-      phone: shippingAddress.phone,
-      street: shippingAddress.line1,
-      line1: shippingAddress.line1,
-      line2: shippingAddress.line2,
-      city: shippingAddress.city,
-      state: shippingAddress.state,
-      postalCode: shippingAddress.postalCode,
-      country: shippingAddress.country
-    },
-    payment_method: paymentMethod,
-    coupon_code: summary.coupon?.code || '',
-    discount_amount: summary.discount
-  });
+  // after createOrderFromCart created variable is set (replace the previous return sequence)
+  const created = await createOrderFromCart({ userId, shippingAddress: pendingShippingOrProvided, paymentMethod: actualMethod, couponCodeOverride: couponCode });
+
+  // Attempt to email invoice (non-blocking for client success)
+  (async () => {
+    try {
+      const orderDoc = await Order.findById(created.orderId).populate('user_id').lean();
+      if (orderDoc && orderDoc.user_id && orderDoc.user_id.email) {
+        // build a minimal HTML invoice (same template as order.routes)
+        const html = (function buildInvoiceHtml(order, user) {
+          const itemsHtml = (order.items || []).map((it) => `<tr>
+            <td style="padding:6px;border-bottom:1px solid #eee">${it.name} (${it.size})</td>
+            <td style="padding:6px;border-bottom:1px solid #eee">${it.quantity}</td>
+            <td style="padding:6px;border-bottom:1px solid #eee">$${(it.price || 0).toFixed(2)}</td>
+            <td style="padding:6px;border-bottom:1px solid #eee">$${((it.price||0) * (it.quantity||0)).toFixed(2)}</td>
+          </tr>`).join('');
+          return `
+            <!doctype html><html><head><meta charset="utf-8"><title>Invoice ${order._id}</title></head><body style="font-family:Arial,Helvetica,sans-serif;color:#222">
+            <h2>Invoice — Order ${order._id}</h2>
+            <p><strong>Total:</strong> $${(order.total_amount||0).toFixed(2)}</p>
+            <h3>Items</h3><table style="width:100%;border-collapse:collapse;"><thead><tr>
+              <th style="text-align:left;padding:6px;border-bottom:2px solid #ddd">Product</th>
+              <th style="text-align:left;padding:6px;border-bottom:2px solid #ddd">Qty</th>
+              <th style="text-align:left;padding:6px;border-bottom:2px solid #ddd">Unit</th>
+              <th style="text-align:left;padding:6px;border-bottom:2px solid #ddd">Total</th>
+            </tr></thead><tbody>${itemsHtml}</tbody></table>
+            </body></html>
+          `;
+        })(orderDoc, orderDoc.user_id);
+
+        // Send email (development-friendly)
+        const nodemailer = require('nodemailer');
+        const emailUser = process.env.EMAIL_USER || '';
+        const emailPass = (process.env.EMAIL_PASSWORD || '').replace(/\s+/g, '');
+        const emailService = process.env.EMAIL_SERVICE || '';
+        const isConfigured = !!(emailUser && emailPass && emailService);
+        if (!isConfigured) {
+          console.log('📧 [DEV] Invoice email (not sent) for order:', orderDoc._id, 'to:', orderDoc.user_id.email);
+        } else {
+          const transporter = nodemailer.createTransport({
+            service: emailService,
+            auth: { user: emailUser, pass: emailPass }
+          });
+          await transporter.sendMail({
+            from: emailUser,
+            to: orderDoc.user_id.email,
+            subject: `Invoice for Order ${orderDoc._id}`,
+            html: `<p>Thank you for your order. Invoice attached.</p>${html}`,
+            attachments: [{ filename: `invoice-${orderDoc._id}.html`, content: html, contentType: 'text/html' }]
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Error sending invoice email (non-fatal):', e);
+    }
+  })();
+
+  // mark pending checkout completed and delete otp (unchanged)
+  await PendingCheckout.updateOne({ _id: pending._id }, { $set: { status: 'completed' } });
+  await OTP.deleteOne({ _id: checkoutToken }).catch(() => undefined);
+  return res.json({ ok: true, provider: 'stripe-or-paypal-or-cod', ...created });
+
+  
 
   await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } }, { upsert: true });
 
