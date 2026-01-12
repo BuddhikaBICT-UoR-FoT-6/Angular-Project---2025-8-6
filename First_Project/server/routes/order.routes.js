@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 
 const Order = require('../models/order');
 const User = require('../models/user');
+const { generateInvoicePdfBuffer, sendInvoiceEmailPDF } = require('../utils/invoiceService');
 
 
 /**
@@ -87,42 +88,7 @@ function buildInvoiceHtml(order, user){
  * - Uses env EMAIL_SERVICE, EMAIL_USER, EMAIL_PASSWORD if configured.
  * - In development mode (missing config) logs the payload to console.
  */
-async function sendInvoiceEmail({to, subject, htmlContent, attachmentName}){
-  const emailUser = process.env.EMAIL_USER || '';
-  const emailPass = (process.env.EMAIL_PASSWORD || '').replace(/\s+/g, '');
-  const emailService = process.env.EMAIL_SERVICE || '';
-
-  const isConfigured = !!(emailUser && emailPass && emailService);
-  if(!isConfigured){
-    console.log('📧 [DEV] Invoice email (not sent) — to:', to, 'subject:', subject);
-    // Log short preview
-    console.log(htmlContent.substring(0, 400));
-    return { success: true, devMode: true };
-
-  }
-  
-  const transporter = nodemailer.createTransport({
-    service: emailService,
-    auth: {user: emailUser, pass: emailPass}
-  });
-
-  const mailOptions = {
-    from: emailUser,
-    to,
-    subject,
-    html: `<p>Hi,</p><p>Thank you for your order. Please find your invoice attached.</p>${htmlContent}`,
-    attachmentName: [
-      {
-        filename: attachmentName || `invoice-${Date.now()}.html`,
-        content: htmlContent,
-        contentType: 'text/html'
-      }
-    ]
-  };
-
-  const info = await transporter.sendMail(mailOptions);
-  return {success: true, messageId: info.messageId};
-}
+// PDF invoice emailing is handled by utils/invoiceService (generateInvoicePdfBuffer, sendInvoiceEmailPDF)
 
 /* -----------------------------
    ROUTES
@@ -174,11 +140,11 @@ router.get('/:id/invoice', async (req, res) => {
     if(!order) return res.status(404).json({error: 'Order not found'});
 
     const user = order.user_id || {};
-    const html = buildInvoiceHtml(order, user);
-
-    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
-    res.setHeader('Content-Disposition', `attachement; filename="invoice-${order._id}.html"`);
-    res.send(html);
+    // generate PDF buffer
+    const pdfBuffer = await generateInvoicePdfBuffer(order, user);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="invoice-${order._id}.pdf"`);
+    res.send(pdfBuffer);
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -196,27 +162,21 @@ router.post('/', async (req, res) => {
     // Save the new order
     const created = await new Order(req.body).save();
 
-    // Try to email invoice to the order's user if available
-    try{
-      const fullOrder = await Order.findById(created._id).populate('user_id').lean();
-      const user = fullOrder.user_id || {};
-      const html = buildInvoiceHtml(fullOrder, user);
-
-      if(user?.email){
-        await sendInvoiceEmail({
-          to: user.email,
-          subject: `Invoice for Order ${fullOrder._id}`,
-          htmlContent: html,
-          attachmentName: `invoice-${fullOrder._id}.html`
-        });
-
-      } else {
-        console.log('No user email found; skipping invoice email for order', fullOrder._id);
+    // Try to email invoice PDF to the order's user if available (non-blocking)
+    (async () => {
+      try {
+        const fullOrder = await Order.findById(created._id).populate('user_id').lean();
+        const user = fullOrder.user_id || {};
+        if (user?.email) {
+          const pdfBuffer = await generateInvoicePdfBuffer(fullOrder, user);
+          await sendInvoiceEmailPDF({ to: user.email, subject: `Invoice for Order ${fullOrder._id}`, pdfBuffer, filename: `invoice-${fullOrder._id}.pdf` });
+        } else {
+          console.log('No user email found; skipping invoice email for order', fullOrder._id);
+        }
+      } catch (emailErr) {
+        console.error('Error while sending invoice email (non-fatal):', emailErr);
       }
-
-    } catch(emailErr){
-      console.error('Error while sending invoice email:', emailErr);
-    }
+    })();
 
     res.json(created);
   } catch (err) {
