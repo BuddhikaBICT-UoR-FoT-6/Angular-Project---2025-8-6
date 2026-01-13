@@ -123,8 +123,66 @@ export class ApiService {
 
 
   // Order-related API calls
+  
+  /**
+   * Get all orders (Admin)
+   */
   getOrders(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/orders`);
+  }
+
+  /**
+   * Get authenticated customer's orders
+   */
+  getMyOrders(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/orders/my-orders`);
+  }
+
+  /**
+   * Get single order by ID
+   */
+  getOrderById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/orders/${id}`);
+  }
+
+  /**
+   * Download invoice PDF for an order
+   */
+  downloadInvoice(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/orders/${id}/invoice`, { responseType: 'blob' });
+  }
+
+  /**
+   * Update order status (Admin)
+   */
+  updateOrderStatus(id: string, status: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/orders/${id}/status`, { status });
+  }
+
+  /**
+   * Process refund (Admin)
+   */
+  processRefund(id: string, reason: string, amount?: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/orders/${id}/refund`, { reason, amount });
+  }
+
+  /**
+   * Cancel order (Customer)
+   */
+  cancelOrder(id: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/orders/${id}/cancel`, {});
+  }
+
+  /**
+   * Request refund (Customer)
+   */
+  requestRefund(id: string, reason: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/orders/${id}/request-refund`, { reason });
+  }
+
+
+  refundOrder(orderId: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/orders/${orderId}/refund`, {});
   }
 
   // Inventory-related API calls

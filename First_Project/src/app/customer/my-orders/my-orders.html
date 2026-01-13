@@ -1,0 +1,149 @@
+<div class="my-orders-page">
+  <div class="page-header">
+    <h2>My Orders</h2>
+    <div class="header-actions">
+      <a routerLink="/customer/dashboard" class="btn-back">← Dashboard</a>
+      <button class="btn-refresh" (click)="loadOrders()" [disabled]="isLoading">
+        <span>🔄</span> Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your orders...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!isLoading && orders.length === 0">
+    <div class="empty-icon">📦</div>
+    <h3>No orders yet</h3>
+    <p>Start shopping to see your orders here</p>
+    <a routerLink="/customer/showroom" class="btn-shop">Browse Products</a>
+  </div>
+
+  <div class="orders-list" *ngIf="!isLoading && orders.length > 0">
+    <div class="order-card" *ngFor="let order of orders">
+      <div class="order-header">
+        <div class="order-id">
+          <span class="label">Order #</span>
+          <span class="value">{{ order._id?.slice(-8) }}</span>
+        </div>
+        <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+          {{ order.status }}
+        </span>
+      </div>
+
+      <div class="order-info">
+        <div class="info-row">
+          <span class="info-label">📅 Date</span>
+          <span class="info-value">{{ order.created_at | date:'medium' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">💰 Total</span>
+          <span class="info-value total">{{ getOrderTotal(order) | currency }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">📦 Items</span>
+          <span class="info-value">{{ getOrderItems(order).length }}</span>
+        </div>
+        <div class="info-row" *ngIf="order.refund_status !== 'none'">
+          <span class="info-label">💸 Refund</span>
+          <span class="refund-badge" [ngClass]="getRefundStatusClass(order.refund_status)">
+            {{ order.refund_status }}
+          </span>
+        </div>
+      </div>
+
+      <div class="order-actions">
+        <button class="btn-view" (click)="viewOrderDetails(order)">View Details</button>
+        <button class="btn-download" (click)="downloadInvoice(order)">📄 Invoice</button>
+        <button class="btn-cancel" *ngIf="canCancel(order)" (click)="cancelOrder(order)">Cancel</button>
+        <button class="btn-refund" *ngIf="canRequestRefund(order)" (click)="openRefundModal(order)">
+          Request Refund ({{ getDaysRemainingForRefund(order) }} days left)
+        </button>
+        <span class="refund-expired" *ngIf="order.status === 'delivered' && !canRequestRefund(order) && order.refund_status === 'none'">
+          Refund window expired
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="selectedOrder && !showRefundModal" (click)="closeDetails()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Order Details</h3>
+        <button class="btn-close" (click)="closeDetails()">✕</button>
+      </div>
+
+      <div class="modal-content">
+        <div class="detail-section">
+          <h4>Order Information</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Order ID</span>
+              <span class="detail-value">{{ selectedOrder._id }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Status</span>
+              <span class="status-badge" [ngClass]="getStatusClass(selectedOrder.status)">
+                {{ selectedOrder.status }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Date</span>
+              <span class="detail-value">{{ selectedOrder.created_at | date:'medium' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Payment</span>
+              <span class="detail-value">{{ selectedOrder.payment_method }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedOrder.shipping_address">
+          <h4>Shipping Address</h4>
+          <p class="address-text">{{ formatAddress(selectedOrder.shipping_address) }}</p>
+        </div>
+
+        <div class="detail-section">
+          <h4>Order Items</h4>
+          <div class="items-list">
+            <div class="item-row" *ngFor="let item of getOrderItems(selectedOrder)">
+              <div class="item-info">
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-details">Size: {{ item.size }} | Qty: {{ item.quantity }}</span>
+              </div>
+              <span class="item-total">{{ item.quantity * item.price | currency }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="total-summary">
+            <span class="total-label">Total Amount</span>
+            <span class="total-value">{{ getOrderTotal(selectedOrder) | currency }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showRefundModal" (click)="closeRefundModal()">
+    <div class="modal-card refund-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Request Refund</h3>
+        <button class="btn-close" (click)="closeRefundModal()">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-group">
+          <label>Reason for Refund</label>
+          <textarea [(ngModel)]="refundReason" class="form-input" rows="4" placeholder="Please explain why you want a refund"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel-modal" (click)="closeRefundModal()">Cancel</button>
+          <button class="btn-submit" (click)="requestRefund()">Submit Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

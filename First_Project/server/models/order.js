@@ -13,9 +13,16 @@ const OrderSchema = new mongoose.Schema({
     total_amount: {type: Number, required: true},
     status: {
             type: String,
-            enum: ['pending', 'shipped', 'delivered', 'cancelled'],
+            enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
             default: 'pending'
     },
+    refund_status: {
+        type: String,
+        enum: ['none', 'requested', 'processing', 'completed', 'rejected'],
+        default: 'none'
+    },
+    refund_amount: { type: Number, default: 0 },
+    refund_reason: { type: String, default: '' },
     shipping_address: {
         fullName: { type: String, default: '' },
         phone: { type: String, default: '' },
