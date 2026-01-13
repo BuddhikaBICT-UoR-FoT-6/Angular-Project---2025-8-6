@@ -20,6 +20,7 @@ import { Reports } from './admin/reports/reports';
 import { Analytics } from './admin/analytics/analytics';
 import { AdminManagement } from './admin/admin-management/admin-management';
 import { SupplierRestockRequests } from './supplier/restock-requests/restock-requests';
+import { MyOrders } from './customer/my-orders/my-orders';
 
 export const routes: Routes = [
   { path: '', component: Showroom },
@@ -32,6 +33,7 @@ export const routes: Routes = [
   { path: 'cart', component: Cart },
   { path: 'checkout', component: Checkout },
   { path: 'customer/dashboard', component: CustomerDashboard },
+  { path: 'customer/my-orders', component: MyOrders },
   { path: 'admin', redirectTo: 'admin/dashboard', pathMatch: 'full' },
   { path: 'admin/dashboard', component: Dashboard },
   { path: 'admin/products', component: Products },

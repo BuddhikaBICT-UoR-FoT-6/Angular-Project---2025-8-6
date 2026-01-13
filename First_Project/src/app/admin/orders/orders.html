@@ -68,8 +68,8 @@
     <div class="order-card" *ngFor="let order of filteredOrders">
       <div class="order-header">
         <div class="order-id">
-          <span class="label">Order #</span>
-          <span class="value">{{ order._id?.slice(-8) || 'N/A' }}</span>
+          <span class="label">Order</span>
+          <span class="value" title="{{ order._id }}">#{{ order._id?.slice(-8) || 'N/A' }}</span>
         </div>
         <span class="status-badge" [ngClass]="getStatusClass(order.status)">
           {{ order.status || 'pending' }}
@@ -87,7 +87,7 @@
         </div>
         <div class="info-row">
           <span class="info-label">💰 Total</span>
-          <span class="info-value total-amount">\${{ getOrderTotal(order) | number:'1.2-2' }}</span>
+          <span class="info-value total-amount">${{ getOrderTotal(order) | number:'1.2-2' }}</span>
         </div>
         <div class="info-row" *ngIf="order.shipping_address">
           <span class="info-label">📍 Address</span>
@@ -99,6 +99,15 @@
         <button class="btn-view" (click)="viewOrderDetails(order)">
           <span>👁️</span> View Details
         </button>
+        <select class="status-select purple-select" [ngClass]="{ 'status-select-shipped': (order.status || '').toLowerCase() === 'shipped', 'status-select-cancelled': (order.status || '').toLowerCase() === 'cancelled' }" [value]="order.status" (change)="changeOrderStatus(order, $event)">
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <button class="btn-refund" (click)="openRefundModal(order)">💰 Refund</button>
+        <button class="btn-invoice" (click)="downloadInvoice(order)">📄 Download Invoice</button>
       </div>
     </div>
   </div>
@@ -147,18 +156,42 @@
             <div class="item-row" *ngFor="let item of getOrderItems(selectedOrder)">
               <div class="item-info">
                 <span class="item-name">{{ item.product_name || item.name || 'Product' }}</span>
-                <span class="item-details">Qty: {{ item.quantity || 1 }} × \${{ item.price || 0 | number:'1.2-2' }}</span>
+                <span class="item-details">Qty: {{ item.quantity || 1 }} × ${{ item.price || 0 | number:'1.2-2' }}</span>
               </div>
-              <span class="item-total">\${{ (item.quantity || 1) * (item.price || 0) | number:'1.2-2' }}</span>
+              <span class="item-total">${{ (item.quantity || 1) * (item.price || 0) | number:'1.2-2' }}</span>
             </div>
           </div>
         </div>
 
         <div class="detail-section">
-          <div class="total-summary">
+            <div class="total-summary">
             <span class="total-label">Total Amount</span>
-            <span class="total-value">\${{ getOrderTotal(selectedOrder) | number:'1.2-2' }}</span>
+            <span class="total-value">${{ getOrderTotal(selectedOrder) | number:'1.2-2' }}</span>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Refund Modal -->
+  <div class="modal-overlay" *ngIf="showRefundModal" (click)="closeRefundModal()">
+    <div class="modal-card refund-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Process Refund</h3>
+        <button class="btn-close" (click)="closeRefundModal()">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-group">
+          <label>Refund Amount</label>
+          <input type="number" [(ngModel)]="refundAmount" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>Reason</label>
+          <textarea [(ngModel)]="refundReason" class="form-input" rows="3" placeholder="Enter refund reason"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="closeRefundModal()">Cancel</button>
+          <button class="btn-confirm" (click)="processRefund()">Process Refund</button>
         </div>
       </div>
     </div>

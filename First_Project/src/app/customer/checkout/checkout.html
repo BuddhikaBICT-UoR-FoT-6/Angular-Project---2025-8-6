@@ -15,11 +15,24 @@
   <ng-container *ngIf="isLoggedIn()">
     <div *ngIf="confirmation" class="confirm">
       <div class="confirm-card">
-        <h3>Order Confirmed</h3>
-        <p>Your order has been created successfully.</p>
-        <div class="confirm-row"><span>Order ID</span><strong>{{ confirmation.orderId }}</strong></div>
+        <div class="confirm-header">
+          <h3>Order Confirmed</h3>
+          <span class="confirm-badge">Success</span>
+        </div>
+        <p class="confirm-msg">Thank you — your order was placed successfully.</p>
+
+        <div class="confirm-row id-row">
+          <span>Order</span>
+          <strong class="order-id" title="{{ confirmation.orderId }}">#{{ confirmation.orderId?.slice(-8) }}</strong>
+        </div>
+
         <div class="confirm-row"><span>Total</span><strong>${{ confirmation.total | number : '1.2-2' }}</strong></div>
-        <a class="primary" routerLink="/">Continue shopping</a>
+
+        <!-- Download invoice (opens backend endpoint with attachment) -->
+        <div class="confirm-actions">
+          <a class="secondary" [href]="'/api/orders/' + confirmation.orderId + '/invoice'" target="_blank">Download Invoice</a>
+          <a class="primary" routerLink="/">Continue shopping</a>
+        </div>
       </div>
     </div>
 

@@ -93,7 +93,7 @@ export class Checkout {
         this.otpVerified = false;
         sessionStorage.setItem(this.OTP_TOKEN_KEY, this.checkoutToken);
         sessionStorage.removeItem(this.OTP_VERIFIED_KEY);
-        this.toast.success('OTP sent. Please check your email.');
+        this.toast.success(r?.message || 'OTP sent. Please check your email.');
       },
       error: (err) => {
         this.otpSending = false;
@@ -121,11 +121,11 @@ export class Checkout {
 
     this.otpVerifying = true;
     this.checkout.verifyOtp({ otp, checkoutToken: this.checkoutToken }).subscribe({
-      next: () => {
+      next: (r) => {
         this.otpVerifying = false;
         this.otpVerified = true;
         sessionStorage.setItem(this.OTP_VERIFIED_KEY, 'true');
-        this.toast.success('OTP verified. You can place the order now.');
+        this.toast.success(r?.message || 'OTP verified. You can place the order now.');
       },
       error: (err) => {
         this.otpVerifying = false;
@@ -278,6 +278,7 @@ export class Checkout {
       error: (err) => {
         this.placingOrder = false;
         this.errorMessage = err?.error?.error || 'Unable to confirm payment.';
+        this.toast.error(this.errorMessage);
       }
     });
   }

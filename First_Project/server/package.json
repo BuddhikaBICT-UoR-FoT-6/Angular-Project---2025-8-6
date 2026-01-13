@@ -23,6 +23,7 @@
     "mongoose": "^8.18.0",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
+    "pdfkit": "^0.13.0",
     "sharp": "^0.34.5"
   }
 }

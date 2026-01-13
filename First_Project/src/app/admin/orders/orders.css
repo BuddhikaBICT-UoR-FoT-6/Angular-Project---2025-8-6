@@ -18,18 +18,18 @@
   margin: 0;
   font-size: 28px;
   font-weight: 700;
-  color: var(--text);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.status-shipped {
+  background: #6d3df5; /* purple */
+  color: #000; /* black text per request */
 }
-
-.header-actions { display: flex; gap: 12px; align-items: center; }
-
-.btn-back {
-  background: var(--surface);
-  color: var(--accent);
+.status-delivered {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-cancelled {
+  background: #6d3df5; /* purple */
+  color: #000; /* black text per request */
+}
   border: 1px solid var(--border);
   padding: 10px 20px;
   border-radius: 8px;
@@ -41,6 +41,11 @@
 .btn-back:hover {
   background: var(--surface-2);
   border-color: var(--border-strong);
+.status-select-shipped, .status-select-cancelled {
+  background: #6d3df5 !important;
+  color: #000 !important;
+  font-weight: 800;
+}
 }
 
 .btn-refresh {
@@ -532,3 +537,131 @@ th {
 .status.shipped { background: #d1ecf1; color: #0c5460; }
 .status.delivered { background: #d4edda; color: #155724; }
 .status.cancelled { background: #f8d7da; color: #721c24; }
+
+.status-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.status-select:hover {
+  border-color: var(--border-strong);
+}
+
+.btn-refund, .btn-invoice {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-refund {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-refund:hover {
+  background: #fecaca;
+}
+
+.btn-invoice {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.btn-invoice:hover {
+  background: #bfdbfe;
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.refund-modal {
+  max-width: 500px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Force purple dropdown styling for order status select */
+.status-select.purple-select {
+  background: #6d3df5 !important;
+  color: #ffffff !important;
+  border-color: #5a2fd1 !important;
+  font-weight: 700 !important;
+}
+
+.status-select.purple-select option {
+  background: #6d3df5;
+  color: #ffffff;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.btn-cancel, .btn-confirm {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.btn-cancel:hover {
+  background: var(--border);
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}

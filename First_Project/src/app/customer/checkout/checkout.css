@@ -75,8 +75,14 @@
 .empty-card h3{margin:0 0 8px 0}
 
 .confirm{margin:12px 0}
-.confirm-card{background:rgba(109,61,245,.08);border:1px solid rgba(196,167,255,.22);border-radius:var(--radius);padding:16px}
-.confirm-row{display:flex;justify-content:space-between;gap:12px;margin-top:8px}
+.confirm-card{background: rgba(109,61,245,0.08); border:1px solid rgba(196,167,255,0.22); border-radius:var(--radius); padding:18px; color:var(--text); box-shadow: 0 8px 24px rgba(109,61,245,0.06);} 
+.confirm-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.confirm-badge{background:#6d3df5;color:#000;padding:6px 10px;border-radius:999px;font-weight:800;font-size:12px}
+.confirm-msg{margin:8px 0 12px 0;font-size:15px;color:var(--text)}
+.confirm-row{display:flex;justify-content:space-between;gap:12px;margin-top:8px;align-items:center}
+.order-id{font-family:monospace;font-weight:800;background:#6d3df5;color:#000;padding:6px 10px;border-radius:8px}
+.id-row span{color:var(--muted);font-weight:700}
+.confirm-actions{display:flex;gap:12px;margin-top:14px}
 
 @media(max-width:900px){
   .checkout-grid{grid-template-columns:1fr}
