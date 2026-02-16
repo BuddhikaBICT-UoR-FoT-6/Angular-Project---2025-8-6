@@ -3,6 +3,7 @@ const router = express.Router();
 const Order = require('../models/order');
 const { verifyToken } = require('../middleware/auth');
 const { generateInvoicePDF, sendInvoiceEmail } = require('../utils/invoiceGenerator');
+const { broadcastAnalyticsUpdated } = require('../utils/analyticsStream');
 
 /**
  * GET /api/orders
@@ -103,6 +104,9 @@ router.post('/', async (req, res) => {
       // Don't fail order creation if email fails
     }
 
+    broadcastAnalyticsUpdated('order_created');
+    broadcastAnalyticsUpdated('order_status_updated');
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -177,6 +181,9 @@ router.post('/:id/refund', async (req, res) => {
     } catch (emailError) {
       console.error('Failed to send invoice email after refund:', emailError);
     }
+
+    broadcastAnalyticsUpdated('order_refunded');
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -219,6 +226,9 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
     } catch (emailError) {
       console.error('Failed to send invoice email after cancellation:', emailError);
     }
+
+    broadcastAnalyticsUpdated('order_cancelled');
+    
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });

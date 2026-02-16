@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, of, timeout } from 'rxjs';
@@ -12,14 +12,17 @@ interface AnalyticsStats {
   lowStockItems: number;
 }
 
+type SalesTrendPoint = { date: string; revenue: number; orders: number };
+
 @Component({
   selector: 'app-analytics',
   imports: [CommonModule, RouterLink],
   templateUrl: './analytics.html',
   styleUrl: './analytics.css'
 })
-export class Analytics implements OnInit {
+export class Analytics implements OnInit, OnDestroy {
   isLoading = true;
+
   stats: AnalyticsStats = {
     totalUsers: 0,
     totalProducts: 0,
@@ -28,10 +31,36 @@ export class Analytics implements OnInit {
     lowStockItems: 0
   };
 
+  // Sales trends chart
+  salesDays = 30;
+  salesTrends: SalesTrendPoint[] = [];
+
+  // SVG chart rendering
+  chartW = 900;
+  chartH = 260;
+  pad = 36;
+
+  polylinePoints = '';
+  dots: Array<{x: number; y: number; title: string}> = [];
+  yMax = 0;
+
+  private sse?: EventSource;
+  private reloadTimer?: any;
+
   constructor(private apiService: ApiService) {}
 
   ngOnInit(): void {
     this.refresh();
+    this.loadSalesTrends();
+    this.startRealtimeStream();
+  }
+
+  ngOnDestroy(): void {
+    try{
+      this.sse?.close();
+    } catch (e) {
+      if(this.reloadTimer) clearTimeout(this.reloadTimer);
+    }
   }
 
   refresh() {
@@ -109,4 +138,33 @@ export class Analytics implements OnInit {
       }
     });
   }
+
+  loadSalesTrends(){
+    this.apiService.getSalesTrends(this.salesDays).pipe(timeout({first: 20000}),
+      catchError((err) => {
+        console.error('Analytics: failed to load sales trends', err);
+        return of([]);
+      })
+    )
+    .subscribe((points: any) => {
+      this.salesTrends = Array.isArray(points) ? points : [];
+      this.rebuildSalesChart();
+    });
+  }
+
+  private startRealtimeStream(){
+    // SSE does not send auth headers; we keep stream payload non-sensitive and refetch via HttpClient.
+    try{
+      this.sse = new EventSource('/api/analytics/stream');
+
+      this.sse.addEventListener('analytics_updated', () => {
+        this.scheduleReload();
+
+      });
+
+    }
+
+  }
+
+
 }

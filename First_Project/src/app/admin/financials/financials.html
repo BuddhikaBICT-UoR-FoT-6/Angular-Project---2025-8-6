@@ -1,1 +1,352 @@
-<p>financials works!</p>
+<div class="financial-dashboard">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <h1>Financial Management</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="syncOrders()">
+        <span class="icon">🔄</span> Sync Orders
+      </button>
+      <button class="btn btn-primary" (click)="exportExcel()">
+        <span class="icon">📊</span> Export Excel
+      </button>
+      <button class="btn btn-primary" (click)="exportPDF()">
+        <span class="icon">📄</span> Export PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Quick Filter:</label>
+      <select [(ngModel)]="quickFilter" (change)="onQuickFilterChange()" class="filter-select">
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+        <option value="quarter">This Quarter</option>
+        <option value="year">This Year</option>
+        <option value="custom">Custom Range</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Period:</label>
+      <select [(ngModel)]="selectedPeriod" (change)="onPeriodChange()" class="filter-select">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Start Date:</label>
+      <input type="date" [(ngModel)]="startDate" (change)="onDateRangeChange()" class="filter-input" />
+    </div>
+
+    <div class="filter-group">
+      <label>End Date:</label>
+      <input type="date" [(ngModel)]="endDate" (change)="onDateRangeChange()" class="filter-input" />
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-section" *ngIf="revenueReport && profitLoss">
+    <div class="kpi-card revenue">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-content">
+        <h3>Total Revenue</h3>
+        <p class="kpi-value">{{ formatCurrency(revenueReport.summary.totalRevenue) }}</p>
+        <span class="kpi-label">{{ revenueReport.summary.totalTransactions }} transactions</span>
+      </div>
+    </div>
+
+    <div class="kpi-card profit">
+      <div class="kpi-icon">📈</div>
+      <div class="kpi-content">
+        <h3>Net Profit</h3>
+        <p class="kpi-value" [ngClass]="getProfitClass(profitLoss.statement.profit.net_profit)">
+          {{ formatCurrency(profitLoss.statement.profit.net_profit) }}
+        </p>
+        <span class="kpi-label">Margin: {{ profitLoss.statement.profit.net_profit_margin }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card tax">
+      <div class="kpi-icon">🧾</div>
+      <div class="kpi-content">
+        <h3>Tax Liability</h3>
+        <p class="kpi-value">{{ formatCurrency(revenueReport.summary.totalTax) }}</p>
+        <span class="kpi-label" *ngIf="taxSummary">{{ taxSummary.summary.average_tax_rate }} avg rate</span>
+      </div>
+    </div>
+
+    <div class="kpi-card margin">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-content">
+        <h3>Gross Profit</h3>
+        <p class="kpi-value">{{ formatCurrency(profitLoss.statement.profit.gross_profit) }}</p>
+        <span class="kpi-label">Margin: {{ profitLoss.statement.profit.gross_profit_margin }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'revenue'"
+      (click)="setActiveTab('revenue')">
+      Revenue Reports
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'analytics'"
+      (click)="setActiveTab('analytics')">
+      Sales Analytics
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'profitLoss'"
+      (click)="setActiveTab('profitLoss')">
+      Profit & Loss
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'tax'"
+      (click)="setActiveTab('tax')">
+      Tax Summary
+    </button>
+  </div>
+
+  <!-- Revenue Report Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'revenue'">
+    <div class="section-header">
+      <h2>Revenue Report - {{ selectedPeriod | titlecase }}</h2>
+    </div>
+
+    <div *ngIf="loading.revenue" class="loading">Loading revenue data...</div>
+
+    <div *ngIf="!loading.revenue && revenueReport" class="data-table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Period</th>
+            <th>Revenue</th>
+            <th>COGS</th>
+            <th>Expenses</th>
+            <th>Tax</th>
+            <th>Profit</th>
+            <th>Margin %</th>
+            <th>Transactions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of revenueReport.data">
+            <td>{{ row.period }}</td>
+            <td>{{ formatCurrency(row.revenue) }}</td>
+            <td>{{ formatCurrency(row.cogs) }}</td>
+            <td>{{ formatCurrency(row.expenses) }}</td>
+            <td>{{ formatCurrency(row.tax) }}</td>
+            <td [ngClass]="getProfitClass(row.profit)">{{ formatCurrency(row.profit) }}</td>
+            <td>{{ row.profit_margin }}%</td>
+            <td>{{ row.transactions }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="summary-row">
+            <td><strong>Total</strong></td>
+            <td><strong>{{ formatCurrency(revenueReport.summary.totalRevenue) }}</strong></td>
+            <td>-</td>
+            <td>-</td>
+            <td><strong>{{ formatCurrency(revenueReport.summary.totalTax) }}</strong></td>
+            <td [ngClass]="getProfitClass(revenueReport.summary.totalProfit)">
+              <strong>{{ formatCurrency(revenueReport.summary.totalProfit) }}</strong>
+            </td>
+            <td>-</td>
+            <td><strong>{{ revenueReport.summary.totalTransactions }}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sales Analytics Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'analytics'">
+    <div class="section-header">
+      <h2>Sales Analytics</h2>
+    </div>
+
+    <div *ngIf="loading.analytics" class="loading">Loading analytics data...</div>
+
+    <div *ngIf="!loading.analytics && salesAnalytics" class="analytics-container">
+      <!-- Revenue Trend Chart Placeholder -->
+      <div class="chart-container">
+        <h3>Revenue Trend</h3>
+        <div class="chart-placeholder">
+          <p>📈 Revenue Trend Chart</p>
+          <p class="chart-note">Chart.js visualization will render here</p>
+          <div class="chart-data-preview">
+            <div *ngFor="let label of salesAnalytics.chartData.labels; let i = index" class="data-point">
+              <span class="label">{{ label }}:</span>
+              <span class="value revenue">Revenue: {{ formatCurrency(salesAnalytics.chartData.revenue[i]) }}</span>
+              <span class="value profit">Profit: {{ formatCurrency(salesAnalytics.chartData.profit[i]) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Breakdown -->
+      <div class="chart-container">
+        <h3>Category Breakdown</h3>
+        <div class="category-list">
+          <div *ngFor="let category of salesAnalytics.categoryBreakdown" class="category-item">
+            <div class="category-header">
+              <span class="category-name">{{ category.category }}</span>
+              <span class="category-count">{{ category.count }} transactions</span>
+            </div>
+            <div class="category-revenue">{{ formatCurrency(category.revenue) }}</div>
+            <div class="category-bar">
+              <div class="bar-fill" 
+                   [style.width.%]="(category.revenue / salesAnalytics.categoryBreakdown[0].revenue) * 100">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profit & Loss Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'profitLoss'">
+    <div class="section-header">
+      <h2>Profit & Loss Statement</h2>
+    </div>
+
+    <div *ngIf="loading.profitLoss" class="loading">Loading profit/loss data...</div>
+
+    <div *ngIf="!loading.profitLoss && profitLoss" class="profit-loss-container">
+      <!-- Revenue Section -->
+      <div class="pl-section">
+        <h3>Revenue</h3>
+        <div class="pl-row">
+          <span class="pl-label">Gross Revenue</span>
+          <span class="pl-value">{{ formatCurrency(profitLoss.statement.revenue.gross_revenue) }}</span>
+        </div>
+        <div class="pl-row">
+          <span class="pl-label">Less: Discounts</span>
+          <span class="pl-value negative">{{ formatCurrency(profitLoss.statement.revenue.discounts) }}</span>
+        </div>
+        <div class="pl-row total">
+          <span class="pl-label"><strong>Net Revenue</strong></span>
+          <span class="pl-value"><strong>{{ formatCurrency(profitLoss.statement.revenue.net_revenue) }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Costs Section -->
+      <div class="pl-section">
+        <h3>Costs</h3>
+        <div class="pl-row">
+          <span class="pl-label">Cost of Goods Sold (COGS)</span>
+          <span class="pl-value">{{ formatCurrency(profitLoss.statement.costs.cost_of_goods_sold) }}</span>
+        </div>
+        <div class="pl-row">
+          <span class="pl-label">Operating Expenses</span>
+          <span class="pl-value">{{ formatCurrency(profitLoss.statement.costs.operating_expenses) }}</span>
+        </div>
+        <div class="pl-row total">
+          <span class="pl-label"><strong>Total Costs</strong></span>
+          <span class="pl-value"><strong>{{ formatCurrency(profitLoss.statement.costs.total_costs) }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Profit Section -->
+      <div class="pl-section">
+        <h3>Profit</h3>
+        <div class="pl-row">
+          <span class="pl-label">Gross Profit</span>
+          <span class="pl-value">{{ formatCurrency(profitLoss.statement.profit.gross_profit) }}</span>
+        </div>
+        <div class="pl-row">
+          <span class="pl-label">Gross Profit Margin</span>
+          <span class="pl-value">{{ profitLoss.statement.profit.gross_profit_margin }}</span>
+        </div>
+        <div class="pl-row">
+          <span class="pl-label">Operating Profit</span>
+          <span class="pl-value">{{ formatCurrency(profitLoss.statement.profit.operating_profit) }}</span>
+        </div>
+        <div class="pl-row">
+          <span class="pl-label">Less: Tax</span>
+          <span class="pl-value negative">{{ formatCurrency(profitLoss.statement.profit.tax) }}</span>
+        </div>
+        <div class="pl-row total highlight">
+          <span class="pl-label"><strong>Net Profit</strong></span>
+          <span class="pl-value" [ngClass]="getProfitClass(profitLoss.statement.profit.net_profit)">
+            <strong>{{ formatCurrency(profitLoss.statement.profit.net_profit) }}</strong>
+          </span>
+        </div>
+        <div class="pl-row">
+          <span class="pl-label">Net Profit Margin</span>
+          <span class="pl-value">{{ profitLoss.statement.profit.net_profit_margin }}</span>
+        </div>
+      </div>
+
+      <div class="pl-footer">
+        <p>Based on {{ profitLoss.transactionCount }} transactions</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tax Summary Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'tax'">
+    <div class="section-header">
+      <h2>Tax Summary</h2>
+    </div>
+
+    <div *ngIf="loading.tax" class="loading">Loading tax data...</div>
+
+    <div *ngIf="!loading.tax && taxSummary" class="tax-container">
+      <!-- Tax Overview -->
+      <div class="tax-overview">
+        <div class="tax-card">
+          <h4>Total Tax Collected</h4>
+          <p class="tax-amount">{{ formatCurrency(taxSummary.summary.total_tax_collected) }}</p>
+        </div>
+        <div class="tax-card">
+          <h4>Total Taxable Amount</h4>
+          <p class="tax-amount">{{ formatCurrency(taxSummary.summary.total_taxable_amount) }}</p>
+        </div>
+        <div class="tax-card">
+          <h4>Average Tax Rate</h4>
+          <p class="tax-amount">{{ taxSummary.summary.average_tax_rate }}</p>
+        </div>
+        <div class="tax-card">
+          <h4>Transactions</h4>
+          <p class="tax-amount">{{ taxSummary.summary.transactions_count }}</p>
+        </div>
+      </div>
+
+      <!-- Tax Breakdown Table -->
+      <div class="data-table-container">
+        <h3>Tax Breakdown by Period</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Revenue</th>
+              <th>Tax Collected</th>
+              <th>Transactions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of taxSummary.breakdown">
+              <td>{{ row.period }}</td>
+              <td>{{ formatCurrency(row.revenue) }}</td>
+              <td>{{ formatCurrency(row.tax_collected) }}</td>
+              <td>{{ row.transactions }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -273,4 +273,13 @@ export class ApiService {
   getFinancials(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/financials`);
   }
+
+
+  // Analytics-related API calls
+  // Analytics: sales trends (daily revenue)
+  getSalesTrends(days = 30): Observable<Array<{ date: string; revenue: number; orders: number }>> {
+    return this.http.get<Array<{ date: string; revenue: number; orders: number }>>(
+      `${this.baseUrl}/analytics/sales-trends?days=${encodeURIComponent(String(days))}`
+    );
+  }
 }

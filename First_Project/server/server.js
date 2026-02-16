@@ -18,6 +18,7 @@ const reviewRoutes = require('./routes/review.routes');
 const cartRoutes = require('./routes/cart.routes');
 const checkoutRoutes = require('./routes/checkout.routes');
 const uploadsRoutes = require('./routes/uploads.routes');
+const analyticsRoutes = require('./routes/analytics.routes');
 
 const app = express();
 
@@ -81,7 +82,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/uploads', uploadsRoutes);
-
+app.use('/api/analytics', analyticsRoutes);
 // Test DB endpoint (optional, for debugging)
 app.get("/test-db", async (req, res) => {
   try {

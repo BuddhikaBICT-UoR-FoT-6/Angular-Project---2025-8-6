@@ -11,6 +11,7 @@ const OTP = require('../models/otp');
 const { verifyToken } = require('../middleware/auth');
 const { generateOTP, sendCheckoutOTP } = require('../utils/emailService');
 const { generateInvoicePDF, sendInvoiceEmail } = require('../utils/invoiceGenerator');
+const { broadcastAnalyticsUpdated } = require('../utils/analyticsStream');
 
 function toUpperCode(code) {
   return String(code || '').trim().toUpperCase();
@@ -427,6 +428,8 @@ router.post('/stripe/create-session', verifyToken, async (req, res) => {
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
     });
 
+    broadcastAnalyticsUpdated('order_created');
+
     res.json({ provider: 'stripe', providerRef: session.id, url: session.url });
   } catch (err) {
     sendError(res, err);
@@ -457,6 +460,7 @@ router.post('/paypal/create-order', verifyToken, async (req, res) => {
     const cancelUrl = process.env.PAYPAL_CANCEL_URL || `${baseUrl}/checkout?status=paypal_cancelled`;
 
     const accessToken = await paypalGetAccessToken({ clientId, clientSecret });
+    
     const order = await paypalCreateOrder({
       accessToken,
       total: Number(summary.total),
@@ -480,6 +484,8 @@ router.post('/paypal/create-order', verifyToken, async (req, res) => {
       otpToken: String(req.body?.checkoutToken || '').trim(),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
     });
+
+    broadcastAnalyticsUpdated('order_created');
 
     res.json({ provider: 'paypal', providerRef: order.id, approvalUrl: approve?.href });
   } catch (err) {
@@ -530,6 +536,8 @@ async function createOrderFromCart({ userId, shippingAddress, paymentMethod, cou
   await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } }, { upsert: true });
 
   return { orderId: String(created._id), total: summary.total };
+
+  
 }
 
 // Confirm / place order
@@ -564,6 +572,7 @@ router.post('/confirm', verifyToken, async (req, res) => {
             const orderDoc = await Order.findById(created.orderId).populate('user_id').lean();
             const pdf = await generateInvoicePDF(orderDoc);
               await sendInvoiceEmail(user.email, orderDoc, pdf);
+              broadcastAnalyticsUpdated('order_created');
           }
         } catch (e) {
           console.error('Error sending invoice email (COD):', e);
