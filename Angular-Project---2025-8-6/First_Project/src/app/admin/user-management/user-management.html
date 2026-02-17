@@ -1,0 +1,209 @@
+<div class="user-management-container">
+    <div class="header">
+        <h1>User Management</h1>
+        <p class="subtitle">Manage users, roles, and permissions</p>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="error">
+        <span class="error-icon">⚠️</span>
+        {{ error }}
+        <button class="close-btn" (click)="error = ''">×</button>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <div class="filter-group">
+            <label for="role-filter">Role</label>
+            <select id="role-filter" [(ngModel)]="selectedRole" (change)="applyFilters()">
+                <option value="">All Roles</option>
+                <option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="status-filter">Status</label>
+            <select id="status-filter" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+                <option value="">All Statuses</option>
+                <option *ngFor="let status of statuses" [value]="status.value">{{ status.label }}</option>
+            </select>
+        </div>
+
+        <div class="filter-group search-group">
+            <label for="search">Search</label>
+            <input type="text" id="search" [(ngModel)]="searchTerm" (keyup.enter)="applyFilters()"
+                placeholder="Search by name or email..." />
+        </div>
+
+        <div class="filter-actions">
+            <button class="btn btn-primary" (click)="applyFilters()">Apply Filters</button>
+            <button class="btn btn-secondary" (click)="clearFilters()">Clear</button>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading users...</p>
+    </div>
+
+    <!-- Users Table -->
+    <div class="table-container" *ngIf="!loading">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th>Login Count</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let user of filteredUsers">
+                    <td>
+                        <div class="user-info">
+                            <img [src]="user.profile_image || 'assets/default-avatar.png'" alt="{{ user.full_name }}"
+                                class="user-avatar" />
+                            <span>{{ user.full_name }}</span>
+                        </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.phone || 'N/A' }}</td>
+                    <td>
+                        <span class="role-badge">{{ getRoleDisplay(user.role) }}</span>
+                    </td>
+                    <td>
+                        <span class="status-badge" [ngClass]="getStatusClass(user.status)">
+                            {{ user.status | titlecase }}
+                        </span>
+                    </td>
+                    <td>{{ formatDate(user.lastLogin) }}</td>
+                    <td>{{ user.loginCount || 0 }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-icon" (click)="openEditModal(user)" title="Edit User">
+                                ✏️
+                            </button>
+                            <button class="btn-icon" (click)="viewActivity(user)" title="View Activity">
+                                📊
+                            </button>
+                            <button class="btn-icon" (click)="toggleUserStatus(user)"
+                                [title]="user.status === 'active' ? 'Deactivate' : 'Activate'">
+                                {{ user.status === 'active' ? '🔴' : '🟢' }}
+                            </button>
+                            <button class="btn-icon" (click)="resetPassword(user)" title="Reset Password">
+                                🔑
+                            </button>
+                            <button class="btn-icon danger" (click)="deleteUser(user)" title="Delete User">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr *ngIf="filteredUsers.length === 0">
+                    <td colspan="8" class="no-data">No users found</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="!loading && totalPages > 1">
+        <button class="btn btn-secondary" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">
+            Previous
+        </button>
+
+        <div class="page-numbers">
+            <button *ngFor="let page of getPageNumbers()" class="page-btn" [class.active]="page === currentPage"
+                (click)="changePage(page)">
+                {{ page }}
+            </button>
+        </div>
+
+        <button class="btn btn-secondary" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">
+            Next
+        </button>
+
+        <span class="page-info">Page {{ currentPage }} of {{ totalPages }} ({{ totalUsers }} total users)</span>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+        <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Edit User</h2>
+                <button class="close-btn" (click)="closeEditModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit-name">Full Name</label>
+                    <input type="text" id="edit-name" [(ngModel)]="editForm.full_name" />
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-email">Email</label>
+                    <input type="email" id="edit-email" [(ngModel)]="editForm.email" />
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-phone">Phone</label>
+                    <input type="tel" id="edit-phone" [(ngModel)]="editForm.phone" />
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-role">Role</label>
+                    <select id="edit-role" [(ngModel)]="editForm.role">
+                        <option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="closeEditModal()">Cancel</button>
+                <button class="btn btn-primary" (click)="saveUser()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Modal -->
+    <div class="modal-overlay" *ngIf="showActivityModal" (click)="closeActivityModal()">
+        <div class="modal modal-large" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>User Activity - {{ selectedUser?.full_name }}</h2>
+                <button class="close-btn" (click)="closeActivityModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="activity-list">
+                    <div *ngFor="let activity of userActivities" class="activity-item">
+                        <div class="activity-icon">
+                            <span *ngIf="activity.action === 'login'">🔐</span>
+                            <span *ngIf="activity.action === 'logout'">🚪</span>
+                            <span *ngIf="activity.action === 'profile_update'">✏️</span>
+                            <span *ngIf="activity.action === 'password_change'">🔑</span>
+                            <span *ngIf="activity.action === 'role_change'">👤</span>
+                            <span *ngIf="activity.action === 'status_change'">⚡</span>
+                            <span *ngIf="activity.action === 'created'">➕</span>
+                            <span *ngIf="activity.action === 'deleted'">🗑️</span>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-description">{{ activity.description }}</div>
+                            <div class="activity-meta">
+                                <span>{{ formatDate(activity.timestamp) }}</span>
+                                <span *ngIf="activity.ipAddress"> • IP: {{ activity.ipAddress }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div *ngIf="userActivities.length === 0" class="no-activity">
+                        No activity recorded for this user.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="closeActivityModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
