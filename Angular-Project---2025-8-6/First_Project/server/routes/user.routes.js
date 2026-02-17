@@ -6,6 +6,13 @@ const { v2: cloudinary } = require('cloudinary');
 
 const User = require('../models/user');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const {
+  hashPassword,
+  generateResetToken,
+  getResetTokenExpiry,
+  sanitizeUser,
+  validatePasswordStrength
+} = require('../utils/userUtils');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -35,11 +42,45 @@ async function uploadBufferToCloudinary(buffer, folder, options = {}) {
   });
 }
 
-// Get all users (Admin only)
+// Get all users with filters (Admin only)
 router.get('/', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
-    const users = await User.find().select('-password');
-    res.json(users);
+    const { role, status, search, page = 1, limit = 10 } = req.query;
+
+    // Build query
+    const query = {};
+    if (role) query.role = role;
+    if (status) query.status = status;
+    if (search) {
+      query.$or = [
+        { full_name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get users
+    const users = await User.find(query)
+      .select('-password -resetPasswordToken -resetPasswordExpires')
+      .sort({ created_at: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Get total count
+    const total = await User.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: users,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -125,10 +166,153 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 });
 
+// Update user status (Admin only)
+router.patch('/:id/status', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!['active', 'inactive', 'suspended'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be active, inactive, or suspended' });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const oldStatus = user.status;
+    user.status = status;
+
+    await user.addActivity('status_change', `Status changed from ${oldStatus} to ${status}`, req.user.userId);
+    await user.save();
+
+    res.json({
+      success: true,
+      message: `User ${status === 'active' ? 'activated' : status === 'inactive' ? 'deactivated' : 'suspended'} successfully`,
+      data: sanitizeUser(user)
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get user activity log (Admin only)
+router.get('/:id/activity', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const { limit = 50 } = req.query;
+
+    const user = await User.findById(req.params.id)
+      .select('activityLog full_name email')
+      .populate('activityLog.performedBy', 'full_name email');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get recent activities
+    const activities = user.activityLog
+      .slice(-parseInt(limit))
+      .reverse();
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user._id,
+          fullName: user.full_name,
+          email: user.email
+        },
+        activities
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Initiate password reset (Admin only)
+router.post('/:id/reset-password', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Generate reset token
+    const resetToken = generateResetToken();
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = getResetTokenExpiry();
+
+    await user.addActivity('password_change', 'Password reset initiated by admin', req.user.userId);
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset initiated. Reset token has been generated.',
+      resetToken,
+      resetLink: `/reset-password/${resetToken}`
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Complete password reset with token (Public)
+router.post('/reset-password/:token', async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required' });
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({ error: passwordValidation.message });
+    }
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      resetPasswordToken: req.params.token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(password);
+    user.password = hashedPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+
+    await user.addActivity('password_change', 'Password reset completed', user._id);
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Delete user (Admin only)
 router.delete('/:id', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Soft delete - set status to inactive
+    user.status = 'inactive';
+    await user.addActivity('deleted', 'User account deleted by admin', req.user.userId);
+    await user.save();
+
     res.json({ message: 'User deleted successfully', user: { _id: user._id, email: user.email } });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -156,10 +340,10 @@ router.put('/me/password', verifyToken, async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) return res.status(400).json({ error: 'Current password is incorrect' });
-    
+
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
     res.json({ message: 'Password updated successfully' });
@@ -198,7 +382,7 @@ router.put('/me/addresses/:addressId', verifyToken, async (req, res) => {
     const user = await User.findById(req.user.userId);
     const address = user.addresses.id(req.params.addressId);
     if (!address) return res.status(404).json({ error: 'Address not found' });
-    
+
     if (req.body.isDefault) {
       user.addresses.forEach(a => a.isDefault = false);
     }
