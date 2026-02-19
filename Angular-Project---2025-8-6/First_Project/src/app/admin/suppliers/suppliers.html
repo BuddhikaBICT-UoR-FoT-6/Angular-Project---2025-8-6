@@ -1,0 +1,74 @@
+<div class="suppliers-container">
+    <div class="header">
+        <div class="header-content">
+            <h1 class="page-title">🏭 Supplier Management</h1>
+            <p class="page-subtitle">Manage your suppliers for easy restocking</p>
+        </div>
+        <button class="btn-primary" (click)="openAddModal()">+ Add Supplier</button>
+    </div>
+
+    <div class="suppliers-list">
+        <div class="supplier-card" *ngFor="let supplier of suppliers">
+            <div class="card-header">
+                <h3>{{ supplier.name }}</h3>
+                <span class="contact-person" *ngIf="supplier.contact_person">👤 {{ supplier.contact_person }}</span>
+            </div>
+            <div class="card-body">
+                <p><strong>Email:</strong> {{ supplier.email }}</p>
+                <p *ngIf="supplier.phone"><strong>Phone:</strong> {{ supplier.phone }}</p>
+                <p *ngIf="supplier.address"><strong>Address:</strong> {{ supplier.address }}</p>
+                <p *ngIf="supplier.notes" class="notes">"{{ supplier.notes }}"</p>
+            </div>
+            <div class="card-footer">
+                <button class="btn-edit" (click)="openEditModal(supplier)">Edit</button>
+                <button class="btn-delete" (click)="deleteSupplier(supplier._id)">Delete</button>
+            </div>
+        </div>
+
+        <div class="empty-state" *ngIf="!loading && suppliers.length === 0">
+            <p>No suppliers found. Add one to get started!</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>{{ editingSupplier ? 'Edit Supplier' : 'Add New Supplier' }}</h3>
+            <button class="close-btn" (click)="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Company Name *</label>
+                <input type="text" [(ngModel)]="supplierForm.name" placeholder="Supplier Name" />
+            </div>
+            <div class="form-group">
+                <label>Email *</label>
+                <input type="email" [(ngModel)]="supplierForm.email" placeholder="supplier@example.com" />
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" [(ngModel)]="supplierForm.phone" placeholder="Phone Number" />
+            </div>
+            <div class="form-group">
+                <label>Contact Person</label>
+                <input type="text" [(ngModel)]="supplierForm.contact_person" placeholder="Contact Person Name" />
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <textarea [(ngModel)]="supplierForm.address" placeholder="Full Address"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea [(ngModel)]="supplierForm.notes" placeholder="Additional notes..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeModal()">Cancel</button>
+            <button class="btn-save" (click)="saveSupplier()" [disabled]="loading">
+                {{ editingSupplier ? 'Update' : 'Save' }}
+            </button>
+        </div>
+    </div>
+</div>

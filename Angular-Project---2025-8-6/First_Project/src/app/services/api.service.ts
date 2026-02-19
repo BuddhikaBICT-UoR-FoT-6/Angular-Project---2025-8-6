@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { catchError, filter, map, of, switchMap, take, timeout, timer } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, of, timer } from 'rxjs';
+import { catchError, filter, map, switchMap, take, timeout } from 'rxjs/operators';
 import { InventoryAuditEntry, InventoryItem, LowStockItem, StockBySize } from '../models/inventory.model';
 import { FulfillRestockResponse, RestockRequest } from '../models/restock-request.model';
-import { HttpParams } from '@angular/common/http';
+import { Supplier } from '../models/supplier.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +13,7 @@ export class ApiService {
   // Always use relative /api so dev proxy + SSR/prod behave consistently.
   private baseUrl = '/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // --- Health / readiness ---
   getHealth(): Observable<{ ok: boolean; dbReady: boolean }> {
@@ -61,29 +61,29 @@ export class ApiService {
 
   // Product-related API calls
   getProducts(params?: {
-  q?: string;
-  category?: string;
-  sub_category?: string;
-  size?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  sort?: 'price_asc' | 'price_desc' | 'newest' | 'popular';
-  page?: number;
-  limit?: number;
-}): Observable<any[]> {
-  let httpParams = new HttpParams();
-  for (const [key, value] of Object.entries(params || {})) {
-    if (value === undefined || value === null || value === '') continue;
-    httpParams = httpParams.set(key, String(value));
+    q?: string;
+    category?: string;
+    sub_category?: string;
+    size?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: 'price_asc' | 'price_desc' | 'newest' | 'popular';
+    page?: number;
+    limit?: number;
+  }): Observable<any[]> {
+    let httpParams = new HttpParams();
+    for (const [key, value] of Object.entries(params || {})) {
+      if (value === undefined || value === null || value === '') continue;
+      httpParams = httpParams.set(key, String(value));
+    }
+    return this.http.get<any[]>(`${this.baseUrl}/products`, { params: httpParams });
   }
-  return this.http.get<any[]>(`${this.baseUrl}/products`, { params: httpParams });
-}
   searchProducts(q: string, limit = 8): Observable<any[]> {
-  const params = new HttpParams()
-    .set('q', q || '')
-    .set('limit', String(limit));
-  return this.http.get<any[]>(`${this.baseUrl}/products/search`, { params });
-}
+    const params = new HttpParams()
+      .set('q', q || '')
+      .set('limit', String(limit));
+    return this.http.get<any[]>(`${this.baseUrl}/products/search`, { params });
+  }
 
   getProductById(id: string): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/products/${id}`);
@@ -93,12 +93,12 @@ export class ApiService {
     return this.http.post<any>(`${this.baseUrl}/products`, product);
   }
 
-  updateProduct(id: string, product: any):Observable<any> {
+  updateProduct(id: string, product: any): Observable<any> {
     // Update existing product by MongoDB _id
     return this.http.put<any>(`${this.baseUrl}/products/${id}`, product);
   }
 
-  deleteProduct(id: string): Observable<any> { 
+  deleteProduct(id: string): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/products/${id}`);
   }
 
@@ -123,7 +123,7 @@ export class ApiService {
 
 
   // Order-related API calls
-  
+
   /**
    * Get all orders (Admin)
    */
@@ -281,5 +281,31 @@ export class ApiService {
     return this.http.get<Array<{ date: string; revenue: number; orders: number }>>(
       `${this.baseUrl}/analytics/sales-trends?days=${encodeURIComponent(String(days))}`
     );
+  }
+
+  // Suppliers
+  getSuppliers(): Observable<Supplier[]> {
+    return this.http.get<Supplier[]>(`${this.baseUrl}/suppliers`);
+  }
+
+  getSupplier(id: string): Observable<Supplier> {
+    return this.http.get<Supplier>(`${this.baseUrl}/suppliers/${id}`);
+  }
+
+  createSupplier(data: Partial<Supplier>): Observable<Supplier> {
+    return this.http.post<Supplier>(`${this.baseUrl}/suppliers`, data);
+  }
+
+  updateSupplier(id: string, data: Partial<Supplier>): Observable<Supplier> {
+    return this.http.put<Supplier>(`${this.baseUrl}/suppliers/${id}`, data);
+  }
+
+  deleteSupplier(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/suppliers/${id}`);
+  }
+
+  // Global Inventory Audit Log
+  getGlobalInventoryHistory(limit: number): Observable<InventoryAuditEntry[]> {
+    return this.http.get<InventoryAuditEntry[]>(`${this.baseUrl}/inventory/audit-log?limit=${limit}`);
   }
 }
