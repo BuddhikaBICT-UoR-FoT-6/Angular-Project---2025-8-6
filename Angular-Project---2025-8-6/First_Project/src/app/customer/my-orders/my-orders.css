@@ -28,7 +28,8 @@
   gap: 12px;
 }
 
-.btn-back, .btn-refresh {
+.btn-back,
+.btn-refresh {
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: 600;
@@ -57,7 +58,8 @@
   cursor: not-allowed;
 }
 
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -76,7 +78,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-icon {
@@ -123,7 +127,7 @@
 
 .order-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .order-header {
@@ -163,11 +167,30 @@
   text-transform: uppercase;
 }
 
-.status-pending { background: #fef3c7; color: #92400e; }
-.status-processing { background: #dbeafe; color: #1e40af; }
-.status-shipped { background: #e0e7ff; color: #4338ca; }
-.status-delivered { background: #d1fae5; color: #065f46; }
-.status-cancelled { background: #fee2e2; color: #991b1b; }
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-processing {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-shipped {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.status-delivered {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 .refund-badge {
   padding: 4px 10px;
@@ -177,10 +200,25 @@
   text-transform: uppercase;
 }
 
-.refund-requested { background: #fef3c7; color: #92400e; }
-.refund-processing { background: #dbeafe; color: #1e40af; }
-.refund-completed { background: #d1fae5; color: #065f46; }
-.refund-rejected { background: #fee2e2; color: #991b1b; }
+.refund-requested {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.refund-processing {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.refund-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.refund-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 .order-info {
   padding: 20px;
@@ -222,7 +260,9 @@
   flex-wrap: wrap;
 }
 
-.btn-view, .btn-cancel, .btn-refund {
+.btn-view,
+.btn-cancel,
+.btn-refund {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -435,7 +475,8 @@
   margin-top: 24px;
 }
 
-.btn-cancel-modal, .btn-submit {
+.btn-cancel-modal,
+.btn-submit {
   padding: 10px 24px;
   border: none;
   border-radius: 8px;
@@ -454,9 +495,19 @@
 }
 
 @media (max-width: 768px) {
-  .my-orders-page { padding: 16px; }
-  .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
-  .detail-grid { grid-template-columns: 1fr; }
+  .my-orders-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .btn-download {
@@ -484,4 +535,94 @@
   font-size: 13px;
   font-weight: 600;
   display: inline-block;
+}
+
+/* Reorder Button */
+.btn-reorder {
+  padding: 10px 20px;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.btn-reorder:hover {
+  background: #e0f2fe;
+  transform: translateY(-2px);
+}
+
+/* Order Progress Stepper */
+.order-progress {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32px 16px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-width: 80px;
+}
+
+.step-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: all 0.3s ease;
+}
+
+.step-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.progress-line {
+  flex: 2;
+  height: 4px;
+  background: var(--border);
+  margin: 0 -10px;
+  position: relative;
+  top: -14px;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+/* Active State */
+.progress-step.active .step-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 12px rgba(118, 75, 162, 0.3);
+}
+
+.progress-step.active .step-label {
+  color: #764ba2;
+  font-weight: 700;
+}
+
+.progress-line.active {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
 }

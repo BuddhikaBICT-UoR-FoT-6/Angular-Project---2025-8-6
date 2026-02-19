@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { CartService } from '../../services/cart.service';
 import { ToastService } from '../../shared/toast/toast.service';
 
 @Component({
@@ -14,21 +15,23 @@ import { ToastService } from '../../shared/toast/toast.service';
 export class MyOrders implements OnInit {
   // Loading state
   isLoading = true;
-  
+
   // Orders data
   orders: any[] = [];
-  
+
   // Modal states
   selectedOrder: any = null;
   showRefundModal = false;
-  
+
   // Refund form data
   refundReason = '';
 
   constructor(
     private apiService: ApiService,
-    private toast: ToastService
-  ) {}
+    private cartService: CartService,
+    private toast: ToastService,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     this.loadOrders();
@@ -88,14 +91,14 @@ export class MyOrders implements OnInit {
   canRequestRefund(order: any): boolean {
     // Must be delivered
     if (order.status !== 'delivered') return false;
-    
+
     // Must not have existing refund
     if (order.refund_status !== 'none') return false;
-    
+
     // Check 30-day window
     const orderDate = new Date(order.updated_at || order.created_at);
     const daysSinceOrder = Math.floor((Date.now() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     return daysSinceOrder <= 30;
   }
 
@@ -106,11 +109,11 @@ export class MyOrders implements OnInit {
    */
   getDaysRemainingForRefund(order: any): number {
     if (order.status !== 'delivered') return 0;
-    
+
     const orderDate = new Date(order.updated_at || order.created_at);
     const daysSinceOrder = Math.floor((Date.now() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
     const daysRemaining = 30 - daysSinceOrder;
-    
+
     return daysRemaining > 0 ? daysRemaining : 0;
   }
 
@@ -127,7 +130,7 @@ export class MyOrders implements OnInit {
         const idx = this.orders.findIndex(o => o._id === order._id);
         if (idx !== -1) this.orders[idx] = updated;
         this.toast.success('Order cancelled successfully');
-        
+
         // Update selected order if viewing details
         if (this.selectedOrder?._id === order._id) {
           this.selectedOrder = updated;
@@ -149,7 +152,7 @@ export class MyOrders implements OnInit {
       this.toast.error('This order is not eligible for refund');
       return;
     }
-    
+
     this.selectedOrder = order;
     this.refundReason = '';
     this.showRefundModal = true;
@@ -255,5 +258,61 @@ export class MyOrders implements OnInit {
     if (typeof addr === 'string') return addr;
     const parts = [addr.line1, addr.line2, addr.city, addr.state, addr.postalCode, addr.country].filter(Boolean);
     return parts.join(', ');
+  }
+
+  /**
+   * Reorder items from a previous order
+   * Adds all items to cart and redirects to cart page
+   * @param order - Order to reorder
+   */
+  reorder(order: any) {
+    if (!order || !order.items || order.items.length === 0) return;
+
+    // Simple implementation: add items one by one
+    // In a production app, you might want a bulk add API
+    let itemsAdded = 0;
+    const totalItems = order.items.length;
+
+    order.items.forEach((item: any) => {
+      // Note: item.product_id might be an object if populated, or string if not
+      // Based on order model, it ref 'Product', so likely populated or ID
+      const productId = typeof item.product_id === 'object' ? item.product_id._id : item.product_id;
+
+      this.cartService.addItem(productId, item.size, item.quantity).subscribe({
+        next: () => {
+          itemsAdded++;
+          if (itemsAdded === totalItems) {
+            this.toast.success('All items added to cart');
+            this.router.navigate(['/cart']);
+          }
+        },
+        error: (err) => {
+          console.error('Failed to add item to cart', err);
+          // Don't toast for every error to avoid spam, maybe just once at end if needed
+        }
+      });
+    });
+
+    // Fallback navigation if some items fail? 
+    // For now, we'll just let the user see what's in the cart.
+  }
+
+  /**
+   * Get current step number for order progress
+   * 1: Pending/Placed
+   * 2: Processing
+   * 3: Shipped
+   * 4: Delivered
+   * @param status - Order status
+   * @returns Step number (1-4)
+   */
+  getOrderStep(status: string): number {
+    switch (status) {
+      case 'pending': return 1;
+      case 'processing': return 2;
+      case 'shipped': return 3;
+      case 'delivered': return 4;
+      default: return 0; // Cancelled or unknown
+    }
   }
 }

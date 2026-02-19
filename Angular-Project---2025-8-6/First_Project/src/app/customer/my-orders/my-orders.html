@@ -61,7 +61,9 @@
         <button class="btn-refund" *ngIf="canRequestRefund(order)" (click)="openRefundModal(order)">
           Request Refund ({{ getDaysRemainingForRefund(order) }} days left)
         </button>
-        <span class="refund-expired" *ngIf="order.status === 'delivered' && !canRequestRefund(order) && order.refund_status === 'none'">
+        <button class="btn-reorder" (click)="reorder(order)">↻ Reorder</button>
+        <span class="refund-expired"
+          *ngIf="order.status === 'delivered' && !canRequestRefund(order) && order.refund_status === 'none'">
           Refund window expired
         </span>
       </div>
@@ -76,6 +78,29 @@
       </div>
 
       <div class="modal-content">
+        <!-- Order Progress Stepper -->
+        <div class="order-progress" *ngIf="selectedOrder.status !== 'cancelled'">
+          <div class="progress-step" [class.active]="getOrderStep(selectedOrder.status) >= 1">
+            <div class="step-icon">📝</div>
+            <div class="step-label">Placed</div>
+          </div>
+          <div class="progress-line" [class.active]="getOrderStep(selectedOrder.status) >= 2"></div>
+          <div class="progress-step" [class.active]="getOrderStep(selectedOrder.status) >= 2">
+            <div class="step-icon">⚙️</div>
+            <div class="step-label">Processing</div>
+          </div>
+          <div class="progress-line" [class.active]="getOrderStep(selectedOrder.status) >= 3"></div>
+          <div class="progress-step" [class.active]="getOrderStep(selectedOrder.status) >= 3">
+            <div class="step-icon">🚚</div>
+            <div class="step-label">Shipped</div>
+          </div>
+          <div class="progress-line" [class.active]="getOrderStep(selectedOrder.status) >= 4"></div>
+          <div class="progress-step" [class.active]="getOrderStep(selectedOrder.status) >= 4">
+            <div class="step-icon">✅</div>
+            <div class="step-label">Delivered</div>
+          </div>
+        </div>
+
         <div class="detail-section">
           <h4>Order Information</h4>
           <div class="detail-grid">
@@ -137,7 +162,8 @@
       <div class="modal-content">
         <div class="form-group">
           <label>Reason for Refund</label>
-          <textarea [(ngModel)]="refundReason" class="form-input" rows="4" placeholder="Please explain why you want a refund"></textarea>
+          <textarea [(ngModel)]="refundReason" class="form-input" rows="4"
+            placeholder="Please explain why you want a refund"></textarea>
         </div>
         <div class="modal-actions">
           <button class="btn-cancel-modal" (click)="closeRefundModal()">Cancel</button>
