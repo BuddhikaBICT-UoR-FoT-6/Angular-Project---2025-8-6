@@ -1,0 +1,122 @@
+.history-container {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.page-subtitle {
+    color: #6b7280;
+    margin: 4px 0 0 0;
+}
+
+.history-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.data-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 14px;
+}
+
+.data-table td {
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.product-name {
+    font-weight: 600;
+}
+
+.action-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.action-restock {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.action-adjust {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.size-breakdown {
+    display: flex;
+    gap: 8px;
+    color: #4b5563;
+    font-family: monospace;
+}
+
+.role-badge {
+    background: #e0e7ff;
+    color: #4338ca;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.empty-state {
+    padding: 40px;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.load-more {
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #f3f4f6;
+}
+
+.btn-secondary {
+    padding: 10px 24px;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #374151;
+}
+
+.btn-secondary:hover {
+    background: #f9fafb;
+}
+
+.btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

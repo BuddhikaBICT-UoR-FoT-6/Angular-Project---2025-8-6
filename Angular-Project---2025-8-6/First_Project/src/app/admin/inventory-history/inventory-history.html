@@ -1,0 +1,61 @@
+<div class="history-container">
+    <div class="header">
+        <div class="header-content">
+            <h1 class="page-title">📜 Global Inventory History</h1>
+            <p class="page-subtitle">Audit log of all stock changes across all products</p>
+        </div>
+    </div>
+
+    <div class="history-table-container">
+        <table class="data-table" *ngIf="history.length; else emptyHistory">
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>Product</th>
+                    <th>Action</th>
+                    <th>Delta</th>
+                    <th>Reason / Note</th>
+                    <th>By</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let h of history">
+                    <td>{{ h.created_at | date : 'short' }}</td>
+                    <td>
+                        <div class="product-name">{{ h.product_id?.name || 'Unknown Product' }}</div>
+                    </td>
+                    <td>
+                        <span class="action-badge" [ngClass]="{
+              'action-restock': h.action === 'RESTOCK',
+              'action-adjust': h.action === 'ADJUST'
+            }">
+                            {{ h.action }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="size-breakdown">
+                            <span *ngIf="h.delta_by_size.S">S: {{h.delta_by_size.S}}</span>
+                            <span *ngIf="h.delta_by_size.M">M: {{h.delta_by_size.M}}</span>
+                            <span *ngIf="h.delta_by_size.L">L: {{h.delta_by_size.L}}</span>
+                            <span *ngIf="h.delta_by_size.XL">XL: {{h.delta_by_size.XL}}</span>
+                        </div>
+                    </td>
+                    <td>{{ h.reason || '-' }}</td>
+                    <td>
+                        <span class="role-badge">{{ h.performed_by?.role || '-' }}</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <ng-template #emptyHistory>
+            <div class="empty-state">
+                <p>No history records found.</p>
+            </div>
+        </ng-template>
+
+        <div class="load-more" *ngIf="history.length">
+            <button class="btn-secondary" (click)="loadMore()" [disabled]="loading">Load More</button>
+        </div>
+    </div>
+</div>

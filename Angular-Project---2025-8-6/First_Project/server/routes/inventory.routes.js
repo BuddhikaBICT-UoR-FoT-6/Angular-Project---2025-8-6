@@ -86,12 +86,12 @@ router.get('/low-stock', async (req, res) => {
 
         return low.length
           ? {
-              inventory_id: inv._id,
-              product: inv.product_id,
-              stock_by_size: inv.stock_by_size,
-              low_stock_threshold_by_size: inv.low_stock_threshold_by_size,
-              low
-            }
+            inventory_id: inv._id,
+            product: inv.product_id,
+            stock_by_size: inv.stock_by_size,
+            low_stock_threshold_by_size: inv.low_stock_threshold_by_size,
+            low
+          }
           : null;
       })
       .filter(Boolean);
@@ -242,6 +242,21 @@ router.get('/:id/history', async (req, res) => {
   try {
     const limit = Math.min(Math.max(Number(req.query?.limit || 50), 1), 200);
     const history = await InventoryAudit.find({ inventory_id: req.params.id })
+      .sort({ created_at: -1 })
+      .limit(limit);
+    res.json(history);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Global Inventory History (Audit Log)
+// GET /api/inventory/audit-log?limit=50
+router.get('/audit-log', async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(Number(req.query?.limit || 50), 1), 200);
+    const history = await InventoryAudit.find()
+      .populate('product_id', 'name') // Populate product name for context
       .sort({ created_at: -1 })
       .limit(limit);
     res.json(history);
