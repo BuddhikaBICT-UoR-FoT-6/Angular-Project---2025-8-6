@@ -6,15 +6,22 @@ import { takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 import { InventoryAuditEntry, InventoryItem, LowStockItem, StockBySize } from '../../models/inventory.model';
 import { RestockRequest } from '../../models/restock-request.model';
+import { Supplier } from '../../models/supplier.model';
 import { ToastService } from '../../shared/toast/toast.service';
 
 @Component({
   selector: 'app-inventory',
   imports: [CommonModule, FormsModule],
-  templateUrl: './inventory.html',
-  styleUrl: './inventory.css'
 })
 export class Inventory implements OnInit, OnDestroy {
+  onSupplierChange(event: any) {
+    const supplierId = event.target.value;
+    const supplier = this.suppliers.find(s => s._id === supplierId);
+    if (supplier) {
+      this.restockSupplier = supplier.name;
+      this.restockSupplierEmail = supplier.email;
+    }
+  }
   private destroy$ = new Subject<void>();
 
   manageOpen = false;
@@ -24,6 +31,7 @@ export class Inventory implements OnInit, OnDestroy {
   lowStock: LowStockItem[] = [];
   selected: InventoryItem | null = null;
   history: InventoryAuditEntry[] = [];
+  suppliers: Supplier[] = [];
 
   restockOrders: RestockRequest[] = [];
 
@@ -47,7 +55,7 @@ export class Inventory implements OnInit, OnDestroy {
   constructor(
     private api: ApiService,
     private toast: ToastService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     timer(0, 5000)
@@ -55,11 +63,19 @@ export class Inventory implements OnInit, OnDestroy {
       .subscribe(() => {
         this.refreshInventory();
         this.refreshLowStock();
+        this.loadSuppliers(); // Load suppliers for dropdown
         if (this.selected?._id) {
           this.refreshHistory(this.selected._id);
           this.refreshRestockOrders(this.selected._id);
         }
       });
+  }
+
+  loadSuppliers() {
+    this.api.getSuppliers().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (data) => (this.suppliers = data),
+      error: () => console.error('Failed to load suppliers')
+    });
   }
 
   ngOnDestroy(): void {

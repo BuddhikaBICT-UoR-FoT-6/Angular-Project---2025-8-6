@@ -42,12 +42,8 @@
 		</div>
 
 		<div class="inventory-grid" *ngIf="inventory.length; else emptyInventory">
-			<div
-				class="inventory-card"
-				*ngFor="let invItem of inventory"
-				(click)="pick(invItem)"
-				[class.selected]="selected?._id === invItem._id"
-			>
+			<div class="inventory-card" *ngFor="let invItem of inventory" (click)="pick(invItem)"
+				[class.selected]="selected?._id === invItem._id">
 				<div class="card-header-inv">
 					<div class="product-name">{{ productName(invItem) }}</div>
 					<div class="supplier-badge" *ngIf="invItem.supplier">{{ invItem.supplier }}</div>
@@ -85,18 +81,8 @@
 </div>
 
 <!-- Centered Modal Overlay -->
-<div
-	class="modal-overlay"
-	*ngIf="manageOpen && selected"
-	(click)="closeManage()"
-	role="presentation"
->
-	<div
-		class="modal-dialog"
-		role="dialog"
-		aria-modal="true"
-		(click)="$event.stopPropagation()"
-	>
+<div class="modal-overlay" *ngIf="manageOpen && selected" (click)="closeManage()" role="presentation">
+	<div class="modal-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
 		<div class="modal-header">
 			<div class="modal-header-content">
 				<h3 class="modal-title">📦 Manage Inventory</h3>
@@ -160,150 +146,154 @@
 					</div>
 					<div class="form-field">
 						<label class="field-label">Supplier Email</label>
-						<input type="email" class="field-input" [(ngModel)]="restockSupplierEmail" placeholder="Used for notifications" />
+						<input type="email" class="field-input" [(ngModel)]="restockSupplierEmail"
+							placeholder="Used for notifications" />
+					</div>
+					<label class="field-label">Note</label>
+					<input type="text" class="field-input" [(ngModel)]="restockNote" placeholder="Optional note" />
+				</div>
+				<div class="form-field">
+					<label class="field-label">Select Supplier (Optional)</label>
+					<select class="field-input" (change)="onSupplierChange($event)">
+						<option value="">-- Choose from List --</option>
+						<option *ngFor="let s of suppliers" [value]="s._id">{{ s.name }}</option>
+					</select>
+				</div>
+				<button type="button" class="btn-primary" (click)="submitRestock()" [disabled]="loading">
+					<span *ngIf="!loading">📧 Send Supplier Order</span>
+					<span *ngIf="loading" class="spinner"></span>
+				</button>
+				<p class="info-message" *ngIf="requestMessage">{{ requestMessage }}</p>
+			</div>
+
+			<!-- Manual Adjustment -->
+			<div class="modal-section">
+				<h4 class="section-heading">⚖️ Manual Adjustment</h4>
+				<p class="section-note">Use positive/negative numbers to adjust stock (e.g., -5 for damaged items)</p>
+				<div class="form-group-row">
+					<div class="form-field">
+						<label class="field-label">S</label>
+						<input type="number" class="field-input" [(ngModel)]="adjustDelta.S" />
 					</div>
 					<div class="form-field">
-						<label class="field-label">Note</label>
-						<input type="text" class="field-input" [(ngModel)]="restockNote" placeholder="Optional note" />
-					</div>
-					<button type="button" class="btn-primary" (click)="submitRestock()" [disabled]="loading">
-						<span *ngIf="!loading">📧 Send Supplier Order</span>
-						<span *ngIf="loading" class="spinner"></span>
-					</button>
-					<p class="info-message" *ngIf="requestMessage">{{ requestMessage }}</p>
-				</div>
-
-				<!-- Manual Adjustment -->
-				<div class="modal-section">
-					<h4 class="section-heading">⚖️ Manual Adjustment</h4>
-					<p class="section-note">Use positive/negative numbers to adjust stock (e.g., -5 for damaged items)</p>
-					<div class="form-group-row">
-						<div class="form-field">
-							<label class="field-label">S</label>
-							<input type="number" class="field-input" [(ngModel)]="adjustDelta.S" />
-						</div>
-						<div class="form-field">
-							<label class="field-label">M</label>
-							<input type="number" class="field-input" [(ngModel)]="adjustDelta.M" />
-						</div>
-						<div class="form-field">
-							<label class="field-label">L</label>
-							<input type="number" class="field-input" [(ngModel)]="adjustDelta.L" />
-						</div>
-						<div class="form-field">
-							<label class="field-label">XL</label>
-							<input type="number" class="field-input" [(ngModel)]="adjustDelta.XL" />
-						</div>
+						<label class="field-label">M</label>
+						<input type="number" class="field-input" [(ngModel)]="adjustDelta.M" />
 					</div>
 					<div class="form-field">
-						<label class="field-label">Reason (Required)</label>
-						<input type="text" class="field-input" [(ngModel)]="adjustReason" placeholder="e.g., Damaged items, Return, etc." />
+						<label class="field-label">L</label>
+						<input type="number" class="field-input" [(ngModel)]="adjustDelta.L" />
 					</div>
-					<button type="button" class="btn-secondary" (click)="submitAdjust()" [disabled]="loading">
-						✅ Apply Adjustment
-					</button>
+					<div class="form-field">
+						<label class="field-label">XL</label>
+						<input type="number" class="field-input" [(ngModel)]="adjustDelta.XL" />
+					</div>
 				</div>
-
-				<div class="box history">
-					<div class="history-head">
-						<h4>Supplier Orders (Restock Requests)</h4>
-						<div class="muted">Status becomes “FULFILLED” only after code scan</div>
-					</div>
-					<div class="table-wrap" *ngIf="restockOrders.length; else emptyOrders">
-						<table class="table">
-							<thead>
-								<tr>
-									<th>Created</th>
-									<th>Status</th>
-									<th>Expires</th>
-									<th>Qty (S/M/L/XL)</th>
-									<th>Supplier</th>
-									<th></th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr *ngFor="let r of restockOrders">
-									<td>{{ r.created_at ? (r.created_at | date : 'short') : '-' }}</td>
-									<td>{{ orderStatus(r) }}</td>
-									<td>{{ r.expires_at ? (r.expires_at | date : 'short') : '-' }}</td>
-									<td>
-										{{ r.requested_by_size.S }} /
-										{{ r.requested_by_size.M }} /
-										{{ r.requested_by_size.L }} /
-										{{ r.requested_by_size.XL }}
-									</td>
-									<td>{{ r.supplier_email }}</td>
-									<td>
-										<button
-											type="button"
-											*ngIf="orderStatus(r) === 'PENDING'"
-											(click)="cancelOrder(r)"
-											[disabled]="loading"
-										>
-											Cancel
-										</button>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-					<ng-template #emptyOrders>
-						<div class="hint">No supplier orders yet for this product.</div>
-					</ng-template>
+				<div class="form-field">
+					<label class="field-label">Reason (Required)</label>
+					<input type="text" class="field-input" [(ngModel)]="adjustReason"
+						placeholder="e.g., Damaged items, Return, etc." />
 				</div>
+				<button type="button" class="btn-secondary" (click)="submitAdjust()" [disabled]="loading">
+					✅ Apply Adjustment
+				</button>
 			</div>
 
 			<div class="box history">
 				<div class="history-head">
-					<h4>📜 Inventory History / Audit Log</h4>
-					<p class="section-subtitle">Newest first</p>
+					<h4>Supplier Orders (Restock Requests)</h4>
+					<div class="muted">Status becomes “FULFILLED” only after code scan</div>
 				</div>
-				<div class="data-table-container" *ngIf="history.length; else emptyHistory">
-					<table class="data-table">
+				<div class="table-wrap" *ngIf="restockOrders.length; else emptyOrders">
+					<table class="table">
 						<thead>
 							<tr>
-								<th>When</th>
-								<th>Action</th>
-								<th>Delta</th>
-								<th>Reason / Note</th>
-								<th>By</th>
+								<th>Created</th>
+								<th>Status</th>
+								<th>Expires</th>
+								<th>Qty (S/M/L/XL)</th>
+								<th>Supplier</th>
+								<th></th>
 							</tr>
 						</thead>
 						<tbody>
-							<tr *ngFor="let h of history">
-								<td>{{ h.created_at ? (h.created_at | date : 'short') : '-' }}</td>
+							<tr *ngFor="let r of restockOrders">
+								<td>{{ r.created_at ? (r.created_at | date : 'short') : '-' }}</td>
+								<td>{{ orderStatus(r) }}</td>
+								<td>{{ r.expires_at ? (r.expires_at | date : 'short') : '-' }}</td>
 								<td>
-									<span class="action-badge" [ngClass]="{
-									'action-restock': h.action === 'RESTOCK',
-										'action-adjust': h.action === 'ADJUST'
-									}">
-										{{ h.action }}
-									</span>
+									{{ r.requested_by_size.S }} /
+									{{ r.requested_by_size.M }} /
+									{{ r.requested_by_size.L }} /
+									{{ r.requested_by_size.XL }}
 								</td>
+								<td>{{ r.supplier_email }}</td>
 								<td>
-									<div class="size-breakdown">
-										<span>S: {{h.delta_by_size.S}}</span>
-										<span>M: {{h.delta_by_size.M}}</span>
-										<span>L: {{h.delta_by_size.L}}</span>
-										<span>XL: {{h.delta_by_size.XL}}</span>
-									</div>
-								</td>
-								<td>{{ h.reason || '-' }}</td>
-								<td>
-									<span class="role-badge">
-										{{ h.performed_by?.role || '-' }}
-									</span>
+									<button type="button" *ngIf="orderStatus(r) === 'PENDING'" (click)="cancelOrder(r)"
+										[disabled]="loading">
+										Cancel
+									</button>
 								</td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
-				<ng-template #emptyHistory>
-					<div class="empty-state-small">
-						<p>📝 No history yet.</p>
-					</div>
+				<ng-template #emptyOrders>
+					<div class="hint">No supplier orders yet for this product.</div>
 				</ng-template>
 			</div>
 		</div>
+
+		<div class="box history">
+			<div class="history-head">
+				<h4>📜 Inventory History / Audit Log</h4>
+				<p class="section-subtitle">Newest first</p>
+			</div>
+			<div class="data-table-container" *ngIf="history.length; else emptyHistory">
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th>When</th>
+							<th>Action</th>
+							<th>Delta</th>
+							<th>Reason / Note</th>
+							<th>By</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr *ngFor="let h of history">
+							<td>{{ h.created_at ? (h.created_at | date : 'short') : '-' }}</td>
+							<td>
+								<span class="action-badge" [ngClass]="{
+									'action-restock': h.action === 'RESTOCK',
+										'action-adjust': h.action === 'ADJUST'
+									}">
+									{{ h.action }}
+								</span>
+							</td>
+							<td>
+								<div class="size-breakdown">
+									<span>S: {{h.delta_by_size.S}}</span>
+									<span>M: {{h.delta_by_size.M}}</span>
+									<span>L: {{h.delta_by_size.L}}</span>
+									<span>XL: {{h.delta_by_size.XL}}</span>
+								</div>
+							</td>
+							<td>{{ h.reason || '-' }}</td>
+							<td>
+								<span class="role-badge">
+									{{ h.performed_by?.role || '-' }}
+								</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<ng-template #emptyHistory>
+				<div class="empty-state-small">
+					<p>📝 No history yet.</p>
+				</div>
+			</ng-template>
+		</div>
 	</div>
+</div>
 </div>
