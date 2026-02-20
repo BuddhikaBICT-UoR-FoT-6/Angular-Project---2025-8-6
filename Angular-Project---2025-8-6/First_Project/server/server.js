@@ -85,6 +85,8 @@ app.use('/api/checkout', checkoutRoutes);
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/categories', require('./routes/category.routes')); // New
+app.use('/api/collections', require('./routes/collection.routes')); // New
 // Test DB endpoint (optional, for debugging)
 app.get("/test-db", async (req, res) => {
   try {
