@@ -122,6 +122,19 @@ export class ApiService {
   }
 
 
+  // Categories & Collections
+  getCategories(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/categories`);
+  }
+
+  getCollectionsByType(type: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/collections/type/${type}`);
+  }
+
+  getCollectionBySlug(slug: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/collections/slug/${slug}`);
+  }
+
   // Order-related API calls
 
   /**

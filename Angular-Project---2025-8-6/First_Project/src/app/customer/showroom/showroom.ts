@@ -19,7 +19,8 @@ import {
   startWith,
   switchMap,
   tap,
-  timeout
+  timeout,
+  forkJoin
 } from 'rxjs';
 
 
@@ -45,7 +46,15 @@ export class Showroom {
 
   private reviewSummariesByProductId: Record<string, ReviewSummary> = {};
 
-  readonly vm$: Observable<{ loading: boolean; featuredProducts: any[]; errorMessage?: string }> =
+  readonly vm$: Observable<{
+    loading: boolean;
+    featuredProducts: any[];
+    categories: any[];
+    newArrivals: any[];
+    featuredCol?: any;
+    seasonalCol?: any;
+    errorMessage?: string
+  }> =
     this.refreshTrigger$.pipe(
       startWith(void 0),
       switchMap(() => this.loadVm$()),
@@ -64,11 +73,11 @@ export class Showroom {
   categories = ['Shirts', 'Pants', 'Dresses', 'Accessories'];
 
   constructor(
-  private apiService: ApiService,
-  private authService: AuthService,
-  private toast: ToastService,
-  private reviewService: ReviewService
-) {}
+    private apiService: ApiService,
+    private authService: AuthService,
+    private toast: ToastService,
+    private reviewService: ReviewService
+  ) { }
 
   ngOnInit(): void {
     // No-op: vm$ starts loading via startWith.
@@ -211,37 +220,76 @@ export class Showroom {
     return this.authService.isLoggedIn();
   }
 
-  private loadVm$(): Observable<{ loading: boolean; featuredProducts: any[]; errorMessage?: string }> {
+  private loadVm$(): Observable<{
+    loading: boolean;
+    featuredProducts: any[];
+    categories: any[];
+    newArrivals: any[];
+    featuredCol?: any;
+    seasonalCol?: any;
+    errorMessage?: string
+  }> {
     return defer(() =>
       this.apiService.waitForDbReady(120000).pipe(
         delay(1000),
-        switchMap(() => this.apiService.getProducts({ sort: 'popular', limit: 7 })),
+        switchMap(() => {
+          return forkJoin({
+            products: this.apiService.getProducts({ sort: 'popular', limit: 8 }).pipe(catchError(() => of([]))),
+            categories: this.apiService.getCategories().pipe(catchError(() => of([]))),
+            newArrivals: this.apiService.getProducts({ sort: 'newest', limit: 8 }).pipe(catchError(() => of([]))),
+            featuredCol: this.apiService.getCollectionsByType('featured').pipe(map(cols => cols[0] || null), catchError(() => of(null))),
+            seasonalCol: this.apiService.getCollectionsByType('seasonal').pipe(map(cols => cols[0] || null), catchError(() => of(null)))
+          });
+        }),
         timeout({ first: 20000 }),
         retry({ count: 1, delay: 1500 }),
-        switchMap((products) => {
+        switchMap(({ products, categories, newArrivals, featuredCol, seasonalCol }) => {
           const featured = products || [];
-          const ids = featured.map((p: any) => String(p?._id || '')).filter(Boolean);
+          // Collect all product IDs to fetch reviews for
+          const allProducts = [...featured, ...newArrivals, ...(featuredCol?.products || []), ...(seasonalCol?.products || [])];
+          const uniqueIds = [...new Set(allProducts.map((p: any) => String(p?._id || '')).filter(Boolean))];
 
-          if (!ids.length) {
+          if (!uniqueIds.length) {
             this.reviewSummariesByProductId = {};
-            return of({ loading: false, featuredProducts: featured });
+            return of({
+              loading: false,
+              featuredProducts: featured,
+              categories,
+              newArrivals,
+              featuredCol,
+              seasonalCol
+            });
           }
 
-          return this.reviewService.getSummaries(ids).pipe(
+          return this.reviewService.getSummaries(uniqueIds).pipe(
             map((summaries) => {
               this.reviewSummariesByProductId = summaries || {};
-              return { loading: false, featuredProducts: featured };
+              return {
+                loading: false,
+                featuredProducts: featured,
+                categories,
+                newArrivals,
+                featuredCol,
+                seasonalCol
+              };
             }),
             catchError((err) => {
               console.error('Showroom: failed to load review summaries', err);
               this.reviewSummariesByProductId = {};
-              return of({ loading: false, featuredProducts: featured });
+              return of({
+                loading: false,
+                featuredProducts: featured,
+                categories,
+                newArrivals,
+                featuredCol,
+                seasonalCol
+              });
             })
           );
         }),
         catchError((error) => {
-          console.error('Error fetching products:', error);
-          this.toast.error('😕 Oops! Having trouble loading products. Give us a moment and we\'ll try again!');
+          console.error('Error fetching data:', error);
+          this.toast.error('😕 Oops! Having trouble loading content.');
 
           // One automatic retry after a short delay.
           if (!this.autoRetryDone && (globalThis as any)?.setTimeout) {
@@ -252,10 +300,12 @@ export class Showroom {
           return of({
             loading: false,
             featuredProducts: [],
-            errorMessage: '😕 Oops! Having trouble loading products. Please refresh the page or try again in a moment.'
+            categories: [],
+            newArrivals: [],
+            errorMessage: '😕 Oops! Having trouble loading content. Please refresh the page.'
           });
         }),
-        startWith({ loading: true, featuredProducts: [] })
+        startWith({ loading: true, featuredProducts: [], categories: [], newArrivals: [] })
       )
     );
   }
