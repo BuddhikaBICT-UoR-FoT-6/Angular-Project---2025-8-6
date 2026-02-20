@@ -10,6 +10,7 @@ const User = require('../models/user');
 const OTP = require('../models/otp');
 const { verifyToken } = require('../middleware/auth');
 const { generateOTP, sendCheckoutOTP } = require('../utils/emailService');
+const { validatePhone } = require('../utils/userUtils');
 const { generateInvoicePDF, sendInvoiceEmail } = require('../utils/invoiceGenerator');
 const { broadcastAnalyticsUpdated } = require('../utils/analyticsStream');
 
@@ -60,10 +61,13 @@ function normalizeShippingAddress(input) {
   };
 }
 
+const { validatePhone } = require('../utils/userUtils');
+
 function requireBasicShipping(addr) {
   if (!addr.line1) return 'Address line 1 is required';
   if (!addr.city) return 'City is required';
   if (!addr.country) return 'Country is required';
+  if (addr.phone && !validatePhone(addr.phone)) return 'Invalid phone number format';
   return '';
 }
 
@@ -460,7 +464,7 @@ router.post('/paypal/create-order', verifyToken, async (req, res) => {
     const cancelUrl = process.env.PAYPAL_CANCEL_URL || `${baseUrl}/checkout?status=paypal_cancelled`;
 
     const accessToken = await paypalGetAccessToken({ clientId, clientSecret });
-    
+
     const order = await paypalCreateOrder({
       accessToken,
       total: Number(summary.total),
@@ -537,7 +541,7 @@ async function createOrderFromCart({ userId, shippingAddress, paymentMethod, cou
 
   return { orderId: String(created._id), total: summary.total };
 
-  
+
 }
 
 // Confirm / place order
@@ -571,8 +575,8 @@ router.post('/confirm', verifyToken, async (req, res) => {
           if (user?.email) {
             const orderDoc = await Order.findById(created.orderId).populate('user_id').lean();
             const pdf = await generateInvoicePDF(orderDoc);
-              await sendInvoiceEmail(user.email, orderDoc, pdf);
-              broadcastAnalyticsUpdated('order_created');
+            await sendInvoiceEmail(user.email, orderDoc, pdf);
+            broadcastAnalyticsUpdated('order_created');
           }
         } catch (e) {
           console.error('Error sending invoice email (COD):', e);
@@ -609,23 +613,23 @@ router.post('/confirm', verifyToken, async (req, res) => {
         couponCodeOverride: pending.couponCode
       });
 
-        // send invoice pdf by email in background (non-blocking)
-        (async () => {
-          try {
-            const user = await User.findById(userId).select('email full_name').lean();
-            if (user?.email) {
-              const orderDoc = await Order.findById(created.orderId).populate('user_id').lean();
-              const pdf = await generateInvoicePDF(orderDoc);
-              await sendInvoiceEmail(user.email, orderDoc, pdf);
-            }
-          } catch (e) {
-            console.error('Error sending invoice email (Stripe):', e);
+      // send invoice pdf by email in background (non-blocking)
+      (async () => {
+        try {
+          const user = await User.findById(userId).select('email full_name').lean();
+          if (user?.email) {
+            const orderDoc = await Order.findById(created.orderId).populate('user_id').lean();
+            const pdf = await generateInvoicePDF(orderDoc);
+            await sendInvoiceEmail(user.email, orderDoc, pdf);
           }
-        })();
+        } catch (e) {
+          console.error('Error sending invoice email (Stripe):', e);
+        }
+      })();
 
-        await PendingCheckout.updateOne({ _id: pending._id }, { $set: { status: 'completed' } });
-        await OTP.deleteOne({ _id: checkoutToken }).catch(() => undefined);
-        return res.json({ ok: true, provider: 'stripe', message: 'Payment confirmed and order created', ...created });
+      await PendingCheckout.updateOne({ _id: pending._id }, { $set: { status: 'completed' } });
+      await OTP.deleteOne({ _id: checkoutToken }).catch(() => undefined);
+      return res.json({ ok: true, provider: 'stripe', message: 'Payment confirmed and order created', ...created });
     }
 
     if (paymentMethod === 'paypal') {
@@ -650,23 +654,23 @@ router.post('/confirm', verifyToken, async (req, res) => {
         couponCodeOverride: pending.couponCode
       });
 
-        // send invoice pdf by email in background (non-blocking)
-        (async () => {
-          try {
-            const user = await User.findById(userId).select('email full_name').lean();
-            if (user?.email) {
-              const orderDoc = await Order.findById(created.orderId).populate('user_id').lean();
-              const pdf = await generateInvoicePDF(orderDoc);
-              await sendInvoiceEmail(user.email, orderDoc, pdf);
-            }
-          } catch (e) {
-            console.error('Error sending invoice email (PayPal):', e);
+      // send invoice pdf by email in background (non-blocking)
+      (async () => {
+        try {
+          const user = await User.findById(userId).select('email full_name').lean();
+          if (user?.email) {
+            const orderDoc = await Order.findById(created.orderId).populate('user_id').lean();
+            const pdf = await generateInvoicePDF(orderDoc);
+            await sendInvoiceEmail(user.email, orderDoc, pdf);
           }
-        })();
+        } catch (e) {
+          console.error('Error sending invoice email (PayPal):', e);
+        }
+      })();
 
-        await PendingCheckout.updateOne({ _id: pending._id }, { $set: { status: 'completed' } });
-        await OTP.deleteOne({ _id: checkoutToken }).catch(() => undefined);
-        return res.json({ ok: true, provider: 'paypal', message: 'Payment confirmed and order created', ...created });
+      await PendingCheckout.updateOne({ _id: pending._id }, { $set: { status: 'completed' } });
+      await OTP.deleteOne({ _id: checkoutToken }).catch(() => undefined);
+      return res.json({ ok: true, provider: 'paypal', message: 'Payment confirmed and order created', ...created });
     }
 
     res.status(400).json({ error: 'Unsupported payment flow' });
