@@ -41,13 +41,13 @@ export class Analytics implements OnInit, OnDestroy {
   pad = 36;
 
   polylinePoints = '';
-  dots: Array<{x: number; y: number; title: string}> = [];
+  dots: Array<{ x: number; y: number; title: string }> = [];
   yMax = 0;
 
   private sse?: EventSource;
   private reloadTimer?: any;
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService) { }
 
   ngOnInit(): void {
     this.refresh();
@@ -56,10 +56,10 @@ export class Analytics implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    try{
+    try {
       this.sse?.close();
     } catch (e) {
-      if(this.reloadTimer) clearTimeout(this.reloadTimer);
+      if (this.reloadTimer) clearTimeout(this.reloadTimer);
     }
   }
 
@@ -139,31 +139,71 @@ export class Analytics implements OnInit, OnDestroy {
     });
   }
 
-  loadSalesTrends(){
-    this.apiService.getSalesTrends(this.salesDays).pipe(timeout({first: 20000}),
+  loadSalesTrends() {
+    this.apiService.getSalesTrends(this.salesDays).pipe(timeout({ first: 20000 }),
       catchError((err) => {
         console.error('Analytics: failed to load sales trends', err);
         return of([]);
       })
     )
-    .subscribe((points: any) => {
-      this.salesTrends = Array.isArray(points) ? points : [];
-      this.rebuildSalesChart();
-    });
+      .subscribe((points: any) => {
+        this.salesTrends = Array.isArray(points) ? points : [];
+        this.rebuildSalesChart();
+      });
   }
 
-  private startRealtimeStream(){
+  rebuildSalesChart() {
+    if (!this.salesTrends || this.salesTrends.length === 0) {
+      this.polylinePoints = '';
+      this.dots = [];
+      return;
+    }
+
+    const maxRev = Math.max(...this.salesTrends.map(t => t.revenue));
+    // Provide a minimum Y scale so a completely flat line isn't stuck at the bottom
+    this.yMax = Math.max(maxRev * 1.1, 100);
+
+    const w = this.chartW - (this.pad * 2);
+    const h = this.chartH - (this.pad * 2);
+    const stepX = w / Math.max(1, this.salesTrends.length - 1);
+
+    this.dots = [];
+    const points = this.salesTrends.map((t, idx) => {
+      const x = this.pad + (idx * stepX);
+      const yStr = this.pad + h - (t.revenue / this.yMax) * h;
+      // Handle potential NaN if yMax is 0 (though we set a min of 100 above)
+      const y = isNaN(yStr) ? this.pad + h : yStr;
+
+      this.dots.push({
+        x, y,
+        title: `${t.date}\nRev: $${t.revenue.toFixed(2)}\nOrders: ${t.orders}`
+      });
+
+      return `${x},${y}`;
+    });
+
+    this.polylinePoints = points.join(' ');
+  }
+
+  private scheduleReload() {
+    if (this.reloadTimer) clearTimeout(this.reloadTimer);
+    this.reloadTimer = setTimeout(() => {
+      this.refresh();
+      this.loadSalesTrends();
+    }, 2000);
+  }
+
+  private startRealtimeStream() {
     // SSE does not send auth headers; we keep stream payload non-sensitive and refetch via HttpClient.
-    try{
+    try {
       this.sse = new EventSource('/api/analytics/stream');
 
       this.sse.addEventListener('analytics_updated', () => {
         this.scheduleReload();
-
       });
-
+    } catch (e) {
+      console.warn('Real-time analytics stream disconnected', e);
     }
-
   }
 
 

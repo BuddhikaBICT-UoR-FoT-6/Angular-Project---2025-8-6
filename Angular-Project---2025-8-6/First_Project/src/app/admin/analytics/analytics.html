@@ -73,4 +73,64 @@
       </div>
     </div>
   </div>
+
+  <!-- Sales Trends Chart Section -->
+  <div *ngIf="!isLoading" class="chart-section">
+    <div class="chart-header">
+      <h2>Sales Trends (Last {{ salesDays }} Days)</h2>
+      <div class="chart-controls">
+        <select [(ngModel)]="salesDays" (change)="loadSalesTrends()" class="form-control">
+          <option [value]="7">Last 7 Days</option>
+          <option [value]="14">Last 14 Days</option>
+          <option [value]="30">Last 30 Days</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="chart-container" *ngIf="salesTrends.length > 0">
+      <svg [attr.viewBox]="'0 0 ' + chartW + ' ' + chartH" class="sales-chart" preserveAspectRatio="xMidYMid meet">
+
+        <!-- Y-Axis Grid Lines -->
+        <g class="grid-lines">
+          <!-- 100% -->
+          <line [attr.x1]="pad" [attr.y1]="pad" [attr.x2]="chartW - pad" [attr.y2]="pad" />
+          <text [attr.x]="pad - 10" [attr.y]="pad + 4" class="axis-label">${{ yMax | number:'1.0-0' }}</text>
+
+          <!-- 50% -->
+          <line [attr.x1]="pad" [attr.y1]="chartH/2" [attr.x2]="chartW - pad" [attr.y2]="chartH/2" />
+          <text [attr.x]="pad - 10" [attr.y]="chartH/2 + 4" class="axis-label">${{ yMax/2 | number:'1.0-0' }}</text>
+
+          <!-- 0% (Base) -->
+          <line [attr.x1]="pad" [attr.y1]="chartH - pad" [attr.x2]="chartW - pad" [attr.y2]="chartH - pad"
+            class="base-line" />
+          <text [attr.x]="pad - 10" [attr.y]="chartH - pad + 4" class="axis-label">$0</text>
+        </g>
+
+        <!-- The Trend Line -->
+        <polyline [attr.points]="polylinePoints" fill="none" stroke="url(#lineGradient)" stroke-width="3"
+          stroke-linecap="round" stroke-linejoin="round" class="trend-line" />
+
+        <!-- Data Points -->
+        <g class="data-points">
+          <circle *ngFor="let d of dots" [attr.cx]="d.x" [attr.cy]="d.y" r="4" class="data-point">
+            <!-- Simple SVG Tooltip -->
+            <title>{{ d.title }}</title>
+          </circle>
+        </g>
+
+        <!-- Definitions for styling -->
+        <defs>
+          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#4CAF50" />
+            <stop offset="100%" stop-color="#8BC34A" />
+          </linearGradient>
+        </defs>
+
+      </svg>
+    </div>
+
+    <div *ngIf="salesTrends.length === 0" class="empty-chart">
+      <p>No sales data available for the selected period.</p>
+    </div>
+  </div>
 </div>
