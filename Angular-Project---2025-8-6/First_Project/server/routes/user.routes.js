@@ -323,6 +323,20 @@ router.delete('/:id', verifyToken, requireRole('admin', 'superadmin'), async (re
 router.put('/me/profile', verifyToken, async (req, res) => {
   try {
     const { full_name, phone, address } = req.body;
+
+    // Validate phone if provided
+    if (phone && !require('../utils/userUtils').validatePhone(phone)) {
+      return res.status(400).json({ error: 'Invalid phone number format' });
+    }
+
+    // Validate address if provided
+    if (address) {
+      const { street, city, country, houseNo } = address;
+      if (!street || !city || !country || !houseNo) {
+        return res.status(400).json({ error: 'All address fields (House No, Street, City, Country) are required' });
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user.userId,
       { $set: { full_name, phone, address } },
@@ -338,6 +352,17 @@ router.put('/me/profile', verifyToken, async (req, res) => {
 router.put('/me/password', verifyToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
+
+    if (!newPassword) {
+      return res.status(400).json({ error: 'New password is required' });
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({ error: passwordValidation.message });
+    }
+
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -345,6 +370,7 @@ router.put('/me/password', verifyToken, async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Current password is incorrect' });
 
     user.password = await bcrypt.hash(newPassword, 10);
+    await user.addActivity('password_change', 'User changed password', user._id);
     await user.save();
     res.json({ message: 'Password updated successfully' });
   } catch (err) {
@@ -364,6 +390,11 @@ router.get('/me/addresses', verifyToken, async (req, res) => {
 
 router.post('/me/addresses', verifyToken, async (req, res) => {
   try {
+    const { street, city, country, houseNo } = req.body;
+    if (!street || !city || !country || !houseNo) {
+      return res.status(400).json({ error: 'All address fields (House No, Street, City, Country) are required' });
+    }
+
     const user = await User.findById(req.user.userId);
     if (!user.addresses) user.addresses = [];
     if (req.body.isDefault) {
@@ -379,6 +410,13 @@ router.post('/me/addresses', verifyToken, async (req, res) => {
 
 router.put('/me/addresses/:addressId', verifyToken, async (req, res) => {
   try {
+    const { street, city, country, houseNo } = req.body;
+    // Only validate if these fields are present in payload (partial update allowed? Frontend sends all)
+    // Assuming frontend sends complete object for edit
+    if (!street || !city || !country || !houseNo) {
+      return res.status(400).json({ error: 'All address fields are required' });
+    }
+
     const user = await User.findById(req.user.userId);
     const address = user.addresses.id(req.params.addressId);
     if (!address) return res.status(404).json({ error: 'Address not found' });
@@ -417,6 +455,23 @@ router.get('/me/payment-methods', verifyToken, async (req, res) => {
 
 router.post('/me/payment-methods', verifyToken, async (req, res) => {
   try {
+    const { type, last4, expiryMonth, expiryYear } = req.body;
+    if (!type || !last4 || !expiryMonth || !expiryYear) {
+      return res.status(400).json({ error: 'All payment method fields are required' });
+    }
+
+    // Basic validation
+    if (last4.length !== 4 || isNaN(last4)) {
+      return res.status(400).json({ error: 'Last 4 digits must be a 4-digit number' });
+    }
+    if (expiryMonth < 1 || expiryMonth > 12) {
+      return res.status(400).json({ error: 'Invalid expiry month' });
+    }
+    const currentYear = new Date().getFullYear();
+    if (expiryYear < currentYear) {
+      return res.status(400).json({ error: 'Invalid expiry year' });
+    }
+
     const user = await User.findById(req.user.userId);
     if (!user.paymentMethods) user.paymentMethods = [];
     if (req.body.isDefault) {
