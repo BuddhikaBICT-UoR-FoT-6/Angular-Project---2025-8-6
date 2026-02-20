@@ -1,11 +1,12 @@
-import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, timer } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 import { RestockRequest } from '../../models/restock-request.model';
 import { ToastService } from '../../shared/toast/toast.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-supplier-restock-requests',
@@ -15,7 +16,6 @@ import { ToastService } from '../../shared/toast/toast.service';
 })
 export class SupplierRestockRequests implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-
   private didShowLoadErrorToast = false;
 
   requests: RestockRequest[] = [];
@@ -27,10 +27,18 @@ export class SupplierRestockRequests implements OnInit, OnDestroy {
 
   constructor(
     private api: ApiService,
-    private toast: ToastService
-  ) {}
+    private toast: ToastService,
+    private route: ActivatedRoute
+  ) { }
 
   ngOnInit(): void {
+    // Optionally pre-fill code if passed via URL (e.g., ?code=XXXXXX)
+    this.route.queryParams.subscribe(params => {
+      if (params['code']) {
+        this.fulfillCode = params['code'];
+      }
+    });
+
     // Poll so the supplier sees new requests without refresh.
     timer(0, 8000)
       .pipe(takeUntil(this.destroy$))

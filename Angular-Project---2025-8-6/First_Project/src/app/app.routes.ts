@@ -21,6 +21,7 @@ import { Analytics } from './admin/analytics/analytics';
 import { AdminManagement } from './admin/admin-management/admin-management';
 import { AdminCategories } from './admin/admin-categories/admin-categories';
 import { AdminCollections } from './admin/admin-collections/admin-collections';
+import { RestockRequests } from './admin/restock-requests/restock-requests';
 import { SupplierRestockRequests } from './supplier/restock-requests/restock-requests';
 import { MyOrders } from './customer/my-orders/my-orders';
 
@@ -48,6 +49,7 @@ export const routes: Routes = [
   { path: 'admin/admin-management', component: AdminManagement },
   { path: 'admin/categories', component: AdminCategories },
   { path: 'admin/collections', component: AdminCollections },
+  { path: 'admin/restock-requests', component: RestockRequests },
   { path: 'superadmin/dashboard', component: SuperadminDashboard },
   { path: 'supplier/restock-requests', component: SupplierRestockRequests },
   { path: '**', redirectTo: '' }

@@ -1,0 +1,87 @@
+<div class="admin-container">
+    <div class="header-actions">
+        <h2>Restock Requests</h2>
+
+        <div class="filter-group">
+            <label for="statusFilter">Status:</label>
+            <select id="statusFilter" [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange($event)"
+                class="form-control" style="width: auto; display: inline-block; margin-left: 0.5rem;">
+                <option value="all">All</option>
+                <option value="pending">Pending</option>
+                <option value="fulfilled">Fulfilled</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="expired">Expired</option>
+            </select>
+        </div>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+        Loading requests...
+    </div>
+
+    <div class="table-container" *ngIf="!loading">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Product</th>
+                    <th>Supplier</th>
+                    <th>Requested Sizes</th>
+                    <th>Total Qty</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let req of requests">
+                    <td>{{ (req.created_at || req['_id']) | date:'mediumDate' }}</td>
+                    <td>
+                        <span *ngIf="req.product_id && (req.product_id | json) !== 'string'">
+                            {{ $any(req.product_id).name }}
+                        </span>
+                        <span *ngIf="!req.product_id || (req.product_id | json) === 'string'">
+                            {{ req.product_id || 'Unknown Product' }}
+                        </span>
+                    </td>
+                    <td>{{ req.supplier_name || req.supplier_email }}</td>
+                    <td>{{ getRequestedSizes(req) }}</td>
+                    <td>{{ getRequestedQuantityTotal(req) }}</td>
+                    <td>
+                        <span class="status-badge" [ngClass]="getStatusDisplay(req).toLowerCase()">
+                            {{ getStatusDisplay(req) }}
+                        </span>
+                    </td>
+                    <td class="actions">
+                        <button class="btn-delete" *ngIf="getStatusDisplay(req) === 'Pending'"
+                            (click)="openCancelModal(req)">Cancel</button>
+                    </td>
+                </tr>
+                <tr *ngIf="requests.length === 0">
+                    <td colspan="7" class="empty-state">No restock requests found.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Cancel Modal -->
+    <div class="modal-overlay" *ngIf="showCancelModal" (click)="closeCancelModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Cancel Restock Request</h3>
+                <button class="btn-close" (click)="closeCancelModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this request?</p>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="cancelReason">Reason (Optional)</label>
+                    <textarea id="cancelReason" [(ngModel)]="cancelReason" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" (click)="closeCancelModal()">Keep Request</button>
+                    <button type="button" class="btn-delete" style="padding: 0.5rem 1rem;"
+                        (click)="confirmCancel()">Confirm Cancellation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
