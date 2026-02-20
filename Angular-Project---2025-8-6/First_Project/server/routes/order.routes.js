@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/order');
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken, requireRole } = require('../middleware/auth');
 const { generateInvoicePDF, sendInvoiceEmail } = require('../utils/invoiceGenerator');
 const { broadcastAnalyticsUpdated } = require('../utils/analyticsStream');
 
@@ -10,7 +10,7 @@ const { broadcastAnalyticsUpdated } = require('../utils/analyticsStream');
  * Fetch all orders (Admin only)
  * Populates user details for display
  */
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, requireRole('admin'), async (req, res) => {
   try {
     const filter = {};
     if (req.query.status) {
@@ -46,10 +46,16 @@ router.get('/my-orders', verifyToken, async (req, res) => {
  * Fetch single order by ID
  * Returns order with populated user details
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate('user_id', 'full_name email');
     if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    // Check ownership or admin role
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && order.user_id._id.toString() !== req.user.userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -61,10 +67,15 @@ router.get('/:id', async (req, res) => {
  * Generate and download invoice PDF
  * Returns PDF file as download
  */
-router.get('/:id/invoice', async (req, res) => {
+router.get('/:id/invoice', verifyToken, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate('user_id', 'full_name email');
     if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    // Check ownership or admin role
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && order.user_id._id.toString() !== req.user.userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
 
     // Generate PDF
     const pdfBuffer = await generateInvoicePDF(order);
@@ -80,21 +91,21 @@ router.get('/:id/invoice', async (req, res) => {
 
 /**
  * POST /api/orders
- * Create new order
+ * Create new order (Admin only - Customers use checkout)
  * Generates invoice and sends confirmation email
  */
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     // Create order
     const order = await new Order(req.body).save();
-    
+
     // Populate user details for email
     await order.populate('user_id', 'full_name email');
 
     // Generate invoice PDF
     try {
       const pdfBuffer = await generateInvoicePDF(order);
-      
+
       // Send confirmation email with invoice
       if (order.user_id && order.user_id.email) {
         await sendInvoiceEmail(order.user_id.email, order, pdfBuffer);
@@ -118,24 +129,24 @@ router.post('/', async (req, res) => {
  * Update order status (Admin only)
  * Validates status values
  */
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { status } = req.body;
-    
+
     // Validate status
     if (!['pending', 'processing', 'shipped', 'delivered', 'cancelled'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
-    
+
     // Update order
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       { status, updated_at: Date.now() },
       { new: true }
     ).populate('user_id', 'full_name email');
-    
+
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    
+
     // After status update, send invoice email if user email exists
     try {
       const pdfBuffer = await generateInvoicePDF(order);
@@ -156,20 +167,25 @@ router.patch('/:id/status', async (req, res) => {
  * Process refund (Admin only)
  * Marks order as cancelled and refund as completed
  */
-router.post('/:id/refund', async (req, res) => {
+/**
+ * POST /api/orders/:id/refund
+ * Process refund (Admin only)
+ * Marks order as cancelled and refund as completed
+ */
+router.post('/:id/refund', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { reason, amount } = req.body;
     const order = await Order.findById(req.params.id);
-    
+
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    
+
     // Update refund details
     order.refund_status = 'completed';
     order.refund_amount = amount || order.total_amount;
     order.refund_reason = reason || 'Admin refund';
     order.status = 'cancelled';
     order.updated_at = Date.now();
-    
+
     await order.save();
     // After refund, send invoice email if user email exists
     await order.populate('user_id', 'full_name email');
@@ -198,24 +214,24 @@ router.post('/:id/refund', async (req, res) => {
 router.post('/:id/cancel', verifyToken, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    
+
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    
+
     // Verify ownership
     if (order.user_id.toString() !== req.user.userId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
-    
+
     // Check if order can be cancelled
     if (['shipped', 'delivered'].includes(order.status)) {
       return res.status(400).json({ error: 'Cannot cancel shipped or delivered orders' });
     }
-    
+
     // Cancel order
     order.status = 'cancelled';
     order.updated_at = Date.now();
     await order.save();
-    
+
     // After cancellation, send invoice email if user email exists
     await order.populate('user_id', 'full_name email');
     try {
@@ -228,7 +244,7 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
     }
 
     broadcastAnalyticsUpdated('order_cancelled');
-    
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -244,38 +260,38 @@ router.post('/:id/request-refund', verifyToken, async (req, res) => {
   try {
     const { reason } = req.body;
     const order = await Order.findById(req.params.id);
-    
+
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    
+
     // Verify ownership
     if (order.user_id.toString() !== req.user.userId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
-    
+
     // Check if order is delivered
     if (order.status !== 'delivered') {
       return res.status(400).json({ error: 'Only delivered orders can be refunded' });
     }
-    
+
     // Check 30-day refund window
     const orderDate = new Date(order.updated_at || order.created_at);
     const daysSinceOrder = Math.floor((Date.now() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (daysSinceOrder > 30) {
       return res.status(400).json({ error: 'Refund window expired. Refunds are only available within 30 days of delivery.' });
     }
-    
+
     // Check if refund already requested
     if (order.refund_status !== 'none') {
       return res.status(400).json({ error: 'Refund already requested for this order' });
     }
-    
+
     // Request refund
     order.refund_status = 'requested';
     order.refund_reason = reason || 'Customer refund request';
     order.updated_at = Date.now();
     await order.save();
-    
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -286,7 +302,7 @@ router.post('/:id/request-refund', verifyToken, async (req, res) => {
  * PUT /api/orders/:id
  * Update entire order (Admin only)
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(order);
@@ -299,7 +315,7 @@ router.put('/:id', async (req, res) => {
  * DELETE /api/orders/:id
  * Delete order (Admin only)
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const order = await Order.findByIdAndDelete(req.params.id);
     res.json(order);
