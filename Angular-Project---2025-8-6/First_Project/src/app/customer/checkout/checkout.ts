@@ -52,7 +52,7 @@ export class Checkout {
     private checkout: CheckoutService,
     private route: ActivatedRoute,
     private toast: ToastService
-  ) {}
+  ) { }
 
   isLoggedIn(): boolean {
     return this.auth.isLoggedIn();
@@ -168,6 +168,13 @@ export class Checkout {
     if (!this.shipping.line1.trim()) return 'Address line 1 is required.';
     if (!this.shipping.city.trim()) return 'City is required.';
     if (!this.shipping.country.trim()) return 'Country is required.';
+
+    // Validate phone if present
+    const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
+    if (this.shipping.phone && !phoneRegex.test(this.shipping.phone)) {
+      return 'Invalid phone number format.';
+    }
+
     return '';
   }
 
