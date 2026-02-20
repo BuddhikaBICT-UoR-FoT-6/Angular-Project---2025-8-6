@@ -1,0 +1,86 @@
+<div class="admin-container">
+    <div class="header-actions">
+        <h2>Manage Categories</h2>
+        <button class="btn-primary" (click)="openAddModal()">+ Add Category</button>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+        Loading categories...
+    </div>
+
+    <div class="table-container" *ngIf="!loading">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let cat of categories">
+                    <td>
+                        <img *ngIf="cat.image" [src]="cat.image" alt="Category Image" class="thumbnail">
+                        <span *ngIf="!cat.image">No Image</span>
+                    </td>
+                    <td>{{ cat.name }}</td>
+                    <td>{{ cat.description || 'N/A' }}</td>
+                    <td>
+                        <span class="status-badge" [class.active]="cat.isActive" [class.inactive]="!cat.isActive">
+                            {{ cat.isActive ? 'Active' : 'Inactive' }}
+                        </span>
+                    </td>
+                    <td class="actions">
+                        <button class="btn-edit" (click)="openEditModal(cat)">Edit</button>
+                        <button class="btn-delete" (click)="deleteCategory(cat._id)">Delete</button>
+                    </td>
+                </tr>
+                <tr *ngIf="categories.length === 0">
+                    <td colspan="5" class="empty-state">No categories found.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal for Add/Edit -->
+    <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>{{ isEdit ? 'Edit' : 'Add' }} Category</h3>
+                <button class="btn-close" (click)="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form (ngSubmit)="saveCategory()" #categoryForm="ngForm">
+                    <div class="form-group">
+                        <label for="name">Name *</label>
+                        <input type="text" id="name" name="name" [(ngModel)]="currentCategory.name" required
+                            class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" [(ngModel)]="currentCategory.description"
+                            class="form-control"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="image">Image URL</label>
+                        <input type="text" id="image" name="image" [(ngModel)]="currentCategory.image"
+                            class="form-control">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" name="isActive" [(ngModel)]="currentCategory.isActive">
+                            Active (Visible to customers)
+                        </label>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-primary" [disabled]="!categoryForm.form.valid">Save
+                            Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

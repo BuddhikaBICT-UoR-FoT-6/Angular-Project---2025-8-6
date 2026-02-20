@@ -135,6 +135,40 @@ export class ApiService {
     return this.http.get<any>(`${this.baseUrl}/collections/slug/${slug}`);
   }
 
+  // Admin Categories
+  getAdminCategories(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/categories/admin/all`);
+  }
+
+  createCategory(category: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/categories`, category);
+  }
+
+  updateCategory(id: string, category: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/categories/${id}`, category);
+  }
+
+  deleteCategory(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/categories/${id}`);
+  }
+
+  // Admin Collections
+  getAdminCollections(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/collections/admin/all`);
+  }
+
+  createCollection(collection: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/collections`, collection);
+  }
+
+  updateCollection(id: string, collection: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/collections/${id}`, collection);
+  }
+
+  deleteCollection(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/collections/${id}`);
+  }
+
   // Order-related API calls
 
   /**

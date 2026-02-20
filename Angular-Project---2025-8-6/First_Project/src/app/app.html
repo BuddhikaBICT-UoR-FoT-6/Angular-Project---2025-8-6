@@ -1,43 +1,35 @@
 <nav class="main-nav">
   <div class="nav-container">
-    <a routerLink="/" class="brand-link"><h1>Clothing Store</h1></a>
+    <a routerLink="/" class="brand-link">
+      <h1>Clothing Store</h1>
+    </a>
     <div class="nav-links">
       <div class="nav-search" (focusin)="openSearch()" (keydown.escape)="closeSearch()">
-  <input
-    type="search"
-    class="nav-search-input"
-    placeholder="Search products..."
-    aria-label="Search products"
-    autocomplete="off"
-    [formControl]="searchControl"
-  />
+        <input type="search" class="nav-search-input" placeholder="Search products..." aria-label="Search products"
+          autocomplete="off" [formControl]="searchControl" />
 
-  <div class="nav-search-dropdown" *ngIf="searchOpen">
-    <ng-container *ngIf="searchResults$ | async as results">
-      <div class="nav-search-hint" *ngIf="searchControl.value.trim().length < 2">
-        Type at least 2 characters
+        <div class="nav-search-dropdown" *ngIf="searchOpen">
+          <ng-container *ngIf="searchResults$ | async as results">
+            <div class="nav-search-hint" *ngIf="searchControl.value.trim().length < 2">
+              Type at least 2 characters
+            </div>
+
+            <button type="button" class="nav-search-item" *ngFor="let p of results" (mousedown)="goToProduct(p._id)">
+              <span class="name">{{ p.name }}</span>
+              <span class="price">{{ p.price | currency }}</span>
+            </button>
+
+            <div class="nav-search-empty" *ngIf="searchControl.value.trim().length >= 2 && results.length === 0">
+              No matches
+            </div>
+          </ng-container>
+        </div>
       </div>
-
-      <button
-        type="button"
-        class="nav-search-item"
-        *ngFor="let p of results"
-        (mousedown)="goToProduct(p._id)"
-      >
-        <span class="name">{{ p.name }}</span>
-        <span class="price">{{ p.price | currency }}</span>
-      </button>
-
-      <div class="nav-search-empty" *ngIf="searchControl.value.trim().length >= 2 && results.length === 0">
-        No matches
-      </div>
-    </ng-container>
-  </div>
-</div>
 
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Showroom</a>
 
-      <button type="button" class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+      <button type="button" class="theme-toggle" (click)="toggleTheme()"
+        [attr.aria-label]="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
         <span *ngIf="theme === 'dark'">☀️</span>
         <span *ngIf="theme === 'light'">🌙</span>
       </button>
@@ -63,15 +55,13 @@
 <app-toast></app-toast>
 
 <!-- Admin/SuperAdmin Sidebar (shows on admin or superadmin routes) -->
-<aside *ngIf="isAdminRoute()" 
-       class="admin-sidebar" 
-       [class.collapsed]="sidebarCollapsed"
-       (mouseenter)="onSidebarMouseEnter()"
-       (mouseleave)="onSidebarMouseLeave()">
-  
+<aside *ngIf="isAdminRoute()" class="admin-sidebar" [class.collapsed]="sidebarCollapsed"
+  (mouseenter)="onSidebarMouseEnter()" (mouseleave)="onSidebarMouseLeave()">
+
   <!-- SuperAdmin Links -->
   <nav *ngIf="isSuperAdmin()" class="sidebar-nav">
-    <a [routerLink]="getSidebarDashboardRoute()" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="sidebar-link">
+    <a [routerLink]="getSidebarDashboardRoute()" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+      class="sidebar-link">
       <span class="link-icon">🏠</span>
       <span class="link-text">Dashboard</span>
     </a>
@@ -82,6 +72,14 @@
     <a routerLink="/admin/inventory" routerLinkActive="active" class="sidebar-link">
       <span class="link-icon">📦</span>
       <span class="link-text">Inventory</span>
+    </a>
+    <a routerLink="/admin/categories" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">🏷️</span>
+      <span class="link-text">Categories</span>
+    </a>
+    <a routerLink="/admin/collections" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">🛍️</span>
+      <span class="link-text">Collections</span>
     </a>
     <a routerLink="/admin/products" routerLinkActive="active" class="sidebar-link">
       <span class="link-icon">👕</span>
@@ -108,10 +106,11 @@
       <span class="link-text">Admin Management</span>
     </a>
   </nav>
-  
+
   <!-- Regular Admin Links -->
   <nav *ngIf="isAdmin()" class="sidebar-nav">
-    <a [routerLink]="getSidebarDashboardRoute()" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="sidebar-link">
+    <a [routerLink]="getSidebarDashboardRoute()" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+      class="sidebar-link">
       <span class="link-icon">🏠</span>
       <span class="link-text">Dashboard</span>
     </a>
@@ -122,6 +121,14 @@
     <a routerLink="/admin/inventory" routerLinkActive="active" class="sidebar-link">
       <span class="link-icon">📦</span>
       <span class="link-text">Inventory</span>
+    </a>
+    <a routerLink="/admin/categories" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">🏷️</span>
+      <span class="link-text">Categories</span>
+    </a>
+    <a routerLink="/admin/collections" routerLinkActive="active" class="sidebar-link">
+      <span class="link-icon">🛍️</span>
+      <span class="link-text">Collections</span>
     </a>
     <a routerLink="/admin/products" routerLinkActive="active" class="sidebar-link">
       <span class="link-icon">👕</span>
@@ -146,7 +153,8 @@
   </nav>
 </aside>
 
-<main class="main-content" [class.with-sidebar]="isAdminRoute()" [class.sidebar-expanded]="isAdminRoute() && !sidebarCollapsed">
+<main class="main-content" [class.with-sidebar]="isAdminRoute()"
+  [class.sidebar-expanded]="isAdminRoute() && !sidebarCollapsed">
   <div class="container">
     <router-outlet></router-outlet>
   </div>
