@@ -1,115 +1,141 @@
 <ng-container *ngIf="vm$ | async as vm">
-<div class="showroom-container">
+    <div class="showroom-container">
 
-    <!-- Hero Section -->
-     <section class="hero-section">
-        <div class="hero-content">
-            <h1 class="hero-title">✨ Fashion Forward</h1>
-            <p class="hero-subtitle">Discover your style, embrace the trends</p>
-            <button *ngIf="!isLoggedIn()" class="cta-button" routerLink="/register">🛍️ Shop Now</button>
-        </div>
-
-        <div class="hero-image">
-            <div class="hero-placeholder">👗</div>
-        </div>
-     </section>
-
-    <!-- Categories Section -->
-    <section class="categories-section">
-        <h2>Shop by Category</h2>
-        <div class="categories-grid">
-            <div *ngFor="let category of categories" class="category-card">
-                <div class="category-icon">
-                    <span *ngIf="category === 'Shirts'">👕</span>
-                    <span *ngIf="category === 'Pants'">👖</span>
-                    <span *ngIf="category === 'Dresses'">👗</span>
-                    <span *ngIf="category === 'Accessories'">👠</span>
-                </div>
-                <h3>{{category}}</h3>
-                <p>Explore {{category.toLowerCase()}}</p>
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">✨ Fashion Forward</h1>
+                <p class="hero-subtitle">Discover your style, embrace the trends</p>
+                <button *ngIf="!isLoggedIn()" class="cta-button" routerLink="/register">🛍️ Shop Now</button>
             </div>
-        </div>
-    </section>
 
-    <!-- Featured Products -->
-    <section class="products-section">
-        <div class="section-header">
-            <h2>Featured Products</h2>
-            <button class="auto-scroll-toggle" 
-                    [class.active]="isAutoScrollActive"
-                    type="button"
-                    [attr.aria-pressed]="isAutoScrollActive"
-                    *ngIf="!vm.loading && vm.featuredProducts.length > 0"
+            <div class="hero-image">
+                <div class="hero-placeholder">👗</div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section class="categories-section" *ngIf="vm.categories?.length">
+            <h2>Shop by Category</h2>
+            <div class="categories-grid">
+                <div *ngFor="let category of vm.categories" class="category-card" [routerLink]="['/customer/showroom']"
+                    [queryParams]="{ category: category.name }">
+                    <div class="category-icon">
+                        <img *ngIf="category.image" [src]="category.image" [alt]="category.name" class="category-img"
+                            style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+                        <span *ngIf="!category.image" style="font-size: 2rem;">🧥</span>
+                    </div>
+                    <h3>{{category.name}}</h3>
+                    <p *ngIf="category.description" style="font-size: 0.8rem; opacity: 0.8">{{category.description}}</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- New Arrivals Section -->
+        <section class="products-section new-arrivals" *ngIf="vm.newArrivals?.length">
+            <div class="section-header">
+                <h2>New Arrivals</h2>
+            </div>
+            <div class="horizontal-scroll-wrapper">
+                <div class="products-scroll-container">
+                    <div *ngFor="let product of vm.newArrivals" class="product-card"
+                        [routerLink]="['/customer/products', product._id]">
+                        <div class="product-image">
+                            <img *ngIf="product.image && product.image[0]" [src]="product.image[0]"
+                                [alt]="product.name">
+                            <span class="badge new"
+                                style="position: absolute; top: 10px; left: 10px; background: #000; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">NEW</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>{{product.name}}</h3>
+                            <div class="product-price">${{ (product.price || 0) | number:'1.2-2' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Collection Banner -->
+        <section class="hero-section collection-banner" *ngIf="vm.featuredCol"
+            [style.backgroundImage]="'linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(' + (vm.featuredCol.image || '') + ')'"
+            style="margin: 2rem 0; min-height: 300px; display: flex; align-items: center; justify-content: center; text-align: center; color: white; background-size: cover; background-position: center; border-radius: 12px;">
+            <div class="hero-content">
+                <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">{{vm.featuredCol.name}}</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 2rem;">{{vm.featuredCol.description}}</p>
+                <button class="cta-button" [routerLink]="['/customer/showroom']"
+                    [queryParams]="{ collection: vm.featuredCol.slug }">Explore Collection</button>
+            </div>
+        </section>
+
+        <!-- Featured Products -->
+        <section class="products-section">
+            <div class="section-header">
+                <h2>Featured Products</h2>
+                <button class="auto-scroll-toggle" [class.active]="isAutoScrollActive" type="button"
+                    [attr.aria-pressed]="isAutoScrollActive" *ngIf="!vm.loading && vm.featuredProducts.length > 0"
                     (click)="toggleAutoScroll()">
-                <span class="auto-scroll-icon" aria-hidden="true">{{ isAutoScrollActive ? '⏸️' : '▶️' }}</span>
-                <span class="auto-scroll-text">{{ isAutoScrollActive ? 'Pause' : 'Play' }}</span>
-            </button>
-        </div>
+                    <span class="auto-scroll-icon" aria-hidden="true">{{ isAutoScrollActive ? '⏸️' : '▶️' }}</span>
+                    <span class="auto-scroll-text">{{ isAutoScrollActive ? 'Pause' : 'Play' }}</span>
+                </button>
+            </div>
 
-        <div *ngIf="vm.loading" class="loading">
-            <div class="spinner"></div>
-            <p>✨ Loading amazing products for you...</p>
-        </div>
+            <div *ngIf="vm.loading" class="loading">
+                <div class="spinner"></div>
+                <p>✨ Loading amazing products for you...</p>
+            </div>
 
-        <div *ngIf="!vm.loading && vm.featuredProducts.length === 0" class="no-products">
-            <div class="empty-icon">🛍️</div>
-            <h3>{{ vm.errorMessage || '😊 Our collection is being refreshed!' }}</h3>
-            <p>Check back soon for amazing new arrivals</p>
-            <button *ngIf="!isLoggedIn()" routerLink="/register" class="join-button">Join Our Community</button>
-        </div>
+            <div *ngIf="!vm.loading && vm.featuredProducts.length === 0" class="no-products">
+                <div class="empty-icon">🛍️</div>
+                <h3>{{ vm.errorMessage || '😊 Our collection is being refreshed!' }}</h3>
+                <p>Check back soon for amazing new arrivals</p>
+                <button *ngIf="!isLoggedIn()" routerLink="/register" class="join-button">Join Our Community</button>
+            </div>
 
-        <div *ngIf="!vm.loading && vm.featuredProducts.length > 0" 
-             class="horizontal-scroll-wrapper">
-                    <div class="products-scroll-container" #featuredScrollContainer
-               (mousedown)="onDragStart($event)"
-               (mousemove)="onDrag($event)"
-               (mouseup)="onDragEnd()"
-               (mouseleave)="onDragEnd()">
-            <div
-                *ngFor="let product of vm.featuredProducts"
-                class="product-card"
-                [routerLink]="['/product', product._id]"
-                role="link"
-                tabindex="0"
-                (click)="onProductCardClick($event)"
-            >
-                <div class="product-image">
-                    <img *ngIf="product.image && product.image[0]" [src]="product.image[0]" [alt]="product.name || 'Product image'">
-                    <div *ngIf="!product.image || !product.image[0]" class="product-placeholder">📷</div>
-                </div>
+            <div *ngIf="!vm.loading && vm.featuredProducts.length > 0" class="horizontal-scroll-wrapper">
+                <div class="products-scroll-container" #featuredScrollContainer (mousedown)="onDragStart($event)"
+                    (mousemove)="onDrag($event)" (mouseup)="onDragEnd()" (mouseleave)="onDragEnd()">
+                    <div *ngFor="let product of vm.featuredProducts" class="product-card"
+                        [routerLink]="['/product', product._id]" role="link" tabindex="0"
+                        (click)="onProductCardClick($event)">
+                        <div class="product-image">
+                            <img *ngIf="product.image && product.image[0]" [src]="product.image[0]"
+                                [alt]="product.name || 'Product image'">
+                            <div *ngIf="!product.image || !product.image[0]" class="product-placeholder">📷</div>
+                        </div>
 
-                <div class="product-info">
-                    <h3>{{product.name || 'Unnamed Product'}}</h3>
-                    <p class="product-category">{{product.category || 'Fashion'}}</p>
-                    <div class="rating-row" *ngIf="product?._id">
-                    <div class="stars">
-                        <ng-container *ngFor="let filled of starsFor(product._id)">
-                        <span class="star" [class.filled]="filled">★</span>
-                        </ng-container>
+                        <div class="product-info">
+                            <h3>{{product.name || 'Unnamed Product'}}</h3>
+                            <p class="product-category">{{product.category || 'Fashion'}}</p>
+                            <div class="rating-row" *ngIf="product?._id">
+                                <div class="stars">
+                                    <ng-container *ngFor="let filled of starsFor(product._id)">
+                                        <span class="star" [class.filled]="filled">★</span>
+                                    </ng-container>
+                                </div>
+                                <span class="rating-meta">{{ getAverageRating(product._id) | number : '1.1-1'
+                                    }}/5</span>
+                                <span class="rating-meta">({{ getReviewCount(product._id) }})</span>
+                            </div>
+                            <div class="product-price">${{ (product.price || 0) | number:'1.2-2' }}</div>
+                            <div class="see-product-details-tile" aria-hidden="true">See Product Details</div>
+                        </div>
                     </div>
-                    <span class="rating-meta">{{ getAverageRating(product._id) | number : '1.1-1' }}/5</span>
-                    <span class="rating-meta">({{ getReviewCount(product._id) }})</span>
-                    </div>
-                    <div class="product-price">${{ (product.price || 0) | number:'1.2-2' }}</div>
-                                        <div class="see-product-details-tile" aria-hidden="true">See Product Details</div>
                 </div>
             </div>
-          </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Call to Action -->
-    <section *ngIf="!isLoggedIn()" class="cta-section">
-        <div class="cta-content">
-            <h2>Ready to Start Shopping?</h2>
-            <p>Join thousands of satisfied customers</p>
-            <div class="cta-buttons">
-                <button routerLink="/register" class="cta-button primary">Create Account</button>
-                <button routerLink="/login" class="cta-button secondary">Sign In</button>
+        <!-- Call to Action -->
+        <section *ngIf="!isLoggedIn()" class="cta-section">
+            <div class="cta-content">
+                <h2>Ready to Start Shopping?</h2>
+                <p>Join thousands of satisfied customers</p>
+                <div class="cta-buttons">
+                    <button routerLink="/register" class="cta-button primary">Create Account</button>
+                    <button routerLink="/login" class="cta-button secondary">Sign In</button>
+                </div>
             </div>
-        </div>
-    </section>
-    
-</div>
+        </section>
+
+    </div>
 
 </ng-container>
