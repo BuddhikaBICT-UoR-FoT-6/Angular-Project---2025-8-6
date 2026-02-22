@@ -61,8 +61,6 @@ function normalizeShippingAddress(input) {
   };
 }
 
-const { validatePhone } = require('../utils/userUtils');
-
 function requireBasicShipping(addr) {
   if (!addr.line1) return 'Address line 1 is required';
   if (!addr.city) return 'City is required';
