@@ -87,6 +87,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/categories', require('./routes/category.routes')); // New
 app.use('/api/collections', require('./routes/collection.routes')); // New
+app.use('/api/reports', require('./routes/report.routes')); // New Reports
 // Test DB endpoint (optional, for debugging)
 app.get("/test-db", async (req, res) => {
   try {
