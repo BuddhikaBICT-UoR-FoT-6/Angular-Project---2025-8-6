@@ -355,4 +355,21 @@ export class ApiService {
   getGlobalInventoryHistory(limit: number): Observable<InventoryAuditEntry[]> {
     return this.http.get<InventoryAuditEntry[]>(`${this.baseUrl}/inventory/audit-log?limit=${limit}`);
   }
+
+  // Expanded Reports (PDF/Excel)
+  exportSalesReport(format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/reports/sales?format=${format}`, { responseType: 'blob' });
+  }
+
+  exportInventoryReport(format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/reports/inventory?format=${format}`, { responseType: 'blob' });
+  }
+
+  exportCustomerReport(format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/reports/customers?format=${format}`, { responseType: 'blob' });
+  }
+
+  exportMyReport(format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/reports/my-report?format=${format}`, { responseType: 'blob' });
+  }
 }
