@@ -118,8 +118,10 @@ export class Analytics implements OnInit, OnDestroy {
         this.stats.totalUsers = users?.length || 0;
         this.stats.totalProducts = products?.length || 0;
         this.stats.totalOrders = orders?.length || 0;
+
+        const finArray = Array.isArray(financials) ? financials : ((financials as any)?.data || []);
         this.stats.totalRevenue =
-          financials?.reduce((sum: number, f: any) => sum + (f.amount || 0), 0) || 0;
+          finArray.reduce((sum: number, f: any) => sum + (f.amount || 0), 0) || 0;
 
         this.stats.lowStockItems =
           inventory?.filter((item: any) => {

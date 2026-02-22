@@ -14,11 +14,11 @@ import { ToastService } from '../../shared/toast/toast.service';
 export class AdminManagement implements OnInit {
   isLoading = true;
   users: any[] = [];
-  
+
   // Modal state
   editModalOpen = false;
   editingUser: any = null;
-  
+
   // Toast confirmation for delete
   pendingDeleteUserId: string | null = null;
   pendingDeleteUntil = 0;
@@ -26,7 +26,7 @@ export class AdminManagement implements OnInit {
   constructor(
     private apiService: ApiService,
     private toast: ToastService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadUsers();
@@ -35,8 +35,8 @@ export class AdminManagement implements OnInit {
   loadUsers() {
     this.isLoading = true;
     this.apiService.getUsers().subscribe({
-      next: (users) => {
-        this.users = (users || []).slice();
+      next: (users: any) => {
+        this.users = Array.isArray(users) ? users : (users?.data || []);
         this.isLoading = false;
         this.toast.success('Admin users loaded successfully');
       },
@@ -51,12 +51,12 @@ export class AdminManagement implements OnInit {
   get admins(): any[] {
     return (this.users || []).filter((u) => u.role === 'admin' || u.role === 'superadmin');
   }
-  
+
   openEditModal(user: any) {
     this.editingUser = { ...user };
     this.editModalOpen = true;
   }
-  
+
   closeEditModal() {
     this.editModalOpen = false;
     this.editingUser = null;
@@ -78,10 +78,10 @@ export class AdminManagement implements OnInit {
       }
     });
   }
-  
+
   deleteUser(user: any) {
     if (!user?._id) return;
-    
+
     // Toast-based double-tap confirmation
     const now = Date.now();
     if (this.pendingDeleteUserId !== user._id || now > this.pendingDeleteUntil) {
@@ -90,11 +90,11 @@ export class AdminManagement implements OnInit {
       this.toast.warning('Tap Delete again within 5 seconds to confirm removing this admin');
       return;
     }
-    
+
     // Confirmed
     this.pendingDeleteUserId = null;
     this.pendingDeleteUntil = 0;
-    
+
     this.apiService.deleteUser(user._id).subscribe({
       next: () => {
         this.users = this.users.filter(u => u._id !== user._id);

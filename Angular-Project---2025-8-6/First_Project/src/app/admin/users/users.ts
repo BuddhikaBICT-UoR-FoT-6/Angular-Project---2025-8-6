@@ -17,12 +17,12 @@ export class Users implements OnInit {
   filteredUsers: any[] = [];
   selectedRole: string = 'all';
   searchQuery: string = '';
-  
+
   showAddForm = false;
   editingUser: any = null;
-  
+
   newUser = this.getEmptyUser();
-  
+
   // Confirmation state
   private pendingDeleteUserId: string | null = null;
   private pendingDeleteUserUntil = 0;
@@ -30,7 +30,7 @@ export class Users implements OnInit {
   constructor(
     private api: ApiService,
     private toast: ToastService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadUsers();
@@ -48,8 +48,8 @@ export class Users implements OnInit {
   loadUsers() {
     this.isLoading = true;
     this.api.getUsers().subscribe({
-      next: (users) => {
-        this.users = users || [];
+      next: (users: any) => {
+        this.users = Array.isArray(users) ? users : (users?.data || []);
         this.applyFilters();
         this.isLoading = false;
         this.toast.success('🎉 All users loaded and ready!');
@@ -64,19 +64,19 @@ export class Users implements OnInit {
 
   applyFilters() {
     let result = [...this.users];
-    
+
     if (this.selectedRole !== 'all') {
       result = result.filter(u => u.role === this.selectedRole);
     }
-    
+
     if (this.searchQuery.trim()) {
       const q = this.searchQuery.toLowerCase();
-      result = result.filter(u => 
+      result = result.filter(u =>
         (u.full_name || '').toLowerCase().includes(q) ||
         (u.email || '').toLowerCase().includes(q)
       );
     }
-    
+
     this.filteredUsers = result;
   }
 

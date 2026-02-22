@@ -13,6 +13,7 @@ const {
   calculateProfitLoss,
   DEFAULT_TAX_RATE
 } = require('../utils/financialUtils');
+const { verifyToken, requireRole } = require('../middleware/auth');
 
 // ============================================
 // REVENUE REPORTS
@@ -23,7 +24,7 @@ const {
  * Generate revenue reports with date range and period filters
  * Query params: period (daily/weekly/monthly), startDate, endDate
  */
-router.get('/revenue-report', async (req, res) => {
+router.get('/revenue-report', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { period = 'monthly', startDate, endDate } = req.query;
 
@@ -67,7 +68,7 @@ router.get('/revenue-report', async (req, res) => {
  * Generate sales analytics data for charts
  * Query params: period (daily/weekly/monthly), startDate, endDate
  */
-router.get('/sales-analytics', async (req, res) => {
+router.get('/sales-analytics', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { period = 'monthly', startDate, endDate } = req.query;
 
@@ -107,7 +108,7 @@ router.get('/sales-analytics', async (req, res) => {
  * Calculate profit/loss statement
  * Query params: startDate, endDate
  */
-router.get('/profit-loss', async (req, res) => {
+router.get('/profit-loss', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -176,7 +177,7 @@ router.get('/profit-loss', async (req, res) => {
  * Generate tax calculation summary
  * Query params: startDate, endDate, period
  */
-router.get('/tax-summary', async (req, res) => {
+router.get('/tax-summary', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { startDate, endDate, period = 'monthly' } = req.query;
 

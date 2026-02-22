@@ -29,7 +29,7 @@ export class SuperadminDashboard implements OnInit {
     private authService: AuthService,
     private apiService: ApiService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.user = this.authService.getCurrentUser();
@@ -44,7 +44,13 @@ export class SuperadminDashboard implements OnInit {
       this.apiService.getOrders().toPromise(),
       this.apiService.getFinancials().toPromise(),
       this.apiService.getInventory().toPromise()
-    ]).then(([users, products, orders, financials, inventory]) => {
+    ]).then(([usersData, productsData, ordersData, financialsData, inventoryData]) => {
+      const users: any[] = Array.isArray(usersData) ? usersData : ((usersData as any)?.data || []);
+      const products: any[] = Array.isArray(productsData) ? productsData : ((productsData as any)?.data || []);
+      const orders: any[] = Array.isArray(ordersData) ? ordersData : ((ordersData as any)?.data || []);
+      const financials: any[] = Array.isArray(financialsData) ? financialsData : ((financialsData as any)?.data || []);
+      const inventory: any[] = Array.isArray(inventoryData) ? inventoryData : ((inventoryData as any)?.data || []);
+
       this.stats.totalUsers = users?.length || 0;
       this.stats.totalAdmins = users?.filter(u => u.role === 'admin' || u.role === 'superadmin').length || 0;
       this.stats.totalCustomers = users?.filter(u => u.role === 'customer').length || 0;

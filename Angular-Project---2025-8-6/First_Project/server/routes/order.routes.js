@@ -10,7 +10,7 @@ const { broadcastAnalyticsUpdated } = require('../utils/analyticsStream');
  * Fetch all orders (Admin only)
  * Populates user details for display
  */
-router.get('/', verifyToken, requireRole('admin'), async (req, res) => {
+router.get('/', verifyToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const filter = {};
     if (req.query.status) {
