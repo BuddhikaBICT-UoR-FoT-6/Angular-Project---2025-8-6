@@ -1,7 +1,7 @@
-<div class="financial-dashboard">
+<div class="admin-page">
   <!-- Header Section -->
-  <div class="dashboard-header">
-    <h1>Financial Management</h1>
+  <div class="page-header">
+    <h2>Financial Management</h2>
     <div class="header-actions">
       <button class="btn btn-secondary" (click)="syncOrders()">
         <span class="icon">🔄</span> Sync Orders
@@ -92,28 +92,16 @@
 
   <!-- Tab Navigation -->
   <div class="tab-navigation">
-    <button 
-      class="tab-btn" 
-      [class.active]="activeTab === 'revenue'"
-      (click)="setActiveTab('revenue')">
+    <button class="tab-btn" [class.active]="activeTab === 'revenue'" (click)="setActiveTab('revenue')">
       Revenue Reports
     </button>
-    <button 
-      class="tab-btn" 
-      [class.active]="activeTab === 'analytics'"
-      (click)="setActiveTab('analytics')">
+    <button class="tab-btn" [class.active]="activeTab === 'analytics'" (click)="setActiveTab('analytics')">
       Sales Analytics
     </button>
-    <button 
-      class="tab-btn" 
-      [class.active]="activeTab === 'profitLoss'"
-      (click)="setActiveTab('profitLoss')">
+    <button class="tab-btn" [class.active]="activeTab === 'profitLoss'" (click)="setActiveTab('profitLoss')">
       Profit & Loss
     </button>
-    <button 
-      class="tab-btn" 
-      [class.active]="activeTab === 'tax'"
-      (click)="setActiveTab('tax')">
+    <button class="tab-btn" [class.active]="activeTab === 'tax'" (click)="setActiveTab('tax')">
       Tax Summary
     </button>
   </div>
@@ -206,8 +194,8 @@
             </div>
             <div class="category-revenue">{{ formatCurrency(category.revenue) }}</div>
             <div class="category-bar">
-              <div class="bar-fill" 
-                   [style.width.%]="(category.revenue / salesAnalytics.categoryBreakdown[0].revenue) * 100">
+              <div class="bar-fill"
+                [style.width.%]="(category.revenue / salesAnalytics.categoryBreakdown[0].revenue) * 100">
               </div>
             </div>
           </div>

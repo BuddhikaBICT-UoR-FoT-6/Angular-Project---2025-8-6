@@ -1,22 +1,3 @@
-.dashboard-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.dashboard-header h1 {
-  color: var(--text);
-  margin: 0;
-  font-size: 2rem;
-}
-
 .refresh-btn {
   background: var(--accent);
   color: white;
@@ -42,8 +23,13 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading {
@@ -78,13 +64,33 @@
   transform: translateY(-2px);
 }
 
-.stat-card.users { border-left: 4px solid #28a745; }
-.stat-card.admins { border-left: 4px solid #9b59b6; }
-.stat-card.customers { border-left: 4px solid #e74c3c; }
-.stat-card.products { border-left: 4px solid #17a2b8; }
-.stat-card.orders { border-left: 4px solid #ffc107; }
-.stat-card.revenue { border-left: 4px solid #28a745; }
-.stat-card.inventory { border-left: 4px solid #dc3545; }
+.stat-card.users {
+  border-left: 4px solid #28a745;
+}
+
+.stat-card.admins {
+  border-left: 4px solid #9b59b6;
+}
+
+.stat-card.customers {
+  border-left: 4px solid #e74c3c;
+}
+
+.stat-card.products {
+  border-left: 4px solid #17a2b8;
+}
+
+.stat-card.orders {
+  border-left: 4px solid #ffc107;
+}
+
+.stat-card.revenue {
+  border-left: 4px solid #28a745;
+}
+
+.stat-card.inventory {
+  border-left: 4px solid #dc3545;
+}
 
 .stat-icon {
   font-size: 2rem;
@@ -135,7 +141,8 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
   text-align: left;
   padding: 12px 8px;
   border-bottom: 1px solid var(--border);
@@ -161,10 +168,25 @@ td {
   text-transform: capitalize;
 }
 
-.status.pending { background: #fff3cd; color: #856404; }
-.status.completed { background: #d4edda; color: #155724; }
-.status.cancelled { background: #f8d7da; color: #721c24; }
-.status.processing { background: #d1ecf1; color: #0c5460; }
+.status.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status.completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status.cancelled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status.processing {
+  background: #d1ecf1;
+  color: #0c5460;
+}
 
 .low-stock {
   color: #dc3545;
@@ -182,7 +204,7 @@ td {
   .dashboard-container {
     padding: 10px;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
@@ -190,13 +212,13 @@ td {
   .tables-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .dashboard-header {
     flex-direction: column;
     gap: 15px;
     text-align: center;
   }
-  
+
   .stat-card {
     padding: 15px;
   }

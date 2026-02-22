@@ -1,17 +1,19 @@
-<div class="admin-container">
-    <div class="header-actions">
+<div class="admin-page">
+    <div class="page-header">
         <h2>Restock Requests</h2>
 
-        <div class="filter-group">
-            <label for="statusFilter">Status:</label>
-            <select id="statusFilter" [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange($event)"
-                class="form-control" style="width: auto; display: inline-block; margin-left: 0.5rem;">
-                <option value="all">All</option>
-                <option value="pending">Pending</option>
-                <option value="fulfilled">Fulfilled</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="expired">Expired</option>
-            </select>
+        <div class="header-actions">
+            <div class="filter-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter" [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange($event)"
+                    class="form-control" style="width: auto; display: inline-block; margin-left: 0.5rem;">
+                    <option value="all">All</option>
+                    <option value="pending">Pending</option>
+                    <option value="fulfilled">Fulfilled</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="expired">Expired</option>
+                </select>
+            </div>
         </div>
     </div>
 

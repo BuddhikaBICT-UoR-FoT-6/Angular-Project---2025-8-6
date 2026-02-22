@@ -1,67 +1,15 @@
-/* Orders Page */
-.orders-page {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+.status-shipped,
+.status-cancelled {
+  background: #6d3df5 !important;
+  color: #fff !important;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid var(--border);
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-.status-shipped {
-  background: #6d3df5; /* purple */
-  color: #000; /* black text per request */
-}
 .status-delivered {
   background: #d1fae5;
   color: #065f46;
 }
-.status-cancelled {
-  background: #6d3df5; /* purple */
-  color: #000; /* black text per request */
-}
-  border: 1px solid var(--border);
-  padding: 10px 20px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
 
-.btn-back:hover {
-  background: var(--surface-2);
-  border-color: var(--border-strong);
-.status-select-shipped, .status-select-cancelled {
-  background: #6d3df5 !important;
-  color: #000 !important;
-  font-weight: 800;
-}
-}
-
-.btn-refresh {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-}
-
+/* Filter Tabs */
 .btn-refresh:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
@@ -456,7 +404,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-state p {
@@ -498,12 +448,31 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .orders-page { padding: 16px; }
-  .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
-  .filter-tabs { flex-wrap: wrap; }
-  .orders-grid { grid-template-columns: 1fr; }
-  .detail-grid { grid-template-columns: 1fr; }
-  .modal-card { max-height: 95vh; }
+  .orders-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .filter-tabs {
+    flex-wrap: wrap;
+  }
+
+  .orders-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-card {
+    max-height: 95vh;
+  }
 }
 
 
@@ -513,7 +482,8 @@ table {
   color: var(--text);
 }
 
-th, td {
+th,
+td {
   text-align: left;
   padding: 12px 10px;
   border-bottom: 1px solid var(--border);
@@ -533,10 +503,25 @@ th {
   background: #f1f1f1;
 }
 
-.status.pending { background: #fff3cd; color: #856404; }
-.status.shipped { background: #d1ecf1; color: #0c5460; }
-.status.delivered { background: #d4edda; color: #155724; }
-.status.cancelled { background: #f8d7da; color: #721c24; }
+.status.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status.shipped {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.status.delivered {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status.cancelled {
+  background: #f8d7da;
+  color: #721c24;
+}
 
 .status-select {
   padding: 8px 12px;
@@ -554,7 +539,8 @@ th {
   border-color: var(--border-strong);
 }
 
-.btn-refund, .btn-invoice {
+.btn-refund,
+.btn-invoice {
   padding: 8px 16px;
   border: none;
   border-radius: 6px;
@@ -638,7 +624,8 @@ th {
   margin-top: 24px;
 }
 
-.btn-cancel, .btn-confirm {
+.btn-cancel,
+.btn-confirm {
   padding: 10px 24px;
   border: none;
   border-radius: 8px;

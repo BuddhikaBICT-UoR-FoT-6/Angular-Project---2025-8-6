@@ -1,6 +1,11 @@
-<div class="products-page">
-    <div class="page-header">
-        <h2>Products Management</h2>
+<div class="admin-page">
+    <div class="page-header" style="align-items: flex-end;">
+        <div class="header-content">
+            <h2 class="page-title" style="margin: 0; font-size: 28px; font-weight: 700; color: var(--text);">📦 Products
+                Management</h2>
+            <p class="page-subtitle" style="margin: 0; color: var(--muted); font-size: 14px;">Manage your store's
+                catalog</p>
+        </div>
         <div class="header-actions">
             <button class="btn-primary" (click)="openAddForm()" *ngIf="!showAddForm && !editingProduct">
                 <span>➕</span> Add Product
@@ -30,75 +35,77 @@
             </div>
 
             <div class="modal-body">
-            <div class="form-row">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Product Name *</label>
+                        <input [(ngModel)]="newProduct.name" placeholder="Enter product name" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <input [(ngModel)]="newProduct.category" placeholder="e.g., T-Shirts, Jeans" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Price ($) *</label>
+                        <input type="number" [(ngModel)]="newProduct.price" placeholder="0.00" min="0" step="0.01" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Discount (%)</label>
+                        <input type="number" [(ngModel)]="newProduct.discount" placeholder="0" min="0" max="100" />
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label>Product Name *</label>
-                    <input [(ngModel)]="newProduct.name" placeholder="Enter product name" />
+                    <label>Description</label>
+                    <textarea [(ngModel)]="newProduct.description" placeholder="Product description"
+                        rows="3"></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label>Category *</label>
-                    <input [(ngModel)]="newProduct.category" placeholder="e.g., T-Shirts, Jeans" />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Price ($) *</label>
-                    <input type="number" [(ngModel)]="newProduct.price" placeholder="0.00" min="0" step="0.01" />
-                </div>
-
-                <div class="form-group">
-                    <label>Discount (%)</label>
-                    <input type="number" [(ngModel)]="newProduct.discount" placeholder="0" min="0" max="100" />
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Description</label>
-                <textarea [(ngModel)]="newProduct.description" placeholder="Product description" rows="3"></textarea>
-            </div>
-
-            <div class="stock-section">
-                <h4>Stock by Size</h4>
-                <div class="stock-grid">
-                    <div class="stock-item">
-                        <label>S</label>
-                        <input type="number" [(ngModel)]="newProduct.stock.S" min="0" />
-                    </div>
-                    <div class="stock-item">
-                        <label>M</label>
-                        <input type="number" [(ngModel)]="newProduct.stock.M" min="0" />
-                    </div>
-                    <div class="stock-item">
-                        <label>L</label>
-                        <input type="number" [(ngModel)]="newProduct.stock.L" min="0" />
-                    </div>
-                    <div class="stock-item">
-                        <label>XL</label>
-                        <input type="number" [(ngModel)]="newProduct.stock.XL" min="0" />
+                <div class="stock-section">
+                    <h4>Stock by Size</h4>
+                    <div class="stock-grid">
+                        <div class="stock-item">
+                            <label>S</label>
+                            <input type="number" [(ngModel)]="newProduct.stock.S" min="0" />
+                        </div>
+                        <div class="stock-item">
+                            <label>M</label>
+                            <input type="number" [(ngModel)]="newProduct.stock.M" min="0" />
+                        </div>
+                        <div class="stock-item">
+                            <label>L</label>
+                            <input type="number" [(ngModel)]="newProduct.stock.L" min="0" />
+                        </div>
+                        <div class="stock-item">
+                            <label>XL</label>
+                            <input type="number" [(ngModel)]="newProduct.stock.XL" min="0" />
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="image-section">
-                <h4>Product Images</h4>
-                <div class="image-upload-group">
-                    <input type="file" multiple accept="image/*" (change)="onFilesSelected($event)" id="addImageInput" />
-                    <label for="addImageInput" class="file-label">Choose Images</label>
-                    <button type="button" class="btn-upload" (click)="uploadSelectedImages()">
-                        <span>☁️</span> Upload to Cloud
-                    </button>
-                </div>
+                <div class="image-section">
+                    <h4>Product Images</h4>
+                    <div class="image-upload-group">
+                        <input type="file" multiple accept="image/*" (change)="onFilesSelected($event)"
+                            id="addImageInput" />
+                        <label for="addImageInput" class="file-label">Choose Images</label>
+                        <button type="button" class="btn-upload" (click)="uploadSelectedImages()">
+                            <span>☁️</span> Upload to Cloud
+                        </button>
+                    </div>
 
-                <!-- Gallery preview -->
-                <div class="image-gallery" *ngIf="newProduct.image?.length">
-                    <div class="image-item" *ngFor="let url of newProduct.image">
-                        <img [src]="url" alt="Product image" />
-                        <button type="button" class="btn-remove-img" (click)="removeImage(url)">✕</button>
+                    <!-- Gallery preview -->
+                    <div class="image-gallery" *ngIf="newProduct.image?.length">
+                        <div class="image-item" *ngFor="let url of newProduct.image">
+                            <img [src]="url" alt="Product image" />
+                            <button type="button" class="btn-remove-img" (click)="removeImage(url)">✕</button>
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
 
             <div class="modal-actions">
@@ -120,75 +127,78 @@
             </div>
 
             <div class="modal-body">
-            <div class="form-row">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Product Name *</label>
+                        <input [(ngModel)]="editingProduct.name" placeholder="Enter product name" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <input [(ngModel)]="editingProduct.category" placeholder="e.g., T-Shirts, Jeans" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Price ($) *</label>
+                        <input type="number" [(ngModel)]="editingProduct.price" placeholder="0.00" min="0"
+                            step="0.01" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Discount (%)</label>
+                        <input type="number" [(ngModel)]="editingProduct.discount" placeholder="0" min="0" max="100" />
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label>Product Name *</label>
-                    <input [(ngModel)]="editingProduct.name" placeholder="Enter product name" />
+                    <label>Description</label>
+                    <textarea [(ngModel)]="editingProduct.description" placeholder="Product description"
+                        rows="3"></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label>Category *</label>
-                    <input [(ngModel)]="editingProduct.category" placeholder="e.g., T-Shirts, Jeans" />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Price ($) *</label>
-                    <input type="number" [(ngModel)]="editingProduct.price" placeholder="0.00" min="0" step="0.01" />
-                </div>
-
-                <div class="form-group">
-                    <label>Discount (%)</label>
-                    <input type="number" [(ngModel)]="editingProduct.discount" placeholder="0" min="0" max="100" />
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Description</label>
-                <textarea [(ngModel)]="editingProduct.description" placeholder="Product description" rows="3"></textarea>
-            </div>
-
-            <div class="stock-section">
-                <h4>Stock by Size</h4>
-                <div class="stock-grid">
-                    <div class="stock-item">
-                        <label>S</label>
-                        <input type="number" [(ngModel)]="editingProduct.stock.S" min="0" />
-                    </div>
-                    <div class="stock-item">
-                        <label>M</label>
-                        <input type="number" [(ngModel)]="editingProduct.stock.M" min="0" />
-                    </div>
-                    <div class="stock-item">
-                        <label>L</label>
-                        <input type="number" [(ngModel)]="editingProduct.stock.L" min="0" />
-                    </div>
-                    <div class="stock-item">
-                        <label>XL</label>
-                        <input type="number" [(ngModel)]="editingProduct.stock.XL" min="0" />
+                <div class="stock-section">
+                    <h4>Stock by Size</h4>
+                    <div class="stock-grid">
+                        <div class="stock-item">
+                            <label>S</label>
+                            <input type="number" [(ngModel)]="editingProduct.stock.S" min="0" />
+                        </div>
+                        <div class="stock-item">
+                            <label>M</label>
+                            <input type="number" [(ngModel)]="editingProduct.stock.M" min="0" />
+                        </div>
+                        <div class="stock-item">
+                            <label>L</label>
+                            <input type="number" [(ngModel)]="editingProduct.stock.L" min="0" />
+                        </div>
+                        <div class="stock-item">
+                            <label>XL</label>
+                            <input type="number" [(ngModel)]="editingProduct.stock.XL" min="0" />
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="image-section">
-                <h4>Product Images</h4>
-                <div class="image-upload-group">
-                    <input type="file" multiple accept="image/*" (change)="onFilesSelected($event)" id="editImageInput" />
-                    <label for="editImageInput" class="file-label">Choose Images</label>
-                    <button type="button" class="btn-upload" (click)="uploadSelectedImages()">
-                        <span>☁️</span> Upload to Cloud
-                    </button>
-                </div>
+                <div class="image-section">
+                    <h4>Product Images</h4>
+                    <div class="image-upload-group">
+                        <input type="file" multiple accept="image/*" (change)="onFilesSelected($event)"
+                            id="editImageInput" />
+                        <label for="editImageInput" class="file-label">Choose Images</label>
+                        <button type="button" class="btn-upload" (click)="uploadSelectedImages()">
+                            <span>☁️</span> Upload to Cloud
+                        </button>
+                    </div>
 
-                <!-- Gallery preview -->
-                <div class="image-gallery" *ngIf="editingProduct.image?.length">
-                    <div class="image-item" *ngFor="let url of editingProduct.image">
-                        <img [src]="url" alt="Product image" />
-                        <button type="button" class="btn-remove-img" (click)="removeImage(url)">✕</button>
+                    <!-- Gallery preview -->
+                    <div class="image-gallery" *ngIf="editingProduct.image?.length">
+                        <div class="image-item" *ngFor="let url of editingProduct.image">
+                            <img [src]="url" alt="Product image" />
+                            <button type="button" class="btn-remove-img" (click)="removeImage(url)">✕</button>
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
 
             <div class="modal-actions">
@@ -203,20 +213,20 @@
         <div class="spinner"></div>
         <p>Loading products...</p>
     </div>
-     
+
     <div class="products-grid" *ngIf="!isLoading && products.length">
         <div class="product-card" *ngFor="let p of products">
             <div class="product-image">
                 <img [src]="getProductThumbnail(p)" [alt]="p.name" />
             </div>
-            
+
             <div class="product-info">
                 <h4 class="product-name">{{ p.name }}</h4>
                 <div class="product-meta">
                     <span class="category">{{ p.category }}</span>
                     <span class="price">${{ p.price | number:'1.2-2' }}</span>
                 </div>
-                
+
                 <div class="product-stock">
                     <span class="stock-label">Total Stock:</span>
                     <span class="stock-value">{{
@@ -224,9 +234,9 @@
                         (p.stock?.M || 0) +
                         (p.stock?.L || 0) +
                         (p.stock?.XL || 0)
-                    }}</span>
+                        }}</span>
                 </div>
-                
+
                 <div class="stock-sizes">
                     <span>S: {{ p.stock?.S || 0 }}</span>
                     <span>M: {{ p.stock?.M || 0 }}</span>
@@ -234,7 +244,7 @@
                     <span>XL: {{ p.stock?.XL || 0 }}</span>
                 </div>
             </div>
-            
+
             <div class="product-actions">
                 <button class="btn-edit" (click)="startEdit(p)">
                     <span>✏️</span> Edit

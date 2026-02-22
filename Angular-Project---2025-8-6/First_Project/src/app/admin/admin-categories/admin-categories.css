@@ -4,42 +4,6 @@
   margin: 0 auto;
 }
 
-.header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.btn-primary {
-  background: var(--primary-color, #000);
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.admin-table th, .admin-table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
 .thumbnail {
   width: 40px;
   height: 40px;
@@ -53,8 +17,15 @@
   font-size: 0.85rem;
 }
 
-.status-badge.active { background: #e6f4ea; color: #1e8e3e; }
-.status-badge.inactive { background: #fce8e6; color: #d93025; }
+.status-badge.active {
+  background: #e6f4ea;
+  color: #1e8e3e;
+}
+
+.status-badge.inactive {
+  background: #fce8e6;
+  color: #d93025;
+}
 
 .actions button {
   margin-right: 0.5rem;
@@ -64,14 +35,24 @@
   cursor: pointer;
 }
 
-.btn-edit { background: #e8f0fe; color: #1a73e8; }
-.btn-delete { background: #fce8e6; color: #d93025; }
+.btn-edit {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+
+.btn-delete {
+  background: #fce8e6;
+  color: #d93025;
+}
 
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -79,7 +60,7 @@
 }
 
 .modal-content {
-  background: white;
+  background: var(--bg-2);
   padding: 2rem;
   border-radius: 8px;
   width: 100%;
@@ -112,7 +93,7 @@
 .form-control {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 4px;
 }
 

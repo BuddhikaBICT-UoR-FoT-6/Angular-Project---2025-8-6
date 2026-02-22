@@ -1,7 +1,10 @@
-<div class="user-management-container">
-    <div class="header">
-        <h1>User Management</h1>
-        <p class="subtitle">Manage users, roles, and permissions</p>
+<div class="admin-page">
+    <div class="page-header">
+        <div>
+            <h2>User Management</h2>
+            <p class="subtitle" style="margin: 0; color: var(--muted); font-size: 14px;">Manage users, roles, and
+                permissions</p>
+        </div>
     </div>
 
     <!-- Error Message -->
@@ -133,10 +136,10 @@
 
     <!-- Edit User Modal -->
     <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
-        <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
             <div class="modal-header">
                 <h2>Edit User</h2>
-                <button class="close-btn" (click)="closeEditModal()">×</button>
+                <button class="btn-close" (click)="closeEditModal()">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -170,10 +173,10 @@
 
     <!-- Activity Modal -->
     <div class="modal-overlay" *ngIf="showActivityModal" (click)="closeActivityModal()">
-        <div class="modal modal-large" (click)="$event.stopPropagation()">
+        <div class="modal-content modal-large" (click)="$event.stopPropagation()">
             <div class="modal-header">
                 <h2>User Activity - {{ selectedUser?.full_name }}</h2>
-                <button class="close-btn" (click)="closeActivityModal()">×</button>
+                <button class="btn-close" (click)="closeActivityModal()">×</button>
             </div>
             <div class="modal-body">
                 <div class="activity-list">

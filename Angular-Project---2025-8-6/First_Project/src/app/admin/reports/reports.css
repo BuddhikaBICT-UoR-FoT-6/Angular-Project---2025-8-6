@@ -14,12 +14,12 @@
 .page-title {
   margin: 0;
   font-size: 2rem;
-  color: #333;
+  color: var(--text);
 }
 
 .page-subtitle {
   margin: 0.5rem 0 0;
-  color: #666;
+  color: var(--muted);
 }
 
 .btn-secondary {
@@ -27,8 +27,8 @@
   border-radius: 6px;
   text-decoration: none;
   font-weight: 500;
-  background: #f5f5f5;
-  color: #333;
+  background: var(--surface-2);
+  color: var(--text);
   display: inline-flex;
   align-items: center;
   transition: background 0.2s ease;
@@ -43,7 +43,7 @@
 }
 
 .section-card {
-  background: white;
+  background: var(--surface);
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -53,14 +53,14 @@
   display: flex;
   align-items: flex-start;
   margin-bottom: 2rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 1.5rem;
 }
 
 .card-icon {
   font-size: 2.5rem;
   margin-right: 1.5rem;
-  background: #f8f9fa;
+  background: var(--surface-2);
   width: 60px;
   height: 60px;
   display: flex;
@@ -72,12 +72,12 @@
 .card-title {
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
-  color: #333;
+  color: var(--text);
 }
 
 .card-subtitle {
   margin: 0;
-  color: #666;
+  color: var(--muted);
 }
 
 /* Export Options */
@@ -92,9 +92,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border: 1px solid #eee;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--surface-2);
 }
 
 .export-info {
@@ -110,13 +110,13 @@
 .export-title {
   margin: 0 0 0.25rem 0;
   font-size: 1.1rem;
-  color: #333;
+  color: var(--text);
 }
 
 .export-description {
   margin: 0;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--muted);
 }
 
 .export-actions {
@@ -142,7 +142,7 @@
 }
 
 .btn-export:not([disabled]):hover {
-  background: #333;
+  background: var(--text);
 }
 
 .btn-export[disabled] {
@@ -168,11 +168,11 @@
 }
 
 .report-card {
-  border: 1px solid #eee;
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.5rem;
   position: relative;
-  background: white;
+  background: var(--surface);
 }
 
 .report-disabled {
@@ -188,21 +188,21 @@
 .report-title {
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
-  color: #333;
+  color: var(--text);
 }
 
 .report-description {
   margin: 0;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--muted);
 }
 
 .badge-coming-soon {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: #e9ecef;
-  color: #495057;
+  background: var(--border);
+  color: var(--text);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.25rem 0.5rem;

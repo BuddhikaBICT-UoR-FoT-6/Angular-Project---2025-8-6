@@ -1,28 +1,3 @@
-.user-management-container {
-    padding: 30px;
-    max-width: 1400px;
-    margin: 0 auto;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Header */
-.header {
-    margin-bottom: 30px;
-}
-
-.header h1 {
-    font-size: 32px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin: 0 0 8px 0;
-}
-
-.subtitle {
-    font-size: 16px;
-    color: #666;
-    margin: 0;
-}
-
 /* Error Message */
 .error-message {
     background: #fee;
@@ -63,7 +38,7 @@
 
 /* Filters Section */
 .filters-section {
-    background: #f8f9fa;
+    background: var(--surface-2);
     border-radius: 12px;
     padding: 25px;
     margin-bottom: 25px;
@@ -82,13 +57,13 @@
 .filter-group label {
     font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: var(--text);
 }
 
 .filter-group select,
 .filter-group input {
     padding: 10px 14px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -108,41 +83,6 @@
 .filter-actions {
     display: flex;
     gap: 10px;
-}
-
-/* Buttons */
-.btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.btn-secondary {
-    background: #e9ecef;
-    color: #495057;
-}
-
-.btn-secondary:hover {
-    background: #dee2e6;
-}
-
-.btn-secondary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 
 /* Loading */
@@ -173,7 +113,7 @@
 
 /* Table */
 .table-container {
-    background: white;
+    background: var(--surface);
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     overflow: hidden;
@@ -205,13 +145,13 @@
 }
 
 .users-table tbody tr:hover {
-    background: #f8f9fa;
+    background: var(--surface-2);
 }
 
 .users-table td {
     padding: 16px;
     font-size: 14px;
-    color: #333;
+    color: var(--text);
 }
 
 .user-info {
@@ -225,7 +165,7 @@
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #e9ecef;
+    border: 2px solid var(--border);
 }
 
 .role-badge {
@@ -234,8 +174,8 @@
     border-radius: 12px;
     font-size: 12px;
     font-weight: 500;
-    background: #e9ecef;
-    color: #495057;
+    background: var(--border);
+    color: var(--text);
 }
 
 .status-badge {
@@ -277,7 +217,7 @@
 }
 
 .btn-icon:hover {
-    background: #e9ecef;
+    background: var(--border);
 }
 
 .btn-icon.danger:hover {
@@ -307,8 +247,8 @@
 
 .page-btn {
     padding: 8px 14px;
-    border: 1px solid #ddd;
-    background: white;
+    border: 1px solid var(--border);
+    background: var(--surface);
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
@@ -316,7 +256,7 @@
 }
 
 .page-btn:hover {
-    background: #f8f9fa;
+    background: var(--surface-2);
     border-color: #667eea;
 }
 
@@ -328,60 +268,16 @@
 
 .page-info {
     font-size: 14px;
-    color: #666;
-}
-
-/* Modal */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-}
-
-.modal {
-    background: white;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    color: var(--muted);
 }
 
 .modal-large {
     max-width: 800px;
 }
 
-.modal-header {
-    padding: 25px;
-    border-bottom: 1px solid #e9ecef;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.modal-header h2 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 600;
-    color: #1a1a1a;
-}
-
-.modal-body {
-    padding: 25px;
-}
-
 .modal-footer {
     padding: 20px 25px;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid var(--border);
     display: flex;
     gap: 10px;
     justify-content: flex-end;
@@ -396,14 +292,14 @@
     margin-bottom: 8px;
     font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: var(--text);
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
     padding: 10px 14px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -431,7 +327,7 @@
 }
 
 .activity-item:hover {
-    background: #f8f9fa;
+    background: var(--surface-2);
 }
 
 .activity-icon {
@@ -445,7 +341,7 @@
 
 .activity-description {
     font-size: 14px;
-    color: #333;
+    color: var(--text);
     margin-bottom: 5px;
 }
 

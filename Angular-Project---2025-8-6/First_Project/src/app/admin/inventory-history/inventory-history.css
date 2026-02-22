@@ -11,17 +11,17 @@
 .page-title {
     font-size: 28px;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--text);
     margin: 0;
 }
 
 .page-subtitle {
-    color: #6b7280;
+    color: var(--muted);
     margin: 4px 0 0 0;
 }
 
 .history-table-container {
-    background: white;
+    background: var(--surface);
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -36,19 +36,19 @@
 .data-table td {
     padding: 16px;
     text-align: left;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--surface-2);
 }
 
 .data-table th {
-    background: #f9fafb;
+    background: var(--surface-2);
     font-weight: 600;
-    color: #4b5563;
+    color: var(--muted);
     font-size: 14px;
 }
 
 .data-table td {
     font-size: 14px;
-    color: #1f2937;
+    color: var(--text);
 }
 
 .product-name {
@@ -76,7 +76,7 @@
 .size-breakdown {
     display: flex;
     gap: 8px;
-    color: #4b5563;
+    color: var(--muted);
     font-family: monospace;
 }
 
@@ -93,27 +93,27 @@
 .empty-state {
     padding: 40px;
     text-align: center;
-    color: #9ca3af;
+    color: var(--muted);
 }
 
 .load-more {
     padding: 20px;
     text-align: center;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid var(--surface-2);
 }
 
 .btn-secondary {
     padding: 10px 24px;
-    background: white;
-    border: 1px solid #d1d5db;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
-    color: #374151;
+    color: var(--text);
 }
 
 .btn-secondary:hover {
-    background: #f9fafb;
+    background: var(--surface-2);
 }
 
 .btn-secondary:disabled {

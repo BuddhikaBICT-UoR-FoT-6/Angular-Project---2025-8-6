@@ -1,7 +1,9 @@
-<div class="admin-container">
-    <div class="header-actions">
+<div class="admin-page">
+    <div class="page-header">
         <h2>Manage Collections</h2>
-        <button class="btn-primary" (click)="openAddModal()">+ Add Collection</button>
+        <div class="header-actions">
+            <button class="btn-primary" (click)="openAddModal()">+ Add Collection</button>
+        </div>
     </div>
 
     <div *ngIf="loading" class="loading-state">

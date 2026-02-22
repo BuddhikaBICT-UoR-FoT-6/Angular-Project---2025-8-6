@@ -94,7 +94,7 @@ export interface TaxSummaryResponse {
     providedIn: 'root'
 })
 export class FinancialService {
-    private apiUrl = '/api/financial';
+    private apiUrl = '/api/financials';
 
     constructor(private http: HttpClient) { }
 

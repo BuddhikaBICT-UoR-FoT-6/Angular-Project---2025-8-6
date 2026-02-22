@@ -14,12 +14,12 @@
 .page-title {
     font-size: 28px;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--text);
     margin: 0;
 }
 
 .page-subtitle {
-    color: #6b7280;
+    color: var(--muted);
     margin: 4px 0 0 0;
 }
 
@@ -40,8 +40,8 @@
 }
 
 .supplier-card {
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -55,32 +55,32 @@
     align-items: center;
     margin-bottom: 12px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--surface-2);
 }
 
 .card-header h3 {
     margin: 0;
     font-size: 18px;
-    color: #111827;
+    color: var(--text);
 }
 
 .contact-person {
     font-size: 12px;
-    background: #f3f4f6;
+    background: var(--surface-2);
     padding: 4px 8px;
     border-radius: 12px;
-    color: #4b5563;
+    color: var(--muted);
 }
 
 .card-body p {
     margin: 8px 0;
     font-size: 14px;
-    color: #4b5563;
+    color: var(--muted);
 }
 
 .notes {
     font-style: italic;
-    color: #9ca3af !important;
+    color: var(--muted) !important;
     margin-top: 12px !important;
 }
 
@@ -115,7 +115,7 @@
     grid-column: 1 / -1;
     text-align: center;
     padding: 40px;
-    color: #9ca3af;
+    color: var(--muted);
     font-size: 18px;
 }
 
@@ -134,7 +134,7 @@
 }
 
 .modal-dialog {
-    background: white;
+    background: var(--surface);
     border-radius: 12px;
     width: 100%;
     max-width: 500px;
@@ -144,7 +144,7 @@
 
 .modal-header {
     padding: 20px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -152,7 +152,7 @@
 
 .modal-header h3 {
     margin: 0;
-    color: #111827;
+    color: var(--text);
 }
 
 .close-btn {
@@ -160,7 +160,7 @@
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #9ca3af;
+    color: var(--muted);
 }
 
 .modal-body {
@@ -175,7 +175,7 @@
     display: block;
     margin-bottom: 6px;
     font-weight: 500;
-    color: #374151;
+    color: var(--text);
     font-size: 14px;
 }
 
@@ -183,7 +183,7 @@
 .form-group textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 14px;
 }
@@ -195,7 +195,7 @@
 
 .modal-footer {
     padding: 20px;
-    background: #f9fafb;
+    background: var(--surface-2);
     display: flex;
     justify-content: flex-end;
     gap: 12px;
@@ -203,8 +203,8 @@
 
 .btn-cancel {
     padding: 10px 20px;
-    border: 1px solid #d1d5db;
-    background: white;
+    border: 1px solid var(--border);
+    background: var(--surface);
     border-radius: 6px;
     cursor: pointer;
 }
