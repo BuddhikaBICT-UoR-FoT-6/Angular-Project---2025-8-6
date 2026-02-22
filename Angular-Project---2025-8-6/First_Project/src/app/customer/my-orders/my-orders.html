@@ -2,6 +2,12 @@
   <div class="page-header">
     <h2>My Orders</h2>
     <div class="header-actions">
+      <div class="export-actions-inline">
+        <button class="btn-export-sm btn-pdf" (click)="downloadMyReport('pdf')" [disabled]="isExporting">📄 PDF
+          Report</button>
+        <button class="btn-export-sm btn-excel" (click)="downloadMyReport('excel')" [disabled]="isExporting">📊 Excel
+          Report</button>
+      </div>
       <a routerLink="/customer/dashboard" class="btn-back">← Dashboard</a>
       <button class="btn-refresh" (click)="loadOrders()" [disabled]="isLoading">
         <span>🔄</span> Refresh

@@ -15,6 +15,7 @@ import { ToastService } from '../../shared/toast/toast.service';
 export class MyOrders implements OnInit {
   // Loading state
   isLoading = true;
+  isExporting = false;
 
   // Orders data
   orders: any[] = [];
@@ -314,5 +315,33 @@ export class MyOrders implements OnInit {
       case 'delivered': return 4;
       default: return 0; // Cancelled or unknown
     }
+  }
+
+  /**
+   * Download a PDF or Excel report of the customer's personal data
+   * @param format - Export format (pdf | excel)
+   */
+  downloadMyReport(format: 'pdf' | 'excel') {
+    this.isExporting = true;
+    this.toast.info(`Generating ${format.toUpperCase()} report...`);
+
+    this.apiService.exportMyReport(format).subscribe({
+      next: (blob) => {
+        const ext = format === 'excel' ? 'xlsx' : 'pdf';
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `my_orders_report.${ext}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.isExporting = false;
+        this.toast.success('Report exported successfully!');
+      },
+      error: (err) => {
+        console.error('Export failed', err);
+        this.isExporting = false;
+        this.toast.error('Failed to export report. Please try again.');
+      }
+    });
   }
 }

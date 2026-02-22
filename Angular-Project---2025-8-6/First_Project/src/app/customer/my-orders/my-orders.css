@@ -626,3 +626,41 @@
 .progress-line.active {
   background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
 }
+
+.export-actions-inline {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-export-sm {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: white;
+}
+
+.btn-export-sm:not([disabled]):hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.btn-export-sm[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-pdf {
+  background: #ff5252;
+}
+
+.btn-excel {
+  background: #4caf50;
+}
