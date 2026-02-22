@@ -22,7 +22,7 @@
                 <tr *ngFor="let h of history">
                     <td>{{ h.created_at | date : 'short' }}</td>
                     <td>
-                        <div class="product-name">{{ h.product_id?.name || 'Unknown Product' }}</div>
+                        <div class="product-name">{{ $any(h.product_id)?.name || 'Unknown Product' }}</div>
                     </td>
                     <td>
                         <span class="action-badge" [ngClass]="{

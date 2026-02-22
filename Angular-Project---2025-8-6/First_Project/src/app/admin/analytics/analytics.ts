@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { catchError, forkJoin, of, timeout } from 'rxjs';
 import { ApiService } from '../../services/api.service';
 
@@ -16,7 +17,7 @@ type SalesTrendPoint = { date: string; revenue: number; orders: number };
 
 @Component({
   selector: 'app-analytics',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './analytics.html',
   styleUrl: './analytics.css'
 })

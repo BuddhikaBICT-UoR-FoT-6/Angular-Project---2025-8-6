@@ -114,4 +114,10 @@ export class AdminCollections implements OnInit {
   isProductSelected(productId: string): boolean {
     return this.currentCollection.products.includes(productId);
   }
+
+  generateSlug() {
+    if (!this.currentCollection.slug && this.currentCollection.name) {
+      this.currentCollection.slug = this.currentCollection.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    }
+  }
 }

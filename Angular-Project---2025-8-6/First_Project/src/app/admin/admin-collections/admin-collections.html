@@ -53,8 +53,7 @@
                     <div class="form-group">
                         <label for="name">Name *</label>
                         <input type="text" id="name" name="name" [(ngModel)]="currentCollection.name" required
-                            class="form-control"
-                            (blur)="!currentCollection.slug && (currentCollection.slug = currentCollection.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'))">
+                            class="form-control" (blur)="generateSlug()">
                     </div>
                     <div class="form-group">
                         <label for="slug">Slug * (Unique URL identifier)</label>

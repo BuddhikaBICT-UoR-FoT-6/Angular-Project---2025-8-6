@@ -12,6 +12,8 @@ import { ToastService } from '../../shared/toast/toast.service';
 @Component({
   selector: 'app-inventory',
   imports: [CommonModule, FormsModule],
+  templateUrl: './inventory.html',
+  styleUrl: './inventory.css'
 })
 export class Inventory implements OnInit, OnDestroy {
   onSupplierChange(event: any) {
