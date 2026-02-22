@@ -1,8 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { UserManagementService, User, UserListResponse } from '../../services/user-management.service';
 
 @Component({
     selector: 'app-user-management',
+    imports: [CommonModule, FormsModule],
     templateUrl: './user-management.html',
     styleUrls: ['./user-management.css']
 })
