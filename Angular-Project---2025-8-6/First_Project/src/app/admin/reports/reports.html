@@ -43,44 +43,52 @@
     </div>
   </div>
 
-  <!-- Future Reports Section -->
+  <!-- Expanded Reports Section -->
   <div class="section">
     <div class="section-card">
       <div class="card-header">
         <div class="card-icon">📈</div>
         <div class="card-title-group">
-          <h2 class="card-title">Business Reports</h2>
-          <p class="card-subtitle">Comprehensive analytics and insights (coming soon)</p>
+          <h2 class="card-title">Comprehensive Reports</h2>
+          <p class="card-subtitle">Download detailed PDF and Excel reports for analysis</p>
         </div>
       </div>
 
       <div class="report-grid">
-        <div class="report-card report-disabled">
+        <div class="report-card">
           <div class="report-icon">💰</div>
-          <h3 class="report-title">Revenue Report</h3>
-          <p class="report-description">Detailed financial analysis with trends</p>
-          <span class="badge-coming-soon">Coming Soon</span>
+          <h3 class="report-title">Sales Report</h3>
+          <p class="report-description">Detailed sales history and totals by order.</p>
+          <div class="export-actions-inline mt-3">
+            <button [disabled]="isExporting" class="btn-export-sm btn-pdf" (click)="downloadReport('sales', 'pdf')">📄
+              PDF</button>
+            <button [disabled]="isExporting" class="btn-export-sm btn-excel"
+              (click)="downloadReport('sales', 'excel')">📊 Excel</button>
+          </div>
         </div>
 
-        <div class="report-card report-disabled">
-          <div class="report-icon">🛒</div>
-          <h3 class="report-title">Orders Report</h3>
-          <p class="report-description">Complete order history and statistics</p>
-          <span class="badge-coming-soon">Coming Soon</span>
-        </div>
-
-        <div class="report-card report-disabled">
-          <div class="report-icon">📊</div>
+        <div class="report-card">
+          <div class="report-icon">📦</div>
           <h3 class="report-title">Inventory Report</h3>
-          <p class="report-description">Stock levels and restocking analysis</p>
-          <span class="badge-coming-soon">Coming Soon</span>
+          <p class="report-description">Current stock levels for all products.</p>
+          <div class="export-actions-inline mt-3">
+            <button [disabled]="isExporting" class="btn-export-sm btn-pdf"
+              (click)="downloadReport('inventory', 'pdf')">📄 PDF</button>
+            <button [disabled]="isExporting" class="btn-export-sm btn-excel"
+              (click)="downloadReport('inventory', 'excel')">📊 Excel</button>
+          </div>
         </div>
 
-        <div class="report-card report-disabled">
+        <div class="report-card">
           <div class="report-icon">👥</div>
           <h3 class="report-title">Customer Report</h3>
-          <p class="report-description">User engagement and behavior metrics</p>
-          <span class="badge-coming-soon">Coming Soon</span>
+          <p class="report-description">Customer history and lifetime value.</p>
+          <div class="export-actions-inline mt-3">
+            <button [disabled]="isExporting" class="btn-export-sm btn-pdf"
+              (click)="downloadReport('customers', 'pdf')">📄 PDF</button>
+            <button [disabled]="isExporting" class="btn-export-sm btn-excel"
+              (click)="downloadReport('customers', 'excel')">📊 Excel</button>
+          </div>
         </div>
       </div>
     </div>

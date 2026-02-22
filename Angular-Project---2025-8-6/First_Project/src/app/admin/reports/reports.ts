@@ -16,28 +16,50 @@ export class Reports {
   constructor(
     private apiService: ApiService,
     private toast: ToastService
-  ) {}
+  ) { }
 
   exportProductsCsv() {
     this.isExporting = true;
     this.toast.info('Generating CSV export...');
-    
+
     this.apiService.exportProductsCsv().subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'products.csv';
-        a.click();
-        window.URL.revokeObjectURL(url);
-        this.isExporting = false;
-        this.toast.success('Products CSV exported successfully!');
-      },
-      error: (err) => {
-        console.error('CSV export failed', err);
-        this.isExporting = false;
-        this.toast.error('Failed to export CSV. Please try again.');
-      }
+      next: (blob) => this.handleBlobDownload(blob, 'products.csv'),
+      error: (err) => this.handleExportError(err)
     });
+  }
+
+  downloadReport(type: 'sales' | 'inventory' | 'customers', format: 'pdf' | 'excel') {
+    this.isExporting = true;
+    this.toast.info(`Generating ${type} report as ${format.toUpperCase()}...`);
+
+    let request;
+    if (type === 'sales') request = this.apiService.exportSalesReport(format);
+    else if (type === 'inventory') request = this.apiService.exportInventoryReport(format);
+    else request = this.apiService.exportCustomerReport(format);
+
+    request.subscribe({
+      next: (blob) => {
+        const ext = format === 'excel' ? 'xlsx' : 'pdf';
+        this.handleBlobDownload(blob, `${type}_report.${ext}`);
+      },
+      error: (err) => this.handleExportError(err)
+    });
+  }
+
+  private handleBlobDownload(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    this.isExporting = false;
+    this.toast.success(`${filename} exported successfully!`);
+  }
+
+  private handleExportError(err: any) {
+    console.error('Export failed', err);
+    this.isExporting = false;
+    this.toast.error('Failed to export report. Please try again.');
   }
 }
