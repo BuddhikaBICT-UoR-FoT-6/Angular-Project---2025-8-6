@@ -1,5 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
@@ -36,11 +37,11 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<any> {
-    return this.http.post('/api/auth/login', { email, password });
+    return this.http.post(`${environment.apiUrl}/auth/login`, { email, password });
   }
 
   register(userData: any): Observable<any> {
-    return this.http.post('/api/auth/register', userData);
+    return this.http.post(`${environment.apiUrl}/auth/register`, userData);
   }
 
   setCurrentUser(user: User) {
@@ -66,7 +67,7 @@ export class AuthService {
 
   logout() {
     // Attempt to blacklist the token on the server
-    this.http.post('/api/auth/logout', {}).subscribe({
+    this.http.post(`${environment.apiUrl}/auth/logout`, {}).subscribe({
       next: () => this.clearSession(),
       error: () => this.clearSession() // Even if server fails (e.g., token already invalid), clear local
     });

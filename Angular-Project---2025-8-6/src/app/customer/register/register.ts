@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { OtpInput } from '../../shared/otp-input/otp-input';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-register',
@@ -68,7 +69,7 @@ export class Register {
     this.success = '';
 
     // Step 1: Send OTP to email
-    this.http.post('/api/auth/send-registration-otp', {
+    this.http.post(`${environment.apiUrl}/auth/send-registration-otp`, {
       email: this.userData.email,
       full_name: this.userData.full_name
     }).subscribe({
@@ -88,7 +89,7 @@ export class Register {
     this.error = '';
 
     // Step 2: Verify OTP and complete registration
-    this.http.post('/api/auth/verify-registration-otp', {
+    this.http.post(`${environment.apiUrl}/auth/verify-registration-otp`, {
       email: this.userData.email,
       otp: otp,
       password: this.userData.password,
@@ -160,7 +161,7 @@ export class Register {
   }
 
   onResendOtp() {
-    this.http.post('/api/auth/send-registration-otp', {
+    this.http.post(`${environment.apiUrl}/auth/send-registration-otp`, {
       email: this.userData.email,
       full_name: this.userData.full_name
     }).subscribe({

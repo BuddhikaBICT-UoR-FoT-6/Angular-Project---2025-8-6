@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { OtpInput } from '../../shared/otp-input/otp-input';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-forgot-password',
@@ -43,7 +44,7 @@ export class ForgotPassword {
     this.error = '';
     this.success = '';
 
-    this.http.post('/api/auth/forgot-password', {
+    this.http.post(`${environment.apiUrl}/auth/forgot-password`, {
       email: this.email
     }).subscribe({
       next: (response: any) => {
@@ -62,7 +63,7 @@ export class ForgotPassword {
   onVerifyOtp(otp: string) {
     this.error = '';
 
-    this.http.post('/api/auth/verify-reset-otp', {
+    this.http.post(`${environment.apiUrl}/auth/verify-reset-otp`, {
       email: this.email,
       otp: otp
     }).subscribe({
@@ -104,9 +105,9 @@ export class ForgotPassword {
     this.isLoading = true;
     this.error = '';
 
-    this.http.post('/api/auth/reset-password', {
-      resetToken: this.resetToken,
-      newPassword: this.newPassword
+    this.http.post(`${environment.apiUrl}/auth/reset-password`, {
+      email: this.email,
+      password: this.newPassword
     }).subscribe({
       next: (response: any) => {
         this.isLoading = false;
@@ -124,7 +125,7 @@ export class ForgotPassword {
   }
 
   onResendOtp() {
-    this.http.post('/api/auth/forgot-password', {
+    this.http.post(`${environment.apiUrl}/auth/forgot-password`, {
       email: this.email
     }).subscribe({
       next: (response: any) => {
