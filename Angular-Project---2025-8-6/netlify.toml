@@ -1,11 +1,7 @@
 [build]
-  # We run the command by cd'ing into the project, so Netlify's context stays at the true repo root
-  command = "cd First_Project && npm install --legacy-peer-deps && npm run build"
-  
-  # Point publish directly to the exact sub-folder from the repo root
-  publish = "First_Project/dist/First_Project/browser"
+  command = "npm install --legacy-peer-deps && npm run build"
+  publish = "dist/First_Project/browser"
 
-# Redirect all routing back to index.html for Angular's client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"

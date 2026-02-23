@@ -1,26 +1,43 @@
-.amazonq/rules/only_suggest_code.md
-.amazonq/rules/Only_suggest_code_dont_edit_automatically.md
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# --- Dependencies (never commit) ---
-**/node_modules/
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
 
-# --- Builds / cache ---
-**/dist/
-**/out-tsc/
-**/.angular/cache/
-**/coverage/
-**/.nyc_output/
+# Node
+/node_modules
+/server/node_modules
+npm-debug.log
+yarn-error.log
 
-# --- Runtime temp files ---
-**/tmp/
-**/*.log
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
 
-# --- Environment files (keep secrets out of git) ---
-**/.env
-**/.env.*
-!**/.env.example
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
 
-# --- OS / editor ---
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
+
+# System files
 .DS_Store
 Thumbs.db
-.vscode/
