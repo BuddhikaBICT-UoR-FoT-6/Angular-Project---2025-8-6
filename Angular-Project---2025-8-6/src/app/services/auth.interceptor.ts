@@ -8,7 +8,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Prepend environment API URL if it's a relative /api call (fixes hardcoded paths)
   let finalUrl = req.url;
   if (finalUrl.startsWith('/api/')) {
+    // environment.apiUrl is 'https://.../api' without a trailing slash.
+    // finalUrl starts with `/api/` (with a trailing slash).
     finalUrl = finalUrl.replace(/^\/api/, environment.apiUrl);
+  } else if (finalUrl === '/api') {
+    finalUrl = environment.apiUrl;
   }
 
   // Get the token from localStorage (only in browser)
