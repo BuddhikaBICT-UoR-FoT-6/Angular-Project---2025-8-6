@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
@@ -23,9 +25,20 @@ const supplierRoutes = require('./routes/supplier.routes');
 
 const app = express();
 
-// Middleware
+// Security Middleware
+app.use(helmet()); // Secure HTTP headers (XSS, Content-Security-Policy, etc)
+app.use(cors()); // Configure CORS as needed
+
+// Rate Limiting on authentication routes to prevent brute-force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes window
+  max: 20, // limit each IP to 20 auth requests per windowMs
+  message: 'Too many authentication attempts from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use(express.json());
-app.use(cors());
 
 // Cloudinary configuration
 cloudinary.config({
@@ -72,7 +85,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
