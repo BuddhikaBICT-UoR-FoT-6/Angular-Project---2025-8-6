@@ -23,8 +23,8 @@ router.post('/send-registration-otp', async (req, res) => {
 
     const otp = generateOTP();
 
-    await OTP.deleteMany({ 
-      email: email.toLowerCase(), 
+    await OTP.deleteMany({
+      email: email.toLowerCase(),
       purpose: 'registration',
       verified: false
     });
@@ -39,7 +39,7 @@ router.post('/send-registration-otp', async (req, res) => {
 
     await sendRegistrationOTP(email, otp, full_name);
 
-    res.json({ 
+    res.json({
       success: true,
       message: 'OTP sent to your email',
       expiresIn: 600
@@ -57,6 +57,11 @@ router.post('/verify-registration-otp', async (req, res) => {
 
     if (!email || !otp || !password) {
       return res.status(400).json({ error: 'Email, OTP, and password are required' });
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.' });
     }
 
     const otpRecord = await OTP.findOne({
@@ -78,7 +83,7 @@ router.post('/verify-registration-otp', async (req, res) => {
     if (otpRecord.otp !== otp) {
       otpRecord.attempts += 1;
       await otpRecord.save();
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid OTP',
         attemptsLeft: 5 - otpRecord.attempts
       });
@@ -109,7 +114,7 @@ router.post('/verify-registration-otp', async (req, res) => {
 
     await OTP.deleteOne({ _id: otpRecord._id });
 
-    res.status(201).json({ 
+    res.status(201).json({
       success: true,
       message: 'Registration successful',
       token,
@@ -137,7 +142,7 @@ router.post('/forgot-password', async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.json({ 
+      return res.json({
         success: true,
         message: 'If an account exists with this email, you will receive a password reset OTP.'
       });
@@ -145,8 +150,8 @@ router.post('/forgot-password', async (req, res) => {
 
     const otp = generateOTP();
 
-    await OTP.deleteMany({ 
-      email: email.toLowerCase(), 
+    await OTP.deleteMany({
+      email: email.toLowerCase(),
       purpose: 'password-reset',
       verified: false
     });
@@ -161,7 +166,7 @@ router.post('/forgot-password', async (req, res) => {
 
     await sendPasswordResetOTP(email, otp, user.full_name);
 
-    res.json({ 
+    res.json({
       success: true,
       message: 'If an account exists with this email, you will receive a password reset OTP.',
       expiresIn: 600
@@ -200,7 +205,7 @@ router.post('/verify-reset-otp', async (req, res) => {
     if (otpRecord.otp !== otp) {
       otpRecord.attempts += 1;
       await otpRecord.save();
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid OTP',
         attemptsLeft: 5 - otpRecord.attempts
       });
@@ -209,7 +214,7 @@ router.post('/verify-reset-otp', async (req, res) => {
     otpRecord.verified = true;
     await otpRecord.save();
 
-    res.json({ 
+    res.json({
       success: true,
       message: 'OTP verified successfully. You can now reset your password.',
       resetToken: otpRecord._id
@@ -229,8 +234,9 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'Reset token and new password are required' });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.' });
     }
 
     const otpRecord = await OTP.findOne({
@@ -255,7 +261,7 @@ router.post('/reset-password', async (req, res) => {
 
     await OTP.deleteOne({ _id: otpRecord._id });
 
-    res.json({ 
+    res.json({
       success: true,
       message: 'Password reset successful. You can now login with your new password.'
     });
@@ -282,7 +288,7 @@ router.post('/login', async (req, res) => {
 
     const token = generateToken(user._id, user.role);
 
-    res.json({ 
+    res.json({
       message: 'Login successful',
       token,
       user: {
@@ -305,7 +311,7 @@ router.get('/verify', verifyToken, async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json({ 
+    res.json({
       valid: true,
       user: {
         userId: user._id,
@@ -315,7 +321,41 @@ router.get('/verify', verifyToken, async (req, res) => {
       }
     });
   } catch (err) {
+    console.error('Verify token error:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Logout (Invalidate Token)
+router.post('/logout', verifyToken, async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(400).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.substring(7);
+    const TokenBlacklist = require('../models/tokenBlacklist');
+
+    // Calculate expiration based on JWT exp claim
+    const jwt = require('jsonwebtoken');
+    const { JWT_SECRET } = require('../middleware/auth');
+    const decoded = jwt.decode(token);
+
+    // Add to blacklist until the token naturally expires
+    const expiresAt = new Date(decoded.exp * 1000);
+
+    const blacklistedToken = new TokenBlacklist({
+      token,
+      expiresAt
+    });
+
+    await blacklistedToken.save();
+
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch (err) {
+    console.error('Logout error:', err);
+    res.status(500).json({ error: 'Logout failed. Please try again.' });
   }
 });
 

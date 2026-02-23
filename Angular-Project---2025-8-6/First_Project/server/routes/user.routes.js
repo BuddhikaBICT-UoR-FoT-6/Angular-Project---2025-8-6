@@ -156,6 +156,10 @@ router.put('/:id', verifyToken, async (req, res) => {
     }
 
     if (req.body.password) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+      if (!passwordRegex.test(req.body.password)) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.' });
+      }
       req.body.password = await bcrypt.hash(req.body.password, 10);
     }
 
