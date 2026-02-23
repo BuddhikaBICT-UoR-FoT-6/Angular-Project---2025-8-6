@@ -25,6 +25,9 @@ import { RestockRequests } from './admin/restock-requests/restock-requests';
 import { SupplierRestockRequests } from './supplier/restock-requests/restock-requests';
 import { MyOrders } from './customer/my-orders/my-orders';
 
+import { authGuard } from './guards/auth.guard';
+import { roleGuard } from './guards/role.guard';
+
 export const routes: Routes = [
   { path: '', component: Showroom },
   { path: 'login', component: Login },
@@ -35,22 +38,31 @@ export const routes: Routes = [
   { path: 'product/:id', component: ProductDetails },
   { path: 'cart', component: Cart },
   { path: 'checkout', component: Checkout },
-  { path: 'customer/dashboard', component: CustomerDashboard },
-  { path: 'customer/my-orders', component: MyOrders },
+
+  // Customer Routes (Authenticated Only)
+  { path: 'customer/dashboard', component: CustomerDashboard, canActivate: [authGuard] },
+  { path: 'customer/my-orders', component: MyOrders, canActivate: [authGuard] },
+
+  // Admin Routes (Authenticated + Admin/Superadmin Role)
   { path: 'admin', redirectTo: 'admin/dashboard', pathMatch: 'full' },
-  { path: 'admin/dashboard', component: Dashboard },
-  { path: 'admin/products', component: Products },
-  { path: 'admin/inventory', component: Inventory },
-  { path: 'admin/users', component: Users },
-  { path: 'admin/financials', component: Financials },
-  { path: 'admin/orders', component: Orders },
-  { path: 'admin/reports', component: Reports },
-  { path: 'admin/analytics', component: Analytics },
-  { path: 'admin/admin-management', component: AdminManagement },
-  { path: 'admin/categories', component: AdminCategories },
-  { path: 'admin/collections', component: AdminCollections },
-  { path: 'admin/restock-requests', component: RestockRequests },
-  { path: 'superadmin/dashboard', component: SuperadminDashboard },
-  { path: 'supplier/restock-requests', component: SupplierRestockRequests },
+  { path: 'admin/dashboard', component: Dashboard, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+  { path: 'admin/products', component: Products, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+  { path: 'admin/inventory', component: Inventory, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+  { path: 'admin/users', component: Users, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+  { path: 'admin/financials', component: Financials, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+  { path: 'admin/orders', component: Orders, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+  { path: 'admin/reports', component: Reports, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+  { path: 'admin/analytics', component: Analytics, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+  { path: 'admin/admin-management', component: AdminManagement, canActivate: [authGuard, roleGuard], data: { roles: ['superadmin'] } }, // Restrict to Superadmin
+  { path: 'admin/categories', component: AdminCategories, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+  { path: 'admin/collections', component: AdminCollections, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+  { path: 'admin/restock-requests', component: RestockRequests, canActivate: [authGuard, roleGuard], data: { roles: ['admin', 'superadmin'] } },
+
+  // Superadmin Only Routes
+  { path: 'superadmin/dashboard', component: SuperadminDashboard, canActivate: [authGuard, roleGuard], data: { roles: ['superadmin'] } },
+
+  // Supplier Routes
+  { path: 'supplier/restock-requests', component: SupplierRestockRequests, canActivate: [authGuard, roleGuard], data: { roles: ['supplier'] } },
+
   { path: '**', redirectTo: '' }
 ];
