@@ -1,0 +1,15 @@
+[build]
+  # Set the base directory to your Angular project folder
+  base = "First_Project"
+  
+  # Command to install dependencies and build the Angular app
+  command = "npm install --legacy-peer-deps && npm run build"
+  
+  # Directory where Angular outputs the compiled browser files
+  publish = "dist/First_Project/browser"
+
+# Redirect all routing back to index.html for Angular's client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
