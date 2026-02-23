@@ -1,0 +1,14 @@
+[build]
+  # Tell Netlify that the Angular app lives inside this sub-directory relative to the git root
+  base = "Angular-Project---2025-8-6"
+  
+  # Command to run for building
+  command = "npm install --legacy-peer-deps && npm run build"
+  
+  # The output folder created by ng build (relative to the base directory)
+  publish = "dist/First_Project/browser"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
