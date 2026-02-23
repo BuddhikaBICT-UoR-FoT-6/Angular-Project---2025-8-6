@@ -15,9 +15,9 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 // Proxy API requests to the real backend (Express + MongoDB).
-// Without this, first-load requests to http://localhost:4000/api/*
-// hit the SSR server (which has no API routes) and appear to "work only after a second click".
-const apiTarget = new URL(process.env['API_PROXY_TARGET'] || 'http://localhost:3000');
+// Without this, first-load requests to /api/* hit the SSR server
+const apiTargetUrl = process.env['API_PROXY_TARGET'] || process.env['API_URL'] || 'http://localhost:3000';
+const apiTarget = new URL(apiTargetUrl);
 app.use('/api', (req, res) => {
   const isHttps = apiTarget.protocol === 'https:';
   const client = isHttps ? https : http;

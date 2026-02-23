@@ -97,19 +97,6 @@ const sendRegistrationOTP = async (email, otp, fullName) => {
   };
 
   try {
-  // Development mode - just log to console
-  if (!isEmailConfigured) {
-    console.log('\n📧 ═══════════════════════════════════════════════════');
-    console.log('📧 PASSWORD RESET OTP EMAIL (Development Mode)');
-    console.log('📧 ═══════════════════════════════════════════════════');
-    console.log('📧 To:', email);
-    console.log('📧 Name:', fullName);
-    console.log('📧 OTP Code:', otp);
-    console.log('📧 Subject: Reset Your Password - Clothing Store');
-    console.log('📧 ═══════════════════════════════════════════════════\n');
-    return Promise.resolve({ success: true, messageId: 'dev-mode-' + Date.now() });
-  }
-
     const info = await transporter.sendMail(mailOptions);
     console.log('✅ Registration OTP email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
@@ -123,6 +110,19 @@ const sendRegistrationOTP = async (email, otp, fullName) => {
  * Send OTP email for password reset
  */
 const sendPasswordResetOTP = async (email, otp, fullName) => {
+  // Development mode - just log to console
+  if (!isEmailConfigured) {
+    console.log('\n📧 ═══════════════════════════════════════════════════');
+    console.log('📧 PASSWORD RESET OTP EMAIL (Development Mode)');
+    console.log('📧 ═══════════════════════════════════════════════════');
+    console.log('📧 To:', email);
+    console.log('📧 Name:', fullName);
+    console.log('📧 OTP Code:', otp);
+    console.log('📧 Subject: Reset Your Password - Clothing Store');
+    console.log('📧 ═══════════════════════════════════════════════════\n');
+    return Promise.resolve({ success: true, messageId: 'dev-mode-' + Date.now() });
+  }
+
   const mailOptions = {
     from: process.env.EMAIL_USER || 'noreply@clothingstore.com',
     to: email,
@@ -172,21 +172,6 @@ const sendPasswordResetOTP = async (email, otp, fullName) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-  
-  // Development mode - just log to console
-  if (!isEmailConfigured) {
-    console.log('\n📧 ═══════════════════════════════════════════════════');
-    console.log(`📧 ACCOUNT ${actionText.toUpperCase()} OTP EMAIL (Development Mode)`);
-    console.log('📧 ═══════════════════════════════════════════════════');
-    console.log('📧 To:', email);
-    console.log('📧 Name:', fullName);
-    console.log('📧 OTP Code:', otp);
-    console.log('📧 Action:', actionText);
-    console.log(`📧 Subject: ${actionText} Your Account - Clothing Store`);
-    console.log('📧 ═══════════════════════════════════════════════════\n');
-    return Promise.resolve({ success: true, messageId: 'dev-mode-' + Date.now() });
-  }
-
     console.log('✅ Password reset OTP email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
@@ -201,7 +186,21 @@ const sendPasswordResetOTP = async (email, otp, fullName) => {
 const sendAccountActionOTP = async (email, otp, fullName, action) => {
   const actionText = action === 'deactivation' ? 'Deactivate' : 'Delete';
   const actionColor = action === 'deactivation' ? '#ff9800' : '#e74c3c';
-  
+
+  // Development mode - just log to console
+  if (!isEmailConfigured) {
+    console.log('\n📧 ═══════════════════════════════════════════════════');
+    console.log(`📧 ACCOUNT ${actionText.toUpperCase()} OTP EMAIL (Development Mode)`);
+    console.log('📧 ═══════════════════════════════════════════════════');
+    console.log('📧 To:', email);
+    console.log('📧 Name:', fullName);
+    console.log('📧 OTP Code:', otp);
+    console.log('📧 Action:', actionText);
+    console.log(`📧 Subject: ${actionText} Your Account - Clothing Store`);
+    console.log('📧 ═══════════════════════════════════════════════════\n');
+    return Promise.resolve({ success: true, messageId: 'dev-mode-' + Date.now() });
+  }
+
   const mailOptions = {
     from: process.env.EMAIL_USER || 'noreply@clothingstore.com',
     to: email,
@@ -237,10 +236,10 @@ const sendAccountActionOTP = async (email, otp, fullName, action) => {
             
             <p><strong>This code will expire in 10 minutes.</strong></p>
             
-            ${action === 'deactivation' 
-              ? '<p class="warning">📅 Note: Your account will be automatically deleted after 30 days of deactivation.</p>'
-              : '<p class="warning">⚠️ WARNING: This action is irreversible. All your data will be permanently deleted.</p>'
-            }
+            ${action === 'deactivation'
+        ? '<p class="warning">📅 Note: Your account will be automatically deleted after 30 days of deactivation.</p>'
+        : '<p class="warning">⚠️ WARNING: This action is irreversible. All your data will be permanently deleted.</p>'
+      }
             
             <p>If you didn't request this action, please contact our support team immediately.</p>
             
