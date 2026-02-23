@@ -5,13 +5,14 @@ import { catchError, filter, map, switchMap, take, timeout } from 'rxjs/operator
 import { InventoryAuditEntry, InventoryItem, LowStockItem, StockBySize } from '../models/inventory.model';
 import { FulfillRestockResponse, RestockRequest } from '../models/restock-request.model';
 import { Supplier } from '../models/supplier.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  // Always use relative /api so dev proxy + SSR/prod behave consistently.
-  private baseUrl = '/api';
+  // Uses environment variable to switch between absolute URLs (Netlify/render) and relative (Local)
+  private baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
 
