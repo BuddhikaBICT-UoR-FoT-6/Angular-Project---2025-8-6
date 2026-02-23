@@ -20,7 +20,7 @@ function generateToken(userId, role) {
  */
 function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'No token provided' });
   }
@@ -30,7 +30,18 @@ function verifyToken(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded; // Add user info to request
-    next();
+
+    // Check if token is blacklisted
+    const TokenBlacklist = require('../models/tokenBlacklist');
+    TokenBlacklist.findOne({ token }).then(blacklisted => {
+      if (blacklisted) {
+        return res.status(401).json({ error: 'Token has been invalidated. Please log in again.' });
+      }
+      next();
+    }).catch(err => {
+      console.error('Error checking token blacklist:', err);
+      next(); // Fail open if DB check fails
+    });
   } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
@@ -58,7 +69,7 @@ function requireRole(...roles) {
  */
 function optionalAuth(req, res, next) {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return next();
   }
@@ -67,12 +78,22 @@ function optionalAuth(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+
+    // Check if token is blacklisted
+    const TokenBlacklist = require('../models/tokenBlacklist');
+    TokenBlacklist.findOne({ token }).then(blacklisted => {
+      if (!blacklisted) {
+        req.user = decoded;
+      }
+      next();
+    }).catch(err => {
+      console.error('Error checking token blacklist in optionalAuth:', err);
+      next();
+    });
   } catch (err) {
     // Invalid token but continue anyway
+    next();
   }
-  
-  next();
 }
 
 module.exports = {

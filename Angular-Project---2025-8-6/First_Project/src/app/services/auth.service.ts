@@ -18,8 +18,12 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
+  public get currentUserValue(): User | null {
+    return this.currentUserSubject.value;
+  }
+
   constructor(
-    private http: HttpClient, 
+    private http: HttpClient,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
@@ -61,12 +65,20 @@ export class AuthService {
   }
 
   logout() {
+    // Attempt to blacklist the token on the server
+    this.http.post('/api/auth/logout', {}).subscribe({
+      next: () => this.clearSession(),
+      error: () => this.clearSession() // Even if server fails (e.g., token already invalid), clear local
+    });
+  }
+
+  private clearSession() {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('currentUser');
       localStorage.removeItem('token');
     }
     this.currentUserSubject.next(null);
-    this.router.navigate(['/']);
+    this.router.navigate(['/login']);
   }
 
   getCurrentUser(): User | null {
