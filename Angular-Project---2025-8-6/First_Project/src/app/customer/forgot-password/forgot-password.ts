@@ -30,7 +30,7 @@ export class ForgotPassword {
   constructor(
     private router: Router,
     private http: HttpClient
-  ) {}
+  ) { }
 
   // Step 1: Request OTP
   onRequestOtp() {
@@ -61,7 +61,7 @@ export class ForgotPassword {
   // Step 2: Verify OTP
   onVerifyOtp(otp: string) {
     this.error = '';
-    
+
     this.http.post('/api/auth/verify-reset-otp', {
       email: this.email,
       otp: otp
@@ -90,8 +90,9 @@ export class ForgotPassword {
       return;
     }
 
-    if (this.newPassword.length < 6) {
-      this.error = 'Password must be at least 6 characters long';
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(this.newPassword)) {
+      this.error = 'Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.';
       return;
     }
 

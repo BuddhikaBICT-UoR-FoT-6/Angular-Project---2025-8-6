@@ -35,16 +35,16 @@ export class Register {
 
   profileImageFile: File | null = null;
   profileImagePreviewUrl: string | null = null;
-  
+
   isLoading = false;
   error = '';
   success = '';
 
   constructor(
-    private authService: AuthService, 
+    private authService: AuthService,
     private router: Router,
     private http: HttpClient
-  ) {}
+  ) { }
 
   onSubmit() {
     if (!this.userData.full_name || !this.userData.email || !this.userData.password) {
@@ -57,8 +57,9 @@ export class Register {
       return;
     }
 
-    if (this.userData.password.length < 6) {
-      this.error = 'Password must be at least 6 characters long';
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(this.userData.password)) {
+      this.error = 'Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.';
       return;
     }
 
@@ -85,7 +86,7 @@ export class Register {
 
   onVerifyOtp(otp: string) {
     this.error = '';
-    
+
     // Step 2: Verify OTP and complete registration
     this.http.post('/api/auth/verify-registration-otp', {
       email: this.userData.email,
@@ -129,7 +130,7 @@ export class Register {
             }
           });
         }
-        
+
         this.router.navigate(['/registration-result'], {
           queryParams: {
             success: 'true',
