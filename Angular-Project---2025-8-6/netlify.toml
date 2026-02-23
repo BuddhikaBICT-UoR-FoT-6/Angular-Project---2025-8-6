@@ -1,12 +1,9 @@
 [build]
-  # Set the base directory to your Angular project folder
-  base = "First_Project"
+  # We run the command by cd'ing into the project, so Netlify's context stays at the true repo root
+  command = "cd First_Project && npm install --legacy-peer-deps && npm run build"
   
-  # Command to install dependencies and build the Angular app
-  command = "npm install --legacy-peer-deps && npm run build"
-  
-  # Directory where Angular outputs the compiled browser files
-  publish = "dist/First_Project/browser"
+  # Point publish directly to the exact sub-folder from the repo root
+  publish = "First_Project/dist/First_Project/browser"
 
 # Redirect all routing back to index.html for Angular's client-side routing
 [[redirects]]
