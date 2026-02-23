@@ -1,6 +1,6 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReviewService } from '../../services/review.service';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
@@ -53,7 +53,9 @@ export class Showroom {
     newArrivals: any[];
     featuredCol?: any;
     seasonalCol?: any;
-    errorMessage?: string
+    errorMessage?: string;
+    isFiltered?: boolean;
+    filterTitle?: string;
   }> =
     this.refreshTrigger$.pipe(
       startWith(void 0),
@@ -73,6 +75,7 @@ export class Showroom {
   categories = ['Shirts', 'Pants', 'Dresses', 'Accessories'];
 
   constructor(
+    private route: ActivatedRoute,
     private apiService: ApiService,
     private authService: AuthService,
     private toast: ToastService,
@@ -227,63 +230,99 @@ export class Showroom {
     newArrivals: any[];
     featuredCol?: any;
     seasonalCol?: any;
-    errorMessage?: string
+    errorMessage?: string;
+    isFiltered?: boolean;
+    filterTitle?: string;
   }> {
     return defer(() =>
       this.apiService.waitForDbReady(120000).pipe(
-        delay(1000),
-        switchMap(() => {
+        delay(500),
+        switchMap(() => this.route.queryParams),
+        switchMap((params) => {
+          const category = params['category'];
+          const collectionSlug = params['collection'];
+          const sort = params['sort']; // e.g. sort=newest
+
+          const isFiltered = !!(category || collectionSlug || sort);
+
+          if (isFiltered) {
+            let filterTitle = 'Filtered Results';
+            let products$: Observable<any[]> = of([]);
+
+            if (category) {
+              filterTitle = category;
+              products$ = this.apiService.getProducts({ category }).pipe(catchError(() => of([])));
+            } else if (sort === 'newest') {
+              filterTitle = 'New Arrivals';
+              products$ = this.apiService.getProducts({ sort: 'newest' }).pipe(catchError(() => of([])));
+            } else if (collectionSlug) {
+              products$ = this.apiService.getCollectionBySlug(collectionSlug).pipe(
+                map(col => {
+                  if (col && col.name) filterTitle = col.name;
+                  return col?.products || [];
+                }),
+                catchError(() => of([]))
+              );
+            }
+
+            return forkJoin({
+              products: products$,
+              filterTitle: of(filterTitle)
+            }).pipe(
+              map(res => ({
+                loading: false,
+                featuredProducts: res.products,
+                categories: [],
+                newArrivals: [],
+                featuredCol: undefined,
+                seasonalCol: undefined,
+                isFiltered: true,
+                filterTitle: res.filterTitle
+              }))
+            );
+          }
+
+          // Otherwise, return standard landing page data
           return forkJoin({
             products: this.apiService.getProducts({ sort: 'popular', limit: 8 }).pipe(catchError(() => of([]))),
             categories: this.apiService.getCategories().pipe(catchError(() => of([]))),
             newArrivals: this.apiService.getProducts({ sort: 'newest', limit: 8 }).pipe(catchError(() => of([]))),
             featuredCol: this.apiService.getCollectionsByType('featured').pipe(map(cols => cols[0] || null), catchError(() => of(null))),
             seasonalCol: this.apiService.getCollectionsByType('seasonal').pipe(map(cols => cols[0] || null), catchError(() => of(null)))
-          });
+          }).pipe(
+            map(res => ({
+              loading: false,
+              featuredProducts: res.products,
+              categories: res.categories,
+              newArrivals: res.newArrivals,
+              featuredCol: res.featuredCol,
+              seasonalCol: res.seasonalCol,
+              isFiltered: false
+            }))
+          );
         }),
         timeout({ first: 20000 }),
         retry({ count: 1, delay: 1500 }),
-        switchMap(({ products, categories, newArrivals, featuredCol, seasonalCol }) => {
-          const featured = products || [];
+        switchMap((vmState) => {
+          const featured = vmState.featuredProducts || [];
           // Collect all product IDs to fetch reviews for
-          const allProducts = [...featured, ...newArrivals, ...(featuredCol?.products || []), ...(seasonalCol?.products || [])];
+          const allProducts = [...featured, ...(vmState.newArrivals || []), ...(vmState.featuredCol?.products || []), ...(vmState.seasonalCol?.products || [])];
           const uniqueIds = [...new Set(allProducts.map((p: any) => String(p?._id || '')).filter(Boolean))];
 
           if (!uniqueIds.length) {
             this.reviewSummariesByProductId = {};
-            return of({
-              loading: false,
-              featuredProducts: featured,
-              categories,
-              newArrivals,
-              featuredCol,
-              seasonalCol
-            });
+            return of(vmState);
           }
 
           return this.reviewService.getSummaries(uniqueIds).pipe(
             map((summaries) => {
               this.reviewSummariesByProductId = summaries || {};
-              return {
-                loading: false,
-                featuredProducts: featured,
-                categories,
-                newArrivals,
-                featuredCol,
-                seasonalCol
-              };
+              return vmState;
             }),
             catchError((err) => {
               console.error('Showroom: failed to load review summaries', err);
               this.reviewSummariesByProductId = {};
-              return of({
-                loading: false,
-                featuredProducts: featured,
-                categories,
-                newArrivals,
-                featuredCol,
-                seasonalCol
-              });
+              return of(vmState);
             })
           );
         }),
